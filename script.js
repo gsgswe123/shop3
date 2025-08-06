@@ -236,9 +236,8 @@ const ProductModal = {
         }
 
         // Kiểm tra quyền admin
-        if (!window.PermissionManager?.checkPostPermission()) {
+        if (window.currentUser.role !== 'admin' && window.currentUser.role !== 'moderator') {
             window.Utils?.showToast('Bạn không có quyền đăng sản phẩm!\nChỉ admin mới có thể đăng sản phẩm.', 'error');
-            window.PermissionManager?.debugPermissions();
             return;
         }
         
@@ -889,21 +888,230 @@ function addEnhancedStyles() {
             border-radius: 12px;
             margin: 20px 0;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+        }
+        
         .add-product-modal-content {
             max-width: 600px;
             width: 95%;
             max-height: 90vh;
             overflow-y: auto;
+            background: #fff;
+            border-radius: 16px;
+            position: relative;
+            animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
+        
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+        
+        .modal-title {
+            margin: 0 0 1.5rem 0;
+            color: #1f2937;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
         .form-grid-2col {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-bottom: 1rem;
         }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+            gap: 0.5rem;
+        }
+        
+        .required {
+            color: #ef4444;
+        }
+        
+        .char-count {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .image-preview {
+            margin-top: 0.5rem;
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(16,185,129,0.4);
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16,185,129,0.6);
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
         @media (max-width: 768px) {
             .form-grid-2col {
                 grid-template-columns: 1fr;
+            }
+            .add-product-modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            .form-actions {
+                flex-direction: column;
             }
         }
     `;
