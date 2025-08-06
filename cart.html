@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - Shop Grow A Garden</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --dark-gradient: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1f2937;
+            --gray-color: #6b7280;
+            --light-gray: #f3f4f6;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --border-radius: 12px;
+            --border-radius-lg: 20px;
+            --font-main: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-main); line-height: 1.6; color: var(--dark-color); background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 1000; transition: var(--transition-smooth); }
+        .header-container { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; }
+        .logo { height: 50px; width: auto; transition: var(--transition-smooth); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+        .logo:hover { transform: scale(1.05) rotate(2deg); }
+        .nav-menu { display: flex; gap: 2rem; align-items: center; }
+        .nav-link { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--gray-color); font-weight: 500; padding: 0.75rem 1.5rem; border-radius: 50px; transition: var(--transition-smooth); position: relative; overflow: hidden; }
+        .nav-link::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: var(--primary-gradient); transition: var(--transition-smooth); z-index: -1; }
+        .nav-link:hover::before { left: 0; }
+        .nav-link:hover { color: white; transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+        .nav-link.active { background: var(--primary-gradient); color: white; box-shadow: var(--shadow-soft); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border: none; border-radius: 50px; font-weight: 600; text-decoration: none; cursor: pointer; transition: var(--transition-bounce); position: relative; overflow: hidden; font-size: 14px; font-family: inherit; }
+        .btn-primary { background: var(--primary-gradient); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .btn-primary:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6); }
+        .btn-outline { background: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); }
+        .btn-outline:hover { background: var(--primary-gradient); color: white; transform: translateY(-2px); }
+        .user-dropdown { display: flex; align-items: center; gap: 0.75rem; background: var(--glass-bg); padding: 0.5rem 1rem; border-radius: 50px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); position: relative; cursor: pointer; transition: var(--transition-smooth); }
+        .user-dropdown:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+        .user-avatar { width: 40px; height: 40px; background: var(--primary-gradient); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .user-name { font-weight: 600; color: var(--dark-color); max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dropdown-menu { position: absolute; top: calc(100% + 10px); right: 0; background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-strong); min-width: 200px; padding: 0.75rem 0; z-index: 1001; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: var(--transition-smooth); }
+        .user-dropdown:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--dark-color); text-decoration: none; transition: var(--transition-smooth); }
+        .dropdown-item:hover { background: rgba(102, 126, 234, 0.1); color: var(--primary-color); }
+        .dropdown-divider { height: 1px; background: #e5e7eb; margin: 0.5rem 0; }
+        .badge { background: var(--danger-color); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; }
+        .logout-btn { background: none; border: none; width: 100%; text-align: left; font-family: inherit; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.show { display: flex; opacity: 1; }
+        .modal-content { background: white; border-radius: var(--border-radius-lg); padding: 2rem; width: 95%; max-width: 450px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: var(--shadow-strong); transform: scale(0.9); transition: var(--transition-smooth); }
+        .modal.show .modal-content { transform: scale(1); }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: var(--gray-color); cursor: pointer; transition: var(--transition-smooth); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--light-gray); color: var(--danger-color); transform: rotate(90deg); }
+        .modal-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; color: var(--dark-color); }
+        .modal-tabs { display: flex; margin-bottom: 1.5rem; background: var(--light-gray); border-radius: var(--border-radius); padding: 0.25rem; }
+        .modal-tab { flex: 1; padding: 0.75rem 1rem; text-align: center; cursor: pointer; font-weight: 500; border-radius: var(--border-radius); transition: var(--transition-smooth); }
+        .modal-tab.active { background: white; color: var(--primary-color); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .modal-form { display: none; }
+        .modal-form.active { display: block; animation: fadeInUp 0.3s ease; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-color); }
+        .form-group input { width: 100%; padding: 0.875rem 1rem; border: 2px solid #e5e7eb; border-radius: var(--border-radius); font-size: 1rem; transition: var(--transition-smooth); font-family: inherit; }
+        .form-group input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .modal-actions { margin-top: 1.5rem; }
+        .btn-submit { width: 100%; padding: 1rem; font-size: 1rem; margin-bottom: 1rem; }
+        .btn-submit.loading { pointer-events: none; opacity: 0.8; }
+        .spinner { display: none; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-left: 0.5rem; }
+        .btn-submit.loading .spinner { display: inline-block; }
+        .form-footer { text-align: center; color: var(--gray-color); font-size: 0.9rem; }
+        .form-footer a { color: var(--primary-color); text-decoration: none; font-weight: 500; }
+        .hero { background: var(--primary-gradient); color: white; text-align: center; padding: 4rem 0; }
+        .hero-title { font-size: 3.5rem; margin-bottom: 1rem; font-weight: 800; }
+        .hero-subtitle { font-size: 1.25rem; max-width: 600px; margin: 0 auto; }
+        .filter-section { background: white; padding: 2rem; border-radius: var(--border-radius-lg); margin: 2rem 0; box-shadow: var(--shadow-soft); }
+        .filter-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--dark-color); }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .filter-group input, .filter-group select { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: var(--border-radius); }
+        .filter-actions { display: flex; gap: 1rem; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; margin: 2rem 0; }
+        .product-card { background: white; border-radius: var(--border-radius-lg); overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: var(--transition-smooth); position: relative; }
+        .product-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-strong); }
+        .product-image { position: relative; height: 200px; overflow: hidden; background: #f3f4f6; }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth); }
+        .product-card:hover .product-image img { transform: scale(1.1); }
+        .product-badge { position: absolute; top: 1rem; left: 1rem; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 12px; font-weight: 700; background: var(--danger-gradient); color: white; }
+        .product-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; gap: 1rem; opacity: 0; transition: var(--transition-smooth); }
+        .product-card:hover .product-overlay { opacity: 1; }
+        .btn-icon { width: 45px; height: 45px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-bounce); font-size: 18px; background: rgba(255,255,255,0.9); color: var(--danger-color); }
+        .btn-icon:hover, .btn-icon.active { background: var(--danger-color); color: white; transform: scale(1.2); }
+        .product-info { padding: 1.5rem; }
+        .product-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .product-description { color: var(--gray-color); font-size: 0.9rem; margin-bottom: 1rem; height: 40px; overflow: hidden; }
+        .product-price { font-size: 1.5rem; font-weight: 800; color: var(--success-color); margin-bottom: 1rem; }
+        .product-actions { display: flex; gap: 0.75rem; padding: 0 1.5rem 1.5rem; }
+        .add-to-cart { flex: 1; }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
+        .loading-placeholder, .error-state, .empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; background-color: #f9fafb; border-radius: var(--border-radius); }
+        .loading-placeholder i { font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem; }
+        .empty-state-icon { font-size: 4rem; color: #ccc; margin-bottom: 20px; }
+        .empty-state-title { font-size: 1.5rem; margin-bottom: 10px; }
+        .empty-state-text { color: var(--gray-color); margin-bottom: 20px; }
+        .footer { background: var(--dark-gradient); color: white; padding: 3rem 0 1rem; margin-top: 4rem; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        .footer-logo img { width: 40px; height: 40px; }
+        .footer-title { font-size: 1.125rem; margin-bottom: 1rem; }
+        .footer-text, .footer-link a { color: #d1d5db; text-decoration: none; }
+        .footer-link a:hover { color: var(--primary-color); }
+        .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #374151; color: #9ca3af; }
+        .page-title { font-size: 2.5rem; font-weight: 700; margin: 2rem 0; text-align: center; }
+        .cart-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+        .cart-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid #eee; background: white; border-radius: var(--border-radius); margin-bottom: 1rem; }
+        .cart-item-image { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+        .cart-item-details { flex: 1; }
+        .cart-item-quantity { display: flex; align-items: center; }
+        .cart-item-quantity input { width: 50px; text-align: center; border: 1px solid #ddd; margin: 0 5px; height: 30px; border-radius: 4px; }
+        .btn-quantity, .btn-remove { background: #f3f4f6; border: 1px solid #ccc; cursor: pointer; width: 30px; height: 30px; border-radius: 4px; }
+        .btn-remove { border-color: transparent; background: #fee2e2; color: var(--danger-color); }
+        .cart-summary { background: white; padding: 2rem; border-radius: var(--border-radius); position: sticky; top: 120px; box-shadow: var(--shadow-soft); }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .summary-divider { height: 1px; background: #eee; margin: 1rem 0; }
+        .summary-row.total { font-weight: bold; font-size: 1.2rem; }
+        .btn-block { width: 100%; padding: 1rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 992px) { .cart-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header" id="header">
+        <div class="container header-container">
+            <a href="index.html">
+                <img src="https://i.ibb.co/q3r1hTft/8574d186247eba75669b7d50d42bd650-png.png" alt="Shop Grow A Garden" class="logo">
+            </a>
+            
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span>Trang Chủ</span></a>
+                <a href="cart.html" class="nav-link active"><i class="fas fa-shopping-cart"></i><span>Giỏ Hàng</span></a>
+                <a href="favorite.html" class="nav-link"><i class="fas fa-heart"></i><span>Yêu Thích</span></a>
+            </nav>
+
+            <div class="user-dropdown" id="userDropdown" style="display: none;">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span class="user-name" id="userName">User</span>
+                <div class="dropdown-menu">
+                    <a href="account.html" class="dropdown-item">
+                        <i class="fas fa-user-circle"></i><span>Tài khoản</span>
+                    </a>
+                    <a href="cart.html" class="dropdown-item">
+                        <i class="fas fa-shopping-cart"></i><span>Giỏ hàng</span>
+                        <span class="badge cart-count" id="cartCount" style="display: none;">0</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <button class="logout-btn dropdown-item" id="logoutButton">
+                        <i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="loginButton">
+                <i class="fas fa-user"></i>
+                <span>Đăng Nhập</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1 class="page-title"><i class="fas fa-shopping-cart"></i> Giỏ Hàng Của Bạn</h1>
+        <div id="cartContainer">
+        </div>
+    </main>
+
+    <footer class="footer">
+         <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h3 class="footer-title">Shop Grow A Garden</h3>
+                    <p class="footer-text">Chuyên cung cấp dịch vụ, giống cây và thú cưng chất lượng. Giao dịch nhanh chóng, uy tín.</p>
+                </div>
+                <div>
+                    <h3 class="footer-title">Về Chúng Tôi</h3>
+                    <p class="footer-text">Với nhiều năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất.</p>
+                </div>
+                <div>
+                    <h3 class="footer-title">Liên Hệ</h3>
+                    <ul class="footer-links" style="list-style: none;">
+                        <li class="footer-link"><a href="mailto:support@shopgrowgarden.com"><i class="fas fa-envelope"></i><span> support@shopgrowgarden.com</span></a></li>
+                        <li class="footer-link"><a href="tel:0123456789"><i class="fas fa-phone"></i><span> 0123 456 789</span></a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2025 Shop Grow A Garden. All Rights Reserved.</p></div>
+        </div>
+    </footer>
+    
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Đóng">×</button>
+            <h2 class="modal-title">Chào mừng bạn</h2>
+            <div class="modal-tabs">
+                <div class="modal-tab active" data-tab="login">Đăng nhập</div>
+                <div class="modal-tab" data-tab="register">Đăng ký</div>
+            </div>
+            
+            <form class="modal-form active" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Mật khẩu</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary btn-submit">
+                        <span>Đăng nhập</span>
+                        <div class="spinner"></div>
+                    </button>
+                </div>
+                <div class="form-footer">
+                    Chưa có tài khoản? <a href="#" class="switch-to-register">Đăng ký ngay</a>
+                </div>
+            </form>
+            
+            <form class="modal-form" id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Họ và tên</label>
+                    <input type="text" id="registerName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Mật khẩu</label>
+                    <input type="password" id="registerPassword" name="password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirmPassword">Xác nhận mật khẩu</label>
+                    <input type="password" id="registerConfirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary btn-submit">
+                        <span>Đăng ký</span>
+                        <div class="spinner"></div>
+                    </button>
+                </div>
+                <div class="form-footer">
+                    Đã có tài khoản? <a href="#" class="switch-to-login">Đăng nhập ngay</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="main.js"></script>
+</body>
+</html>

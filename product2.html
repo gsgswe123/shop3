@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mimic Octopus - Shop Grow A Garden</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style2.css">
+    <!-- Progress bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-container">
+            <a href="index.html">
+                <img src="https://i.ibb.co/q3r1hTft/8574d186247eba75669b7d50d42bd650-png.png" alt="Shop Grow A Garden" class="logo">
+            </a>
+            
+            <nav class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Trang Chủ</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-seedling"></i>
+                    <span>Giống Cây</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-paw"></i>
+                    <span>Thú Cưng</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Tài Khoản Game</span>
+                </a>
+            </nav>
+
+            <div class="user-dropdown" id="userDropdown" style="display: none;">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span class="user-name" id="userName">User</span>
+                <div class="dropdown-menu">
+                    <a href="#" class="dropdown-item" id="accountButton">
+                        <i class="fas fa-user"></i>
+                        <span>Tài khoản</span>
+                    </a>
+                    <a href="#" class="dropdown-item coming-soon-action">
+                        <i class="fas fa-heart"></i>
+                        <span>Yêu thích</span>
+                        <small class="coming-soon-badge">Coming Soon</small>
+                    </a>
+                    <a href="#" class="dropdown-item coming-soon-action">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Giỏ hàng</span>
+                        <small class="coming-soon-badge">Coming Soon</small>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item" id="logoutButton">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="loginButton">
+                <i class="fas fa-user"></i>
+                <span>Đăng Nhập</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Product Detail Section -->
+    <main class="container product-detail-container">
+        <div class="breadcrumb">
+            <a href="index.html">Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="#">Thú cưng</a>
+            <i class="fas fa-chevron-right"></i>
+            <span id="productTitleBreadcrumb">Mimic Octopus</span>
+        </div>
+        
+        <div class="product-detail">
+            <div class="product-gallery">
+                <span class="featured-badge">NỔI BẬT</span>
+                <div class="main-image" id="mainImage">
+                    <img id="mainProductImage" src="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg" alt="Mimic Octopus Product" loading="lazy">
+                </div>
+                <div class="thumbnail-images" id="thumbnailImages">
+                    <div class="thumbnail active" data-image="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg">
+                        <img src="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg" alt="Thumbnail 1">
+                    </div>
+                    <div class="thumbnail" data-image="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg">
+                        <img src="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg" alt="Thumbnail 2">
+                    </div>
+                    <div class="thumbnail" data-image="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg">
+                        <img src="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg" alt="Thumbnail 3">
+                    </div>
+                    <div class="thumbnail" data-image="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg">
+                        <img src="https://i.ibb.co/d02TTqSw/ab66bab0-c4f1-4130-bb23-b689337484a2.jpg" alt="Thumbnail 4">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="product-info">
+                <h1 id="productTitle" class="product-title">Mimic Octopus</h1>
+                <div class="product-meta">
+                    <span class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="rating-count">(42 đánh giá)</span>
+                    </span>
+                    <span class="product-status in-stock">
+                        <i class="fas fa-check-circle"></i>
+                        Còn hàng
+                    </span>
+                    <span class="product-sales">
+                        <i class="fas fa-user"></i>
+                        125 lượt mua
+                    </span>
+                </div>
+                
+                <div class="product-price-container">
+                    <span class="current-price" id="currentPrice">250.000đ</span>
+                    <span class="old-price" id="oldPrice">300.000đ</span>
+                    <span class="discount-badge" id="discountBadge">-16%</span>
+                </div>
+                
+                <div class="product-description" id="productDescription">
+                    <p>Bạch tuộc Mimic - "Bậc thầy ngụy trang" của đại dương. Chúng có khả năng bắt chước hình dạng và hành vi của các loài sinh vật khác một cách đáng kinh ngạc.</p>
+                </div>
+                
+                <div class="product-features" id="productFeatures">
+                    <h3>Tính năng nổi bật:</h3>
+                    <ul>
+                        <li>Thông minh và dễ huấn luyện</li>
+                        <li>Thân thiện với trẻ em và gia đình</li>
+                        <li>Có khả năng thích nghi cao với môi trường</li>
+                        <li>Tính cách hoạt bát và vui tươi</li>
+                        <li>Được chăm sóc sức khỏe định kỳ</li>
+                        <li>Có đầy đủ giấy tờ và vaccine</li>
+                    </ul>
+                </div>
+                
+                <div class="product-actions">
+                    <div class="quantity-selector">
+                        <button class="quantity-btn" id="decreaseQty" type="button">-</button>
+                        <input type="number" id="productQty" value="1" min="1" max="10">
+                        <button class="quantity-btn" id="increaseQty" type="button">+</button>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-add-to-cart" id="addToCartBtn" type="button">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Thêm vào giỏ hàng</span>
+                    </button>
+                    
+                    <button class="btn btn-outline btn-wishlist" id="addToWishlistBtn" type="button">
+                        <i class="far fa-heart"></i>
+                        <span>Yêu thích</span>
+                    </button>
+                </div>
+                
+                <div class="product-meta-info">
+                    <div class="meta-item">
+                        <i class="fas fa-tag"></i>
+                        <span>Danh mục: <a href="#">Thú cưng</a></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Chia sẻ: 
+                            <a href="#" title="Chia sẻ lên Facebook"><i class="fab fa-facebook"></i></a>
+                            <a href="#" title="Chia sẻ lên Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" title="Chia sẻ lên Pinterest"><i class="fab fa-pinterest"></i></a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product Tabs -->
+        <div class="product-tabs">
+            <ul class="tabs-nav">
+                <li class="active" data-tab="description">Mô tả chi tiết</li>
+                <li data-tab="reviews">Đánh giá (42)</li>
+                <li data-tab="shipping">Vận chuyển & Bảo hành</li>
+            </ul>
+            
+            <div class="tabs-content">
+                <div class="tab-pane active" id="description">
+                    <div id="detailedDescription">
+                        <h3>Giới thiệu về Mimic Octopus</h3>
+                        <p>Mimic Octopus là một trong những loài thú cưng thông minh và đáng yêu nhất. Với bộ lông mềm mại, đôi mắt sáng và tính cách hoạt bát, Mimic Octopus sẽ mang đến cho gia đình bạn những giây phút vui vẻ và ý nghĩa.</p>
+                        
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 3px solid var(--primary-color);">
+                            <h3 style="margin-bottom: 15px; color: var(--primary-color);">Đặc điểm nổi bật</h3>
+                            <ul style="list-style: none;">
+                                <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                    <i class="fas fa-check-circle" style="position: absolute; left: 0; top: 3px; color: var(--primary-color);"></i>
+                                    <strong>Thông minh cao:</strong> Có khả năng học hỏi và ghi nhớ các lệnh một cách nhanh chóng
+                                </li>
+                                <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                    <i class="fas fa-check-circle" style="position: absolute; left: 0; top: 3px; color: var(--primary-color);"></i>
+                                    <strong>Thân thiện:</strong> Dễ dàng hòa nhập với các thành viên trong gia đình
+                                </li>
+                                <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                    <i class="fas fa-check-circle" style="position: absolute; left: 0; top: 3px; color: var(--primary-color);"></i>
+                                    <strong>Sức khỏe tốt:</strong> Được chăm sóc bởi đội ngũ bác sĩ thú y chuyên nghiệp
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <h3>Hướng dẫn chăm sóc</h3>
+                        <p><strong>Dinh dưỡng:</strong></p>
+                        <ul>
+                            <li>Cho ăn 2-3 lần mỗi ngày với thức ăn chuyên dụng</li>
+                            <li>Bổ sung vitamin và khoáng chất cần thiết</li>
+                            <li>Luôn đảm bảo có nước sạch</li>
+                        </ul>
+                        
+                        <p><strong>Vệ sinh:</strong></p>
+                        <ul>
+                            <li>Tắm rửa định kỳ 1-2 tuần/lần</li>
+                            <li>Vệ sinh tai, mắt, răng miệng thường xuyên</li>
+                            <li>Cắt móng định kỳ</li>
+                        </ul>
+                        
+                        <div style="margin-top: 30px; background: #e8f5e9; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3 style="color: var(--primary-color); margin-bottom: 15px;">Cam kết chất lượng</h3>
+                            <p>Chúng tôi cam kết cung cấp những chú thú cưng khỏe mạnh, được chăm sóc tốt nhất. Nếu có bất kỳ vấn đề gì, chúng tôi sẵn sàng hỗ trợ 24/7!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="reviews">
+                    <h3>Đánh giá sản phẩm (4.5/5)</h3>
+                    <div class="review-form">
+                        <h4>Viết đánh giá</h4>
+                        <form id="reviewForm">
+                            <div class="form-group">
+                                <label for="reviewName">Tên của bạn *</label>
+                                <input type="text" id="reviewName" name="reviewName" required>
+                                <div class="error-message"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reviewEmail">Email *</label>
+                                <input type="email" id="reviewEmail" name="reviewEmail" required>
+                                <div class="error-message"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Đánh giá của bạn *</label>
+                                <div class="rating-input">
+                                    <input type="radio" id="star5" name="rating" value="5">
+                                    <label for="star5"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star4" name="rating" value="4">
+                                    <label for="star4"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star3" name="rating" value="3">
+                                    <label for="star3"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star2" name="rating" value="2">
+                                    <label for="star2"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star1" name="rating" value="1">
+                                    <label for="star1"><i class="fas fa-star"></i></label>
+                                </div>
+                                <div class="error-message"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reviewText">Nội dung đánh giá *</label>
+                                <textarea id="reviewText" name="reviewText" rows="5" required placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."></textarea>
+                                <div class="error-message"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-submit">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Gửi đánh giá</span>
+                                <div class="spinner"></div>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="review-list" id="reviewList">
+                        <div class="review-item">
+                            <div class="review-header">
+                                <span class="review-author">Nguyễn Văn A</span>
+                                <span class="review-date">20/12/2024</span>
+                                <div class="review-rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>Mimic Octopus rất dễ thương và thông minh. Con vật rất thân thiện với cả gia đình, đặc biệt là với các em nhỏ. Chăm sóc không quá khó khăn và shop hỗ trợ rất tận tình.</p>
+                            </div>
+                        </div>
+                        <div class="review-item">
+                            <div class="review-header">
+                                <span class="review-author">Trần Thị B</span>
+                                <span class="review-date">15/12/2024</span>
+                                <div class="review-rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>Chất lượng tốt, Mimic Octopus khỏe mạnh và hoạt bát. Đóng gói cẩn thận, giao hàng đúng hẹn. Giá cả hợp lý so với chất lượng nhận được.</p>
+                            </div>
+                        </div>
+                        <div class="review-item">
+                            <div class="review-header">
+                                <span class="review-author">Lê Văn C</span>
+                                <span class="review-date">10/12/2024</span>
+                                <div class="review-rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>Rất hài lòng với sản phẩm. Mimic Octopus rất thông minh, học lệnh rất nhanh. Shop tư vấn nhiệt tình và chu đáo. Sẽ giới thiệu cho bạn bè.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="load-more-reviews">
+                        <button class="btn btn-outline" id="loadMoreReviews" type="button">
+                            <i class="fas fa-plus"></i>
+                            <span>Xem thêm đánh giá</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="shipping">
+                    <h3>Chính sách vận chuyển</h3>
+                    <p>Chúng tôi giao hàng toàn quốc với các phương thức sau:</p>
+                    <ul>
+                        <li><strong>Giao hàng nhanh:</strong> Trong 2-4 giờ (nội thành Hà Nội, TP.HCM) - Phí 50.000đ</li>
+                        <li><strong>Giao hàng tiêu chuẩn:</strong> 1-3 ngày (toàn quốc) - Phí 30.000đ</li>
+                        <li><strong>Nhận hàng tại cửa hàng:</strong> Miễn phí</li>
+                    </ul>
+                    <p><strong>Lưu ý:</strong> Đối với thú cưng, chúng tôi có đội ngũ chuyên gia vận chuyển với phương tiện chuyên dụng để đảm bảo an toàn tuyệt đối.</p>
+                    
+                    <h3 style="margin-top: 30px;">Chính sách bảo hành</h3>
+                    <p>Chúng tôi cam kết:</p>
+                    <ul>
+                        <li><strong>Bảo hành sức khỏe 30 ngày:</strong> Hoàn tiền 100% nếu thú cưng có vấn đề sức khỏe trong 30 ngày đầu</li>
+                        <li><strong>Hỗ trợ tư vấn:</strong> 24/7 qua hotline, chat, email về cách chăm sóc</li>
+                        <li><strong>Khám bệnh miễn phí:</strong> Trong 6 tháng đầu tại các phòng khám đối tác</li>
+                        <li><strong>Vaccine và sức khỏe:</strong> Được tiêm vaccine đầy đủ và kiểm tra sức khỏe định kỳ</li>
+                    </ul>
+                    
+                    <div style="margin-top: 30px; background: #fff8e1; padding: 20px; border-radius: 12px; border-left: 3px solid var(--secondary-color);">
+                        <h3 style="color: var(--secondary-color); margin-bottom: 15px;">Cam kết chất lượng</h3>
+                        <p>Chúng tôi tự hào là địa chỉ tin cậy cho những người yêu thú cưng. Mọi vấn đề về sức khỏe thú cưng sẽ được giải quyết trong vòng 24 giờ với sự hỗ trợ từ đội ngũ bác sĩ thú y chuyên nghiệp.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        <section class="related-products">
+            <h2 class="section-title">Sản phẩm liên quan</h2>
+            <div class="products-grid" id="relatedProducts">
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://i.ibb.co/YpJ8Xgh/mimic-octopus.jpg" alt="Mimic Octopus" loading="lazy">
+                        <span class="product-badge">HOT</span>
+                    </div>
+                    <div class="product-info-card">
+                        <h3 class="product-title-card">Mimic Octopus</h3>
+                        <p class="product-description-card">Bạch tuộc mimic thông minh và độc đáo</p>
+                        <div class="product-price">
+                            <div>
+                                <span class="product-current-price">70.000đ</span>
+                                <span class="product-old-price">100.000đ</span>
+                            </div>
+                            <span class="product-sales">
+                                <i class="fas fa-user"></i>
+                                75
+                            </span>
+                        </div>
+                        <div class="product-actions-card">
+                            <a href="#" class="btn btn-primary btn-add-to-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Mua Ngay</span>
+                            </a>
+                            <button class="btn btn-outline btn-wishlist" type="button">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://i.ibb.co/2YT1NHg/hamster.jpg" alt="Hamster" loading="lazy">
+                    </div>
+                    <div class="product-info-card">
+                        <h3 class="product-title-card">Hamster</h3>
+                        <p class="product-description-card">Chuột hamster nhỏ xinh và dễ thương</p>
+                        <div class="product-price">
+                            <div>
+                                <span class="product-current-price">150.000đ</span>
+                            </div>
+                            <span class="product-sales">
+                                <i class="fas fa-user"></i>
+                                85
+                            </span>
+                        </div>
+                        <div class="product-actions-card">
+                            <a href="#" class="btn btn-primary btn-add-to-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Mua Ngay</span>
+                            </a>
+                            <button class="btn btn-outline btn-wishlist" type="button">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://i.ibb.co/9yK2sNk/golden-retriever.jpg" alt="Golden Retriever" loading="lazy">
+                        <span class="product-badge">NEW</span>
+                    </div>
+                    <div class="product-info-card">
+                        <h3 class="product-title-card">Golden Retriever</h3>
+                        <p class="product-description-card">Chó Golden Retriever thuần chủng</p>
+                        <div class="product-price">
+                            <div>
+                                <span class="product-current-price">1.200.000đ</span>
+                                <span class="product-old-price">1.500.000đ</span>
+                            </div>
+                            <span class="product-sales">
+                                <i class="fas fa-user"></i>
+                                42
+                            </span>
+                        </div>
+                        <div class="product-actions-card">
+                            <a href="#" class="btn btn-primary btn-add-to-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Mua Ngay</span>
+                            </a>
+                            <button class="btn btn-outline btn-wishlist" type="button">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://i.ibb.co/n8VJfXy/persian-cat.jpg" alt="Persian Cat" loading="lazy">
+                        <span class="product-badge">GIẢM 15%</span>
+                    </div>
+                    <div class="product-info-card">
+                        <h3 class="product-title-card">Persian Cat</h3>
+                        <p class="product-description-card">Mèo Ba Tư lông dài đáng yêu</p>
+                        <div class="product-price">
+                            <div>
+                                <span class="product-current-price">800.000đ</span>
+                                <span class="product-old-price">940.000đ</span>
+                            </div>
+                            <span class="product-sales">
+                                <i class="fas fa-user"></i>
+                                120
+                            </span>
+                        </div>
+                        <div class="product-actions-card">
+                            <a href="#" class="btn btn-primary btn-add-to-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Mua Ngay</span>
+                            </a>
+                            <button class="btn btn-outline btn-wishlist" type="button">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-logo">
+                    <img src="https://i.ibb.co/k6BvctRR/t-i-xu-ng.jpg" alt="Shop Grow A Garden" loading="lazy">
+                    <span>Shop Grow A Garden - Giống Cây - Thú Cưng</span>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <a href="#" style="color: white; font-size: 20px;" title="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" style="color: white; font-size: 20px;" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" style="color: white; font-size: 20px;" title="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">Về Chúng Tôi</h3>
+                    <p class="footer-text">Chuyên cung cấp dịch vụ, giống cây và thú cưng chất lượng. Giao dịch nhanh chóng, uy tín.</p>
+                    <ul class="footer-links">
+                        <li class="footer-link">
+                            <a href="#">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Giới thiệu</span>
+                            </a>
+                        </li>
+                        <li class="footer-link">
+                            <a href="#">
+                                <i class="fas fa-newspaper"></i>
+                                <span>Tin tức</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">Chính sách</h3>
+                    <ul class="footer-links">
+                        <li class="footer-link">
+                            <a href="#">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>Chính sách vận chuyển</span>
+                            </a>
+                        </li>
+                        <li class="footer-link">
+                            <a href="#">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Chính sách bảo hành</span>
+                            </a>
+                        </li>
+                        <li class="footer-link">
+                            <a href="#">
+                                <i class="fas fa-lock"></i>
+                                <span>Chính sách bảo mật</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">Liên Hệ</h3>
+                    <ul class="footer-links">
+                        <li class="footer-link">
+                            <a href="mailto:support@shopgrowgarden.com">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email: support@shopgrowgarden.com</span>
+                            </a>
+                        </li>
+                        <li class="footer-link">
+                            <a href="tel:0123456789">
+                                <i class="fas fa-phone"></i>
+                                <span>Hotline: 0123 456 789</span>
+                            </a>
+                        </li>
+                        <li class="footer-link">
+                            <a href="#">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>Địa chỉ: Số 123, Đường ABC, Hà Nội</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>© 2025 Shop Grow A Garden. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Lên đầu trang">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <!-- Messenger Float Button -->
+    <a href="https://www.messenger.com/t/8645401405544278" target="_blank" class="messenger-float" rel="noopener noreferrer">
+        <img src="https://i.imgur.com/G7i5D02.png" alt="Nhắn tin với chúng tôi qua Messenger" loading="lazy">
+    </a>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+    
+    <!-- JavaScript -->
+    <script>
+        // Enhanced JavaScript with Clean Code and Professional Effects
+        class Mimic OctopusProductPage {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initializeComponents();
+                this.showWelcomeMessage();
+            }
+
+            setupEventListeners() {
+                // Tab switching
+                this.setupTabSwitching();
+                
+                // Quantity controls
+                this.setupQuantityControls();
+                
+                // Product actions
+                this.setupProductActions();
+                
+                // Review form
+                this.setupReviewForm();
+                
+                // Image gallery
+                this.setupImageGallery();
+                
+                // Progress bar
+                this.setupProgressBar();
+                
+                // Back to top
+                this.setupBackToTop();
+                
+                // Load more reviews
+                this.setupLoadMoreReviews();
+                
+                // Related products
+                this.setupRelatedProducts();
+                
+                // Social sharing
+                this.setupSocialSharing();
+            }
+
+            initializeComponents() {
+                // Add smooth entrance animations
+                this.addEntranceAnimations();
+                
+                // Initialize tooltips
+                this.initializeTooltips();
+            }
+
+            setupTabSwitching() {
+                const tabNavs = document.querySelectorAll('.tabs-nav li');
+                const tabPanes = document.querySelectorAll('.tab-pane');
+                
+                tabNavs.forEach(tabNav => {
+                    tabNav.addEventListener('click', (e) => {
+                        const tabId = e.currentTarget.getAttribute('data-tab');
+                        
+                        // Remove active classes
+                        tabNavs.forEach(nav => nav.classList.remove('active'));
+                        tabPanes.forEach(pane => pane.classList.remove('active'));
+                        
+                        // Add active classes with animation
+                        e.currentTarget.classList.add('active');
+                        const targetPane = document.getElementById(tabId);
+                        if (targetPane) {
+                            setTimeout(() => {
+                                targetPane.classList.add('active');
+                            }, 150);
+                        }
+                    });
+                });
+            }
+
+            setupQuantityControls() {
+                const decreaseBtn = document.getElementById('decreaseQty');
+                const increaseBtn = document.getElementById('increaseQty');
+                const quantityInput = document.getElementById('productQty');
+                
+                if (!decreaseBtn || !increaseBtn || !quantityInput) return;
+
+                decreaseBtn.addEventListener('click', () => {
+                    let value = parseInt(quantityInput.value) || 1;
+                    if (value > 1) {
+                        quantityInput.value = value - 1;
+                        this.animateQuantityChange(quantityInput);
+                    }
+                });
+                
+                increaseBtn.addEventListener('click', () => {
+                    let value = parseInt(quantityInput.value) || 1;
+                    const max = parseInt(quantityInput.getAttribute('max')) || 999;
+                    if (value < max) {
+                        quantityInput.value = value + 1;
+                        this.animateQuantityChange(quantityInput);
+                    }
+                });
+                
+                quantityInput.addEventListener('input', (e) => {
+                    let value = parseInt(e.target.value) || 1;
+                    const min = parseInt(e.target.getAttribute('min')) || 1;
+                    const max = parseInt(e.target.getAttribute('max')) || 999;
+                    
+                    if (value < min) e.target.value = min;
+                    else if (value > max) e.target.value = max;
+                });
+            }
+
+            animateQuantityChange(input) {
+                input.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    input.style.transform = 'scale(1)';
+                }, 200);
+            }
+
+            setupProductActions() {
+                const addToCartBtn = document.getElementById('addToCartBtn');
+                const addToWishlistBtn = document.getElementById('addToWishlistBtn');
+                
+                if (addToCartBtn) {
+                    addToCartBtn.addEventListener('click', () => {
+                        this.handleAddToCart();
+                    });
+                }
+                
+                if (addToWishlistBtn) {
+                    addToWishlistBtn.addEventListener('click', () => {
+                        this.handleAddToWishlist();
+                    });
+                }
+            }
+
+            async handleAddToCart() {
+                const btn = document.getElementById('addToCartBtn');
+                const quantity = parseInt(document.getElementById('productQty').value) || 1;
+                const productName = document.getElementById('productTitle').textContent;
+                
+                // Add loading state
+                btn.classList.add('loading');
+                btn.disabled = true;
+                
+                // Simulate API call
+                await this.delay(1500);
+                
+                // Reset button state
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                
+                // Show success animation
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i><span>Đã thêm!</span>';
+                btn.style.background = 'var(--gradient-primary)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+                
+                this.showToast(`Đã thêm ${quantity} "${productName}" vào giỏ hàng`, 'success');
+            }
+
+            handleAddToWishlist() {
+                const btn = document.getElementById('addToWishlistBtn');
+                const icon = btn.querySelector('i');
+                const span = btn.querySelector('span');
+                const productName = document.getElementById('productTitle').textContent;
+                
+                if (icon && icon.classList.contains('far')) {
+                    // Add to wishlist
+                    icon.classList.replace('far', 'fas');
+                    btn.style.background = 'rgba(229, 57, 53, 0.1)';
+                    btn.style.borderColor = 'var(--accent-color)';
+                    btn.style.color = 'var(--accent-color)';
+                    if (span) span.textContent = 'Đã thích';
+                    
+                    // Heart beat animation
+                    icon.style.animation = 'heartBeat 0.8s ease-in-out';
+                    setTimeout(() => {
+                        icon.style.animation = '';
+                    }, 800);
+                    
+                    this.showToast(`Đã thêm "${productName}" vào danh sách yêu thích`, 'success');
+                } else if (icon) {
+                    // Remove from wishlist
+                    icon.classList.replace('fas', 'far');
+                    btn.style.background = '';
+                    btn.style.borderColor = 'var(--secondary-color)';
+                    btn.style.color = 'var(--secondary-color)';
+                    if (span) span.textContent = 'Yêu thích';
+                    
+                    this.showToast(`Đã xóa "${productName}" khỏi danh sách yêu thích`, 'info');
+                }
+            }
+
+            setupReviewForm() {
+                const reviewForm = document.getElementById('reviewForm');
+                if (!reviewForm) return;
+
+                reviewForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleReviewSubmit(e.target);
+                });
+            }
+
+            async handleReviewSubmit(form) {
+                const formData = new FormData(form);
+                const data = {
+                    name: formData.get('reviewName')?.trim(),
+                    email: formData.get('reviewEmail')?.trim(),
+                    rating: formData.get('rating'),
+                    content: formData.get('reviewText')?.trim()
+                };
+
+                // Validate form
+                if (!this.validateReviewForm(data, form)) return;
+
+                const submitBtn = form.querySelector('.btn-submit');
+                
+                // Show loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                // Simulate API call
+                await this.delay(2000);
+                
+                // Add review to list
+                this.addReviewToList(data);
+                
+                // Reset form and button
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                form.reset();
+                
+                this.showToast('Cảm ơn bạn đã đánh giá sản phẩm!', 'success');
+            }
+
+            validateReviewForm(data, form) {
+                let isValid = true;
+                
+                // Clear previous errors
+                form.querySelectorAll('.form-group').forEach(group => {
+                    group.classList.remove('has-error');
+                    const errorMsg = group.querySelector('.error-message');
+                    if (errorMsg) errorMsg.style.display = 'none';
+                });
+                
+                const validations = [
+                    { field: 'name', condition: !data.name, message: 'Vui lòng nhập tên của bạn' },
+                    { field: 'email', condition: !data.email, message: 'Vui lòng nhập email' },
+                    { field: 'email', condition: data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email), message: 'Email không hợp lệ' },
+                    { field: 'rating', condition: !data.rating, message: 'Vui lòng chọn số sao đánh giá' },
+                    { field: 'content', condition: !data.content, message: 'Vui lòng nhập nội dung đánh giá' }
+                ];
+                
+                validations.forEach(validation => {
+                    if (validation.condition) {
+                        this.showFieldError(form, validation.field, validation.message);
+                        isValid = false;
+                    }
+                });
+                
+                return isValid;
+            }
+
+            showFieldError(form, fieldName, message) {
+                const fieldMap = {
+                    name: 'reviewName',
+                    email: 'reviewEmail',
+                    rating: '.rating-input',
+                    content: 'reviewText'
+                };
+                
+                const selector = fieldMap[fieldName].startsWith('.') ? fieldMap[fieldName] : `#${fieldMap[fieldName]}`;
+                const field = form.querySelector(selector);
+                
+                if (field) {
+                    const formGroup = field.closest('.form-group');
+                    if (formGroup) {
+                        formGroup.classList.add('has-error');
+                        const errorElement = formGroup.querySelector('.error-message');
+                        if (errorElement) {
+                            errorElement.textContent = message;
+                            errorElement.style.display = 'block';
+                        }
+                    }
+                }
+            }
+
+            addReviewToList(data) {
+                const reviewList = document.getElementById('reviewList');
+                if (!reviewList) return;
+                
+                const reviewItem = document.createElement('div');
+                reviewItem.classList.add('review-item');
+                reviewItem.style.opacity = '0';
+                reviewItem.style.transform = 'translateY(20px)';
+                
+                const stars = this.generateStars(parseInt(data.rating));
+                const now = new Date();
+                const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+                
+                reviewItem.innerHTML = `
+                    <div class="review-header">
+                        <span class="review-author">${data.name}</span>
+                        <span class="review-date">${dateStr}</span>
+                        <div class="review-rating">
+                            ${stars}
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        <p>${data.content}</p>
+                    </div>
+                `;
+                
+                reviewList.prepend(reviewItem);
+                
+                // Animate in
+                setTimeout(() => {
+                    reviewItem.style.transition = 'var(--transition)';
+                    reviewItem.style.opacity = '1';
+                    reviewItem.style.transform = 'translateY(0)';
+                }, 100);
+            }
+
+            generateStars(rating) {
+                let stars = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= rating) {
+                        stars += '<i class="fas fa-star"></i>';
+                    } else {
+                        stars += '<i class="far fa-star"></i>';
+                    }
+                }
+                return stars;
+            }
+
+            setupImageGallery() {
+                const thumbnails = document.querySelectorAll('.thumbnail');
+                const mainImage = document.getElementById('mainProductImage');
+                const mainImageContainer = document.getElementById('mainImage');
+                
+                // Thumbnail clicks
+                thumbnails.forEach(thumbnail => {
+                    thumbnail.addEventListener('click', () => {
+                        thumbnails.forEach(t => t.classList.remove('active'));
+                        thumbnail.classList.add('active');
+                        
+                        const newImageSrc = thumbnail.getAttribute('data-image');
+                        if (newImageSrc && mainImage) {
+                            this.changeMainImage(mainImage, newImageSrc);
+                        }
+                    });
+                });
+                
+                // Image zoom
+                if (mainImageContainer) {
+                    mainImageContainer.addEventListener('click', () => {
+                        mainImageContainer.classList.toggle('zoomed');
+                    });
+                }
+            }
+
+            changeMainImage(imgElement, newSrc) {
+                imgElement.style.opacity = '0';
+                imgElement.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    imgElement.src = newSrc;
+                    imgElement.style.opacity = '1';
+                    imgElement.style.transform = 'scale(1)';
+                }, 200);
+            }
+
+            setupProgressBar() {
+                window.addEventListener('scroll', () => {
+                    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrolled = (winScroll / height) * 100;
+                    const progressBar = document.getElementById('progressBar');
+                    if (progressBar) {
+                        progressBar.style.width = `${Math.min(scrolled, 100)}%`;
+                    }
+                });
+            }
+
+            setupBackToTop() {
+                const backToTopBtn = document.getElementById('backToTop');
+                if (!backToTopBtn) return;
+
+                window.addEventListener('scroll', () => {
+                    if (window.pageYOffset > 300) {
+                        backToTopBtn.classList.add('visible');
+                    } else {
+                        backToTopBtn.classList.remove('visible');
+                    }
+                });
+
+                backToTopBtn.addEventListener('click', () => {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+            }
+
+            setupLoadMoreReviews() {
+                const loadMoreBtn = document.getElementById('loadMoreReviews');
+                if (!loadMoreBtn) return;
+
+                loadMoreBtn.addEventListener('click', async () => {
+                    await this.loadMoreReviews(loadMoreBtn);
+                });
+            }
+
+            async loadMoreReviews(btn) {
+                const reviewList = document.getElementById('reviewList');
+                
+                // Show loading state
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang tải...</span>';
+                btn.disabled = true;
+                
+                // Simulate API call
+                await this.delay(1000);
+                
+                // Sample reviews data
+                const sampleReviews = [
+                    {
+                        name: 'Phạm Thị D',
+                        date: '05/12/2024',
+                        rating: 4,
+                        content: 'Mimic Octopus rất dễ thương, con vật khỏe mạnh và hoạt bát. Đóng gói cẩn thận, giao hàng nhanh chóng.'
+                    },
+                    {
+                        name: 'Hoàng Văn E',
+                        date: '01/12/2024',
+                        rating: 5,
+                        content: 'Chất lượng tuyệt vời! Shop tư vấn nhiệt tình, hướng dẫn cách chăm sóc rất chi tiết.'
+                    }
+                ];
+                
+                // Add new reviews with animation
+                sampleReviews.forEach((review, index) => {
+                    setTimeout(() => {
+                        const reviewItem = document.createElement('div');
+                        reviewItem.classList.add('review-item');
+                        reviewItem.style.opacity = '0';
+                        reviewItem.style.transform = 'translateY(30px)';
+                        
+                        const stars = this.generateStars(review.rating);
+                        
+                        reviewItem.innerHTML = `
+                            <div class="review-header">
+                                <span class="review-author">${review.name}</span>
+                                <span class="review-date">${review.date}</span>
+                                <div class="review-rating">
+                                    ${stars}
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>${review.content}</p>
+                            </div>
+                        `;
+                        
+                        reviewList.appendChild(reviewItem);
+                        
+                        // Animate in
+                        setTimeout(() => {
+                            reviewItem.style.transition = 'var(--transition)';
+                            reviewItem.style.opacity = '1';
+                            reviewItem.style.transform = 'translateY(0)';
+                        }, 100);
+                    }, index * 200);
+                });
+                
+                // Reset button state
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-plus"></i> <span>Xem thêm đánh giá</span>';
+                    btn.disabled = false;
+                    this.showToast('Đã tải thêm đánh giá', 'success');
+                }, 800);
+            }
+
+            setupRelatedProducts() {
+                const productCards = document.querySelectorAll('.product-card .btn-add-to-cart');
+                const wishlistBtns = document.querySelectorAll('.product-card .btn-wishlist');
+                
+                // Add to cart buttons
+                productCards.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        await this.handleRelatedProductCart(btn);
+                    });
+                });
+                
+                // Wishlist buttons
+                wishlistBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.handleRelatedProductWishlist(btn);
+                    });
+                });
+            }
+
+            async handleRelatedProductCart(btn) {
+                const productCard = btn.closest('.product-card');
+                const productName = productCard.querySelector('.product-title-card').textContent;
+                
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang thêm...</span>';
+                btn.disabled = true;
+                
+                await this.delay(1000);
+                
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>Đã thêm</span>';
+                btn.style.background = 'var(--gradient-primary)';
+                
+                this.showToast(`Đã thêm "${productName}" vào giỏ hàng`, 'success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 2000);
+            }
+
+            handleRelatedProductWishlist(btn) {
+                const icon = btn.querySelector('i');
+                const productCard = btn.closest('.product-card');
+                const productName = productCard.querySelector('.product-title-card').textContent;
+                
+                if (icon.classList.contains('far')) {
+                    icon.classList.replace('far', 'fas');
+                    btn.style.background = 'rgba(229, 57, 53, 0.1)';
+                    btn.style.borderColor = 'var(--accent-color)';
+                    btn.style.color = 'var(--accent-color)';
+                    
+                    this.showToast(`Đã thêm "${productName}" vào yêu thích`, 'success');
+                } else {
+                    icon.classList.replace('fas', 'far');
+                    btn.style.background = '';
+                    btn.style.borderColor = 'var(--secondary-color)';
+                    btn.style.color = 'var(--secondary-color)';
+                    
+                    this.showToast(`Đã xóa "${productName}" khỏi yêu thích`, 'info');
+                }
+            }
+
+            setupSocialSharing() {
+                const shareLinks = document.querySelectorAll('.meta-item a[title*="Chia sẻ"]');
+                shareLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const platform = this.getSocialPlatform(link);
+                        this.showToast(`Đã sao chép link chia sẻ ${platform}`, 'success');
+                    });
+                });
+            }
+
+            getSocialPlatform(link) {
+                const iconClasses = link.querySelector('i').classList;
+                if (iconClasses.contains('fa-facebook')) return 'Facebook';
+                if (iconClasses.contains('fa-twitter')) return 'Twitter';
+                if (iconClasses.contains('fa-pinterest')) return 'Pinterest';
+                return 'Social Media';
+            }
+
+            addEntranceAnimations() {
+                // Add staggered animations to product features
+                const featureItems = document.querySelectorAll('.product-features li');
+                featureItems.forEach((item, index) => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        item.style.transition = 'var(--transition)';
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateX(0)';
+                    }, 300 + (index * 100));
+                });
+
+                // Add animations to related products
+                const productCards = document.querySelectorAll('.product-card');
+                productCards.forEach((card, index) => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(30px)';
+                    setTimeout(() => {
+                        card.style.transition = 'var(--transition)';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 500 + (index * 150));
+                });
+            }
+
+            initializeTooltips() {
+                const tooltipElements = document.querySelectorAll('[title]');
+                tooltipElements.forEach(element => {
+                    element.addEventListener('mouseenter', (e) => {
+                        this.showTooltip(e.target, e.target.getAttribute('title'));
+                    });
+                    
+                    element.addEventListener('mouseleave', () => {
+                        this.hideTooltip();
+                    });
+                });
+            }
+
+            showTooltip(element, text) {
+                // Simple tooltip implementation
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = text;
+                tooltip.style.cssText = `
+                    position: absolute;
+                    background: var(--text-primary);
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    z-index: 1003;
+                    pointer-events: none;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                `;
+                
+                document.body.appendChild(tooltip);
+                
+                const rect = element.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + rect.width/2 - tooltip.offsetWidth/2}px`;
+                tooltip.style.top = `${rect.top - tooltip.offsetHeight - 10}px`;
+                
+                setTimeout(() => tooltip.style.opacity = '1', 10);
+                
+                this.currentTooltip = tooltip;
+            }
+
+            hideTooltip() {
+                if (this.currentTooltip) {
+                    this.currentTooltip.style.opacity = '0';
+                    setTimeout(() => {
+                        if (this.currentTooltip && this.currentTooltip.parentNode) {
+                            this.currentTooltip.parentNode.removeChild(this.currentTooltip);
+                        }
+                        this.currentTooltip = null;
+                    }, 300);
+                }
+            }
+
+            showToast(message, type = 'success') {
+                const toastContainer = this.getOrCreateToastContainer();
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const iconMap = {
+                    success: 'fas fa-check-circle',
+                    error: 'fas fa-exclamation-circle',
+                    info: 'fas fa-info-circle',
+                    warning: 'fas fa-exclamation-triangle'
+                };
+                
+                toast.innerHTML = `
+                    <div class="toast-message">
+                        <i class="${iconMap[type] || iconMap.success}"></i>
+                        <span>${message}</span>
+                    </div>
+                    <button class="toast-close">&times;</button>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Show animation
+                setTimeout(() => toast.classList.add('visible'), 100);
+                
+                // Auto hide
+                const autoHideTimeout = setTimeout(() => {
+                    this.hideToast(toast);
+                }, 4000);
+                
+                // Manual close
+                const closeBtn = toast.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => {
+                    clearTimeout(autoHideTimeout);
+                    this.hideToast(toast);
+                });
+            }
+
+            hideToast(toast) {
+                toast.classList.remove('visible');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }
+
+            getOrCreateToastContainer() {
+                let container = document.getElementById('toastContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        z-index: 1001;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        max-width: 400px;
+                    `;
+                    document.body.appendChild(container);
+                }
+                return container;
+            }
+
+            showWelcomeMessage() {
+                setTimeout(() => {
+                    this.showToast('Chào mừng đến với trang sản phẩm Mimic Octopus! 🦝', 'success');
+                }, 1000);
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new Mimic OctopusProductPage();
+        });
+    </script>
+<script src="main.js"></script>   <!-- Nạp "bộ não" chung trước -->
+</body>
+</html>
+
