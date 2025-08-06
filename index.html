@@ -919,7 +919,9 @@
         }
 
         .post-button.show {
-            display: flex;
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         .floating-button .tooltip {
@@ -1331,12 +1333,27 @@
     <!-- JavaScript -->
     <script>
         // Global Variables
-        let currentUser = { role: 'admin', name: 'Admin', email: 'admin@shop.com' };
+        // currentUser đã được khai báo trong main.js
         let isLoggedIn = true;
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
+            // Set default admin user for testing
+            if (!window.currentUser) {
+                window.currentUser = {
+                    role: 'admin',
+                    name: 'co-owner (chí nghĩa)',
+                    email: 'admin@shop.com'
+                };
+                isLoggedIn = true;
+            }
             initializeApp();
+            
+            // Update UI after scripts load
+            setTimeout(() => {
+                updateAuthUI();
+                checkAndShowPostButton();
+            }, 500);
         });
 
         function initializeApp() {
@@ -1364,17 +1381,16 @@
             const userName = document.getElementById('userName');
             const postButton = document.querySelector('.post-button');
 
-            if (isLoggedIn && currentUser) {
+            if (isLoggedIn && (window.currentUser || currentUser)) {
+                const user = window.currentUser || currentUser;
                 userDropdown.style.display = 'flex';
                 loginButton.style.display = 'none';
                 
-                if (userAvatar) userAvatar.textContent = currentUser.name[0].toUpperCase();
-                if (userName) userName.textContent = currentUser.name;
+                if (userAvatar) userAvatar.textContent = user.name[0].toUpperCase();
+                if (userName) userName.textContent = user.name;
                 
                 // Show post button for admin
-                if (currentUser.role === 'admin' && postButton) {
-                    postButton.classList.add('show');
-                }
+                checkAndShowPostButton();
             } else {
                 userDropdown.style.display = 'none';
                 loginButton.style.display = 'flex';
@@ -1474,12 +1490,24 @@
             submitBtn.classList.add('loading');
             spinner.style.display = 'inline-block';
             
-            // Simulate API call
-            setTimeout(() => {
-                // Mock successful login
-                currentUser = {
+            // Sử dụng AuthManager thật thay vì mock
+            if (window.AuthManager) {
+                window.AuthManager.login(email, password)
+                    .then(result => {
+                        if (result.success) {
+                            updateAuthUI();
+                            hideAuthModal();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Login error:', error);
+                        showToast('Đăng nhập thất bại: ' + error.message, 'error');
+                    });
+            } else {
+                // Fallback mock login với tên đúng
+                window.currentUser = {
                     role: email.includes('admin') ? 'admin' : 'user',
-                    name: email.includes('admin') ? 'Admin User' : 'Regular User',
+                    name: email.includes('admin') ? 'co-owner (chí nghĩa)' : email.split('@')[0],
                     email: email
                 };
                 isLoggedIn = true;
@@ -1487,8 +1515,10 @@
                 updateAuthUI();
                 hideAuthModal();
                 showToast('Đăng nhập thành công!', 'success');
+            }
                 
-                // Reset form
+            // Reset form
+            setTimeout(() => {
                 e.target.reset();
                 submitBtn.classList.remove('loading');
                 spinner.style.display = 'none';
@@ -1520,9 +1550,22 @@
             submitBtn.classList.add('loading');
             spinner.style.display = 'inline-block';
             
-            // Simulate API call
-            setTimeout(() => {
-                currentUser = {
+            // Sử dụng AuthManager thật thay vì mock
+            if (window.AuthManager) {
+                window.AuthManager.register(name, email, password, confirmPassword)
+                    .then(result => {
+                        if (result.success) {
+                            updateAuthUI();
+                            hideAuthModal();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Register error:', error);
+                        showToast('Đăng ký thất bại: ' + error.message, 'error');
+                    });
+            } else {
+                // Fallback mock register
+                window.currentUser = {
                     role: 'user',
                     name: name,
                     email: email
@@ -1532,6 +1575,7 @@
                 updateAuthUI();
                 hideAuthModal();
                 showToast('Đăng ký thành công!', 'success');
+            }
                 
                 // Reset form
                 e.target.reset();
@@ -1541,10 +1585,43 @@
         }
 
         function logout() {
-            currentUser = null;
-            isLoggedIn = false;
-            updateAuthUI();
-            showToast('Đăng xuất thành công!', 'success');
+            if (window.AuthManager) {
+                window.AuthManager.logout();
+            } else {
+                window.currentUser = null;
+                isLoggedIn = false;
+                updateAuthUI();
+                showToast('Đăng xuất thành công!', 'success');
+            }
+        }
+
+        function checkAndShowPostButton() {
+            let postButton = document.querySelector('.post-button');
+            const user = window.currentUser || currentUser;
+            
+            // Tạo nút nếu chưa có
+            if (!postButton && user && user.role === 'admin') {
+                const floatingContainer = document.querySelector('.floating-buttons');
+                if (floatingContainer) {
+                    const newPostButton = document.createElement('button');
+                    newPostButton.className = 'floating-button post-button show';
+                    newPostButton.onclick = () => window.showAddProductModal();
+                    newPostButton.innerHTML = `
+                        <i class="fas fa-plus"></i>
+                        <div class="tooltip">Đăng sản phẩm</div>
+                    `;
+                    floatingContainer.appendChild(newPostButton);
+                    postButton = newPostButton;
+                }
+            }
+            
+            if (postButton && user && user.role === 'admin') {
+                postButton.classList.add('show');
+                postButton.style.display = 'flex';
+                console.log('✅ Post button shown for admin:', user.name);
+            } else {
+                console.log('❌ Post button not shown. User:', user, 'Button exists:', !!postButton);
+            }
         }
 
         // Product Functions
@@ -1578,7 +1655,7 @@
             e.preventDefault();
             e.stopPropagation();
             
-            if (!isLoggedIn || currentUser.role !== 'admin') {
+            if (!isLoggedIn || (window.currentUser || currentUser)?.role !== 'admin') {
                 showToast('Chỉ admin mới có thể xóa sản phẩm!', 'warning');
                 return;
             }
@@ -1677,7 +1754,7 @@
 
         // Post Product Functions
         function showPostModal() {
-            if (!isLoggedIn || currentUser.role !== 'admin') {
+            if (!isLoggedIn || (window.currentUser || currentUser)?.role !== 'admin') {
                 showToast('Chỉ admin mới có thể đăng sản phẩm!', 'warning');
                 return;
             }
