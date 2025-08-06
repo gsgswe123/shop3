@@ -1330,8 +1330,20 @@ class MainApp {
 
     static exposeGlobalFunctions() {
         // Expose necessary functions for account.html and other pages
-        window.currentUser = currentUser;
-        window.userBalance = userBalance;
+        // Use getter/setter for dynamic updates
+        Object.defineProperty(window, 'currentUser', {
+            get: () => currentUser,
+            set: (value) => { currentUser = value; },
+            enumerable: true,
+            configurable: true
+        });
+        
+        Object.defineProperty(window, 'userBalance', {
+            get: () => userBalance,
+            set: (value) => { userBalance = value; },
+            enumerable: true,
+            configurable: true
+        });
         window.Utils = Utils;
         window.ApiManager = ApiManager;
         window.AuthManager = AuthManager;
@@ -1436,4 +1448,13 @@ FloatingButtonsManager.createPostButton = function() {
         }
     };
     container.appendChild(postBtn);
-}; 
+};
+
+// =================================================================
+// IMMEDIATE INITIALIZATION
+// =================================================================
+
+// Expose global functions immediately
+MainApp.exposeGlobalFunctions();
+
+console.log('📦 Main.js loaded and globals exposed'); 

@@ -1266,8 +1266,11 @@
                 <div class="form-group">
                     <label for="loginPassword"><i class="fas fa-lock"></i> Mật khẩu</label>
                     <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" required>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px; padding: 8px; background: #f8fafc; border-radius: 6px;">
-                        💡 <strong>Admin test:</strong> chinhan20917976549a@gmail.com / admin123456
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px; padding: 8px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                        💡 <strong>Admin Test Account:</strong><br>
+                        📧 Email: <code style="background: #e5e7eb; padding: 2px 4px; border-radius: 3px;">chinhan20917976549a@gmail.com</code><br>
+                        🔐 Password: <code style="background: #e5e7eb; padding: 2px 4px; border-radius: 3px;">admin123456</code><br>
+                        👑 Role: Co-owner (Chí Nghĩa) - Admin
                     </div>
                 </div>
                 <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
@@ -1333,45 +1336,71 @@
 
     <!-- JavaScript -->
     <script>
-        // Global Variables
-        // currentUser sẽ được khởi tạo từ main.js
-        let isLoggedIn = true;
-
-        // Initialize App
+        // =================================================================
+        // GLOBAL VARIABLES - CLEAN SETUP
+        // =================================================================
+        let isLoggedIn = false;
+        
+        // =================================================================
+        // APP INITIALIZATION - CLEAN & PROPER
+        // =================================================================
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            
-            // Kiểm tra auth status từ backend thay vì tạo fake user
-            setTimeout(() => {
-                checkAuthStatus();
-            }, 500);
-        });
-
-        function initializeApp() {
             console.log('🚀 Initializing Shop Grow A Garden...');
             
-            // Reset trạng thái đăng nhập
-            window.currentUser = null;
-            isLoggedIn = false;
+            // Wait for main.js to load completely
+            waitForDependencies().then(() => {
+                initializeApp();
+            });
+        });
+
+        async function waitForDependencies() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max
+                
+                const checkDependencies = () => {
+                    attempts++;
+                    
+                    if (window.AuthManager && window.Utils && window.PermissionManager) {
+                        console.log('✅ All dependencies loaded');
+                        resolve();
+                    } else if (attempts < maxAttempts) {
+                        setTimeout(checkDependencies, 100);
+                    } else {
+                        console.warn('⚠️ Some dependencies not loaded, proceeding anyway');
+                        resolve();
+                    }
+                };
+                
+                checkDependencies();
+            });
+        }
+
+        function initializeApp() {
+            // 1. Reset state completely
+            resetAppState();
             
-            // Update UI based on login status
-            updateAuthUI();
-            
-            // Setup event listeners
+            // 2. Setup UI components
             setupEventListeners();
-            
-            // Setup product interactions
             setupProductInteractions();
-            
-            // Setup filter functionality
             setupFilters();
-            
-            // Setup post button
             setupPostButton();
+            
+            // 3. Check authentication
+            checkAuthStatus();
             
             console.log('✅ App initialized successfully');
         }
 
+        function resetAppState() {
+            window.currentUser = null;
+            isLoggedIn = false;
+            updateAuthUI();
+        }
+
+        // =================================================================
+        // UI UPDATE FUNCTIONS - CLEAN & PROPER
+        // =================================================================
         function updateAuthUI() {
             const userDropdown = document.getElementById('userDropdown');
             const loginButton = document.getElementById('loginButton');
@@ -1380,21 +1409,48 @@
             const postButton = document.querySelector('.post-button');
 
             if (isLoggedIn && window.currentUser) {
+                // User is logged in - show user info
                 const user = window.currentUser;
-                userDropdown.style.display = 'flex';
-                loginButton.style.display = 'none';
                 
-                if (userAvatar) userAvatar.textContent = user.name[0].toUpperCase();
-                if (userName) userName.textContent = user.name;
+                if (userDropdown) userDropdown.style.display = 'flex';
+                if (loginButton) loginButton.style.display = 'none';
+                
+                if (userAvatar && user.name) {
+                    userAvatar.textContent = user.name.charAt(0).toUpperCase();
+                }
+                if (userName && user.name) {
+                    userName.textContent = user.name;
+                }
+                
+                // Show/hide post button based on role
+                updatePostButton();
                 
                 console.log('✅ UI updated for user:', user.name, 'Role:', user.role);
-                
-                // Show post button for admin
-                checkAndShowPostButton();
             } else {
-                userDropdown.style.display = 'none';
-                loginButton.style.display = 'flex';
-                if (postButton) postButton.classList.remove('show');
+                // User not logged in - show login button
+                if (userDropdown) userDropdown.style.display = 'none';
+                if (loginButton) loginButton.style.display = 'flex';
+                if (postButton) {
+                    postButton.classList.remove('show');
+                    postButton.style.display = 'none';
+                }
+                
+                console.log('ℹ️ UI updated for guest user');
+            }
+        }
+
+        function updatePostButton() {
+            const postButton = document.querySelector('.post-button');
+            const user = window.currentUser;
+            
+            if (postButton && user && (user.role === 'admin' || user.role === 'moderator')) {
+                postButton.classList.add('show');
+                postButton.style.display = 'flex';
+                console.log('✅ Post button shown for:', user.role);
+            } else if (postButton) {
+                postButton.classList.remove('show');
+                postButton.style.display = 'none';
+                console.log('❌ Post button hidden');
             }
         }
 
@@ -1472,125 +1528,144 @@
             }
         }
 
-        function handleLogin(e) {
+        // =================================================================
+        // AUTH FORM HANDLERS - CLEAN & PROPER
+        // =================================================================
+        async function handleLogin(e) {
             e.preventDefault();
+            console.log('🔐 Processing login...');
             
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+            const email = document.getElementById('loginEmail')?.value?.trim();
+            const password = document.getElementById('loginPassword')?.value;
             
+            // Validation
             if (!email || !password) {
                 showToast('Vui lòng nhập đầy đủ thông tin!', 'warning');
                 return;
             }
-
+            
+            // UI Loading state
             const submitBtn = e.target.querySelector('.btn-submit');
-            const spinner = submitBtn.querySelector('.spinner');
+            const spinner = submitBtn?.querySelector('.spinner');
             
-            // Show loading
-            submitBtn.classList.add('loading');
-            spinner.style.display = 'inline-block';
+            setLoadingState(submitBtn, spinner, true);
             
-            // Sử dụng backend thật
-            if (window.AuthManager) {
-                window.AuthManager.login(email, password)
-                    .then(result => {
-                        if (result.success) {
-                            // Refresh auth status after successful login
-                            setTimeout(() => {
-                                checkAuthStatus();
-                            }, 500);
-                            hideAuthModal();
-                            e.target.reset();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Login error:', error);
-                        showToast('Đăng nhập thất bại: ' + error.message, 'error');
-                    })
-                    .finally(() => {
-                        submitBtn.classList.remove('loading');
-                        spinner.style.display = 'none';
-                    });
-            } else {
-                submitBtn.classList.remove('loading');
-                spinner.style.display = 'none';
-                showToast('Hệ thống đăng nhập chưa sẵn sàng. Vui lòng thử lại!', 'error');
+            try {
+                if (!window.AuthManager) {
+                    throw new Error('Hệ thống đăng nhập chưa sẵn sàng');
+                }
+                
+                const result = await window.AuthManager.login(email, password);
+                
+                if (result.success) {
+                    console.log('✅ Login successful');
+                    e.target.reset();
+                    hideAuthModal();
+                    
+                    // Refresh auth status
+                    await checkAuthStatus();
+                } else {
+                    throw new Error(result.error || 'Đăng nhập thất bại');
+                }
+                
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                showToast(error.message || 'Đăng nhập thất bại', 'error');
+            } finally {
+                setLoadingState(submitBtn, spinner, false);
             }
         }
 
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
+            console.log('📝 Processing registration...');
             
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const name = document.getElementById('registerName')?.value?.trim();
+            const email = document.getElementById('registerEmail')?.value?.trim();
+            const password = document.getElementById('registerPassword')?.value;
+            const confirmPassword = document.getElementById('registerConfirmPassword')?.value;
             
+            // Validation
             if (!name || !email || !password || !confirmPassword) {
                 showToast('Vui lòng nhập đầy đủ thông tin!', 'warning');
                 return;
             }
-
+            
             if (password !== confirmPassword) {
                 showToast('Mật khẩu nhập lại không khớp!', 'error');
                 return;
             }
-
+            
+            // UI Loading state
             const submitBtn = e.target.querySelector('.btn-submit');
-            const spinner = submitBtn.querySelector('.spinner');
+            const spinner = submitBtn?.querySelector('.spinner');
             
-            // Show loading
-            submitBtn.classList.add('loading');
-            spinner.style.display = 'inline-block';
+            setLoadingState(submitBtn, spinner, true);
             
-            // Sử dụng backend thật
-            if (window.AuthManager) {
-                window.AuthManager.register(name, email, password, confirmPassword)
-                    .then(result => {
-                        if (result.success) {
-                            // Refresh auth status after successful register
-                            setTimeout(() => {
-                                checkAuthStatus();
-                            }, 500);
-                            hideAuthModal();
-                            e.target.reset();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Register error:', error);
-                        showToast('Đăng ký thất bại: ' + error.message, 'error');
-                    })
-                    .finally(() => {
-                        submitBtn.classList.remove('loading');
-                        spinner.style.display = 'none';
-                    });
-            } else {
-                submitBtn.classList.remove('loading');
-                spinner.style.display = 'none';
-                showToast('Hệ thống đăng ký chưa sẵn sàng. Vui lòng thử lại!', 'error');
+            try {
+                if (!window.AuthManager) {
+                    throw new Error('Hệ thống đăng ký chưa sẵn sàng');
+                }
+                
+                const result = await window.AuthManager.register(name, email, password, confirmPassword);
+                
+                if (result.success) {
+                    console.log('✅ Registration successful');
+                    e.target.reset();
+                    hideAuthModal();
+                    
+                    // Refresh auth status
+                    await checkAuthStatus();
+                } else {
+                    throw new Error(result.error || 'Đăng ký thất bại');
+                }
+                
+            } catch (error) {
+                console.error('❌ Registration error:', error);
+                showToast(error.message || 'Đăng ký thất bại', 'error');
+            } finally {
+                setLoadingState(submitBtn, spinner, false);
             }
         }
 
-        function logout() {
-            if (window.AuthManager) {
-                window.AuthManager.logout()
-                    .then(() => {
-                        window.currentUser = null;
-                        isLoggedIn = false;
-                        updateAuthUI();
-                    })
-                    .catch(error => {
-                        console.error('Logout error:', error);
-                        // Vẫn logout local nếu có lỗi
-                        window.currentUser = null;
-                        isLoggedIn = false;
-                        updateAuthUI();
-                        showToast('Đăng xuất thành công!', 'success');
-                    });
+        // =================================================================
+        // HELPER FUNCTIONS - CLEAN & PROPER
+        // =================================================================
+        function setLoadingState(button, spinner, isLoading) {
+            if (!button) return;
+            
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                if (spinner) spinner.style.display = 'inline-block';
             } else {
-                window.currentUser = null;
-                isLoggedIn = false;
-                updateAuthUI();
+                button.classList.remove('loading');
+                button.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+            }
+        }
+
+        async function logout() {
+            console.log('🚪 Processing logout...');
+            
+            try {
+                if (window.AuthManager && typeof window.AuthManager.logout === 'function') {
+                    await window.AuthManager.logout();
+                } else {
+                    // Manual cleanup if AuthManager not available
+                    localStorage.removeItem('gag_token');
+                    localStorage.removeItem('gag_user');
+                    localStorage.removeItem('gag_balance');
+                }
+                
+                // Always clear local state
+                setUnauthenticatedState();
+                showToast('Đăng xuất thành công!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Logout error:', error);
+                // Force local logout even if server call fails
+                setUnauthenticatedState();
                 showToast('Đăng xuất thành công!', 'success');
             }
         }
@@ -1897,96 +1972,104 @@
         `;
         document.head.appendChild(style);
 
-        // Setup Post Button Function
         function setupPostButton() {
             const postButton = document.getElementById('postProductBtn');
             if (postButton) {
-                postButton.addEventListener('click', function() {
-                    console.log('🎯 Post button clicked');
-                    const user = window.currentUser;
-                    
-                    if (!user) {
-                        showToast('Vui lòng đăng nhập để đăng sản phẩm!', 'warning');
-                        return;
-                    }
-                    
-                    if (user.role !== 'admin' && user.role !== 'moderator') {
-                        showToast('Bạn không có quyền đăng sản phẩm!', 'error');
-                        return;
-                    }
-                    
-                    if (window.showAddProductModal) {
-                        window.showAddProductModal();
-                    } else if (window.ProductModal) {
-                        window.ProductModal.show();
-                    } else {
-                        console.error('❌ No post modal function available');
-                        showToast('Tính năng đăng sản phẩm chưa sẵn sàng!', 'error');
-                    }
-                });
+                postButton.addEventListener('click', handlePostButtonClick);
                 console.log('✅ Post button event listener attached');
             }
         }
 
-        function checkAndShowPostButton() {
-            const postButton = document.querySelector('.post-button');
-            const user = window.currentUser;
+        function handlePostButtonClick() {
+            console.log('🎯 Post button clicked');
             
-            if (postButton && user && user.role === 'admin') {
-                postButton.classList.add('show');
-                postButton.style.display = 'flex';
-                console.log('✅ Post button shown for admin:', user.name);
+            if (!window.currentUser) {
+                showToast('Vui lòng đăng nhập để đăng sản phẩm!', 'warning');
+                showAuthModal();
+                return;
+            }
+            
+            if (window.currentUser.role !== 'admin' && window.currentUser.role !== 'moderator') {
+                showToast('Bạn không có quyền đăng sản phẩm!', 'error');
+                return;
+            }
+            
+            // Try different modal functions
+            if (window.showAddProductModal && typeof window.showAddProductModal === 'function') {
+                window.showAddProductModal();
+            } else if (window.ProductModal && typeof window.ProductModal.show === 'function') {
+                window.ProductModal.show();
             } else {
-                if (postButton) postButton.style.display = 'none';
-                console.log('❌ Post button hidden. User role:', user?.role);
+                console.error('❌ No post modal function available');
+                showToast('Tính năng đăng sản phẩm chưa sẵn sàng!', 'error');
             }
         }
 
-        // Kiểm tra trạng thái đăng nhập từ backend
+        // Function được gọi từ old code - redirect to new function
+        function checkAndShowPostButton() {
+            updatePostButton();
+        }
+
+        // =================================================================
+        // AUTHENTICATION FUNCTIONS - CLEAN & PROPER
+        // =================================================================
         async function checkAuthStatus() {
+            console.log('🔍 Checking authentication status...');
+            
             try {
-                console.log('🔍 Checking auth status...');
-                
-                if (window.AuthManager && window.AuthManager.checkCurrentAuth) {
+                // Method 1: Use AuthManager if available
+                if (window.AuthManager && typeof window.AuthManager.checkCurrentAuth === 'function') {
                     const isAuthenticated = await window.AuthManager.checkCurrentAuth();
-                    if (isAuthenticated) {
+                    if (isAuthenticated && window.currentUser) {
+                        isLoggedIn = true;
                         updateAuthUI();
-                        checkAndShowPostButton();
+                        console.log('✅ Authenticated via AuthManager:', window.currentUser.name);
                         return;
                     }
                 }
                 
-                // Fallback: check với API trực tiếp
-                const response = await fetch('https://shop-4mlk.onrender.com/api/v1/users/me', {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('gag_token') || ''}`
+                // Method 2: Direct API check
+                const token = localStorage.getItem('gag_token');
+                if (token) {
+                    const response = await fetch('https://shop-4mlk.onrender.com/api/v1/users/me', {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status === 'success' && data.data.user) {
+                            window.currentUser = data.data.user;
+                            isLoggedIn = true;
+                            updateAuthUI();
+                            console.log('✅ Authenticated via API:', window.currentUser.name, 'Role:', window.currentUser.role);
+                            return;
+                        }
+                    } else if (response.status === 401) {
+                        // Token expired or invalid
+                        localStorage.removeItem('gag_token');
+                        localStorage.removeItem('gag_user');
                     }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success' && data.data.user) {
-                        window.currentUser = data.data.user;
-                        isLoggedIn = true;
-                        console.log('✅ User authenticated:', window.currentUser);
-                        updateAuthUI();
-                        checkAndShowPostButton();
-                    }
-                } else {
-                    console.log('ℹ️ User not authenticated');
-                    window.currentUser = null;
-                    isLoggedIn = false;
-                    updateAuthUI();
                 }
+                
+                // No valid authentication found
+                setUnauthenticatedState();
+                
             } catch (error) {
-                console.log('ℹ️ Auth check failed:', error.message);
-                window.currentUser = null;
-                isLoggedIn = false;
-                updateAuthUI();
+                console.error('❌ Auth check error:', error);
+                setUnauthenticatedState();
             }
+        }
+
+        function setUnauthenticatedState() {
+            window.currentUser = null;
+            isLoggedIn = false;
+            updateAuthUI();
+            console.log('ℹ️ User not authenticated');
         }
     </script>
     
