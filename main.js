@@ -1309,6 +1309,7 @@ class MainApp {
         window.Utils = Utils;
         window.ApiManager = ApiManager;
         window.AuthManager = AuthManager;
+        window.PermissionManager = PermissionManager;
         window.ProductManager = ProductManager;
         window.CartManager = CartManager;
         window.FavoritesManager = FavoritesManager;
@@ -1354,92 +1355,25 @@ window.MainApp = MainApp;
 
 console.log('📦 Main.js loaded successfully'); 
 
-// Modal Đăng Sản Phẩm
+// Modal Đăng Sản Phẩm - Sử dụng ProductModal từ script.js
 window.showAddProductModal = function() {
-    const modal = document.getElementById('addProductModal');
-    if (modal) modal.classList.add('show');
-};
-window.hideAddProductModal = function() {
-    const modal = document.getElementById('addProductModal');
-    if (modal) modal.classList.remove('show');
+    console.log('🎯 showAddProductModal called');
+    if (window.ProductModal) {
+        window.ProductModal.show();
+    } else {
+        console.error('❌ ProductModal không khả dụng!');
+        window.Utils?.showToast('Lỗi: Không thể mở modal đăng sản phẩm!', 'error');
+    }
 };
 
-(function initAddProductModal() {
-    const form = document.getElementById('addProductForm');
-    if (!form) return;
-    // Char count
-    const titleInput = document.getElementById('productTitle');
-    const descInput = document.getElementById('productDescription');
-    const titleCount = document.getElementById('titleCharCount');
-    const descCount = document.getElementById('descCharCount');
-    if (titleInput && titleCount) {
-        titleInput.addEventListener('input', () => {
-            titleCount.textContent = `${titleInput.value.length}/100 ký tự`;
-        });
+window.hideAddProductModal = function() {
+    console.log('🎯 hideAddProductModal called');
+    if (window.ProductModal) {
+        window.ProductModal.hide();
     }
-    if (descInput && descCount) {
-        descInput.addEventListener('input', () => {
-            descCount.textContent = `${descInput.value.length}/500 ký tự`;
-        });
-    }
-    // Image preview
-    const imageInput = document.getElementById('productImage');
-    const imagePreview = document.getElementById('imagePreview');
-    if (imageInput && imagePreview) {
-        imageInput.addEventListener('change', () => {
-            imagePreview.innerHTML = '';
-            const file = imageInput.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                imagePreview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:180px;border-radius:8px;">`;
-            }
-        });
-    }
-    // Submit
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = document.getElementById('submitAddProductBtn');
-        const resetLoading = window.Utils && Utils.showLoading ? Utils.showLoading(submitBtn, 'Đang đăng...') : () => {};
-        try {
-            // Validate
-            const title = titleInput.value.trim();
-            const description = descInput.value.trim();
-            const price = parseInt(document.getElementById('productPrice').value, 10);
-            const note = document.getElementById('productNote').value.trim();
-            let imageUrl = '';
-            if (!title || title.length < 5) throw new Error('Tên sản phẩm phải từ 5 ký tự');
-            if (!description || description.length < 10) throw new Error('Mô tả phải từ 10 ký tự');
-            if (!price || price < 1000) throw new Error('Giá sản phẩm không hợp lệ');
-            // Upload ảnh nếu có
-            const file = imageInput.files[0];
-            if (file) {
-                if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) throw new Error('Chỉ chấp nhận ảnh JPG, PNG, WEBP');
-                if (file.size > 5*1024*1024) throw new Error('Ảnh tối đa 5MB');
-                imageUrl = await uploadImageToImgbb(file);
-            }
-            // Gọi API tạo sản phẩm
-            const productData = { title, description, price, image: imageUrl, note };
-            const res = await window.ProductManager.createProduct(productData);
-            window.hideAddProductModal();
-            form.reset();
-            if (imagePreview) imagePreview.innerHTML = '';
-            if (window.ProductManager && ProductManager.loadProducts) {
-                await ProductManager.loadProducts();
-                // Render lại sản phẩm nếu có grid
-                const grid = document.getElementById('productsGrid');
-                if (grid) ProductManager.renderProductsBasic(window.allProducts, grid);
-            }
-        } catch (err) {
-            if (window.Utils && Utils.showToast) Utils.showToast(err.message || 'Đăng sản phẩm thất bại', 'error');
-        } finally {
-            resetLoading();
-        }
-    });
-    // Đóng modal khi bấm nền tối
-    document.getElementById('addProductModal').addEventListener('click', function(e) {
-        if (e.target === this) window.hideAddProductModal();
-    });
-})();
+};
+
+// Khởi tạo ProductModal được xử lý trong script.js
 
 // Hàm upload ảnh lên imgbb miễn phí (hoặc có thể thay bằng API backend nếu có)
 async function uploadImageToImgbb(file) {
@@ -1466,8 +1400,13 @@ FloatingButtonsManager.createPostButton = function() {
         <div class="tooltip">Đăng sản phẩm</div>
     `;
     postBtn.onclick = () => {
-        if (PermissionManager.checkPostPermission()) {
+        console.log('🎯 Post button clicked');
+        if (window.PermissionManager && window.PermissionManager.checkPostPermission()) {
             window.showAddProductModal();
+        } else if (!window.currentUser) {
+            window.Utils?.showToast('Vui lòng đăng nhập để đăng sản phẩm!', 'warning');
+        } else {
+            window.Utils?.showToast('Bạn không có quyền đăng sản phẩm!', 'error');
         }
     };
     container.appendChild(postBtn);
