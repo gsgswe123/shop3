@@ -539,6 +539,32 @@ class AuthManager {
         }, 1000);
     }
 
+    static async checkCurrentAuth() {
+        try {
+            const token = ApiManager.getToken();
+            if (!token) return false;
+
+            const userData = await ApiManager.getUserProfile();
+            if (userData && userData.data && userData.data.user) {
+                currentUser = userData.data.user;
+                
+                // Load user balance
+                await this.loadUserBalance();
+                
+                console.log('✅ Auth check successful:', currentUser.name, 'Role:', currentUser.role);
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            // Clear invalid token
+            ApiManager.clearAuthData();
+            currentUser = null;
+            return false;
+        }
+    }
+
     static async checkAutoLogin() {
         try {
             const token = ApiManager.getToken();
