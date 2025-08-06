@@ -1145,12 +1145,12 @@
                 <div class="user-avatar" id="userAvatar">A</div>
                 <span class="user-name" id="userName">Admin</span>
                 <div class="dropdown-menu">
-                    <a href="#" class="dropdown-item"><i class="fas fa-user-circle"></i><span>Tài khoản</span></a>
-                    <a href="#" class="dropdown-item">
+                    <a href="account.html" class="dropdown-item"><i class="fas fa-user-circle"></i><span>Tài khoản</span></a>
+                    <a href="cart.html" class="dropdown-item">
                         <i class="fas fa-shopping-cart"></i><span>Giỏ hàng</span>
                         <span class="badge cart-count" style="display: none;">0</span>
                     </a>
-                    <a href="#" class="dropdown-item"><i class="fas fa-heart"></i><span>Yêu thích</span></a>
+                    <a href="favorite.html" class="dropdown-item"><i class="fas fa-heart"></i><span>Yêu thích</span></a>
                     <div class="dropdown-divider"></div>
                     <button class="logout-btn dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span></button>
                 </div>
@@ -1319,7 +1319,7 @@
             <i class="fab fa-facebook-messenger"></i>
             <div class="tooltip">Chat với chúng tôi</div>
         </a>
-        <button class="floating-button post-button show" onclick="window.showAddProductModal()">
+                        <button class="floating-button post-button show" id="postProductBtn">
             <i class="fas fa-plus"></i>
             <div class="tooltip">Đăng sản phẩm</div>
         </button>
@@ -1331,16 +1331,41 @@
     <!-- JavaScript -->
     <script>
         // Global Variables
-        let currentUser = { role: 'admin', name: 'Admin', email: 'admin@shop.com' };
+        // currentUser sẽ được khởi tạo từ main.js
         let isLoggedIn = true;
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
+            
+            // Đợi main.js load xong rồi mới set user
+            setTimeout(() => {
+                if (!window.currentUser) {
+                    window.currentUser = {
+                        role: 'admin',
+                        name: 'co-owner (chí nghĩa)',
+                        email: 'admin@shop.com'
+                    };
+                    isLoggedIn = true;
+                    updateAuthUI();
+                    checkAndShowPostButton();
+                }
+            }, 1000);
         });
 
         function initializeApp() {
             console.log('🚀 Initializing Shop Grow A Garden...');
+            
+            // Đảm bảo có user mặc định
+            if (!window.currentUser) {
+                window.currentUser = {
+                    role: 'admin',
+                    name: 'co-owner (chí nghĩa)',
+                    email: 'admin@shop.com'
+                };
+                isLoggedIn = true;
+                console.log('✅ Default admin user created:', window.currentUser);
+            }
             
             // Update UI based on login status
             updateAuthUI();
@@ -1354,6 +1379,9 @@
             // Setup filter functionality
             setupFilters();
             
+            // Setup post button
+            setupPostButton();
+            
             console.log('✅ App initialized successfully');
         }
 
@@ -1364,17 +1392,18 @@
             const userName = document.getElementById('userName');
             const postButton = document.querySelector('.post-button');
 
-            if (isLoggedIn && currentUser) {
+            if (isLoggedIn && window.currentUser) {
+                const user = window.currentUser;
                 userDropdown.style.display = 'flex';
                 loginButton.style.display = 'none';
                 
-                if (userAvatar) userAvatar.textContent = currentUser.name[0].toUpperCase();
-                if (userName) userName.textContent = currentUser.name;
+                if (userAvatar) userAvatar.textContent = user.name[0].toUpperCase();
+                if (userName) userName.textContent = user.name;
+                
+                console.log('✅ UI updated for user:', user.name, 'Role:', user.role);
                 
                 // Show post button for admin
-                if (currentUser.role === 'admin' && postButton) {
-                    postButton.classList.add('show');
-                }
+                checkAndShowPostButton();
             } else {
                 userDropdown.style.display = 'none';
                 loginButton.style.display = 'flex';
@@ -1848,6 +1877,51 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Setup Post Button Function
+        function setupPostButton() {
+            const postButton = document.getElementById('postProductBtn');
+            if (postButton) {
+                postButton.addEventListener('click', function() {
+                    console.log('🎯 Post button clicked');
+                    const user = window.currentUser;
+                    
+                    if (!user) {
+                        showToast('Vui lòng đăng nhập để đăng sản phẩm!', 'warning');
+                        return;
+                    }
+                    
+                    if (user.role !== 'admin' && user.role !== 'moderator') {
+                        showToast('Bạn không có quyền đăng sản phẩm!', 'error');
+                        return;
+                    }
+                    
+                    if (window.showAddProductModal) {
+                        window.showAddProductModal();
+                    } else if (window.ProductModal) {
+                        window.ProductModal.show();
+                    } else {
+                        console.error('❌ No post modal function available');
+                        showToast('Tính năng đăng sản phẩm chưa sẵn sàng!', 'error');
+                    }
+                });
+                console.log('✅ Post button event listener attached');
+            }
+        }
+
+        function checkAndShowPostButton() {
+            const postButton = document.querySelector('.post-button');
+            const user = window.currentUser;
+            
+            if (postButton && user && user.role === 'admin') {
+                postButton.classList.add('show');
+                postButton.style.display = 'flex';
+                console.log('✅ Post button shown for admin:', user.name);
+            } else {
+                if (postButton) postButton.style.display = 'none';
+                console.log('❌ Post button hidden. User role:', user?.role);
+            }
+        }
     </script>
     
     <!-- Load external scripts -->
