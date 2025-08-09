@@ -1142,22 +1142,22 @@
 
             <!-- User Dropdown (Hidden by default) -->
             <div class="user-dropdown" id="userDropdown" style="display: none;">
-                <div class="user-avatar" id="userAvatar">A</div>
-                <span class="user-name" id="userName">Admin</span>
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span class="user-name" id="userName">User</span>
                 <div class="dropdown-menu">
-                    <a href="#" class="dropdown-item"><i class="fas fa-user-circle"></i><span>Tài khoản</span></a>
-                    <a href="#" class="dropdown-item">
+                    <a href="account.html" class="dropdown-item"><i class="fas fa-user-circle"></i><span>Tài khoản</span></a>
+                    <a href="cart.html" class="dropdown-item">
                         <i class="fas fa-shopping-cart"></i><span>Giỏ hàng</span>
                         <span class="badge cart-count" style="display: none;">0</span>
                     </a>
-                    <a href="#" class="dropdown-item"><i class="fas fa-heart"></i><span>Yêu thích</span></a>
+                    <a href="favorite.html" class="dropdown-item"><i class="fas fa-heart"></i><span>Yêu thích</span></a>
                     <div class="dropdown-divider"></div>
                     <button class="logout-btn dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span></button>
                 </div>
             </div>
 
             <!-- Login Button -->
-            <button class="btn btn-primary" id="loginButton" onclick="showAuthModal()">
+            <button class="btn btn-primary" id="loginButton">
                 <i class="fas fa-user"></i><span>Đăng Nhập</span>
             </button>
         </div>
@@ -1331,11 +1331,38 @@
     <!-- JavaScript -->
     <script>
         // Global Variables
-        let currentUser = { role: 'admin', name: 'Admin', email: 'admin@shop.com' };
-        let isLoggedIn = true;
+        let currentUser = null;
+        let isLoggedIn = false;
+
+        function loadUserFromStorage() {
+            try {
+                const raw = localStorage.getItem('gag_user');
+                if (!raw) return;
+                const user = JSON.parse(raw);
+                if (user && user.email) {
+                    currentUser = user;
+                    isLoggedIn = true;
+                    window.currentUser = user;
+                }
+            } catch (_) {}
+        }
+
+        function saveUserToStorage(user) {
+            try {
+                localStorage.setItem('gag_user', JSON.stringify(user));
+                window.currentUser = user;
+            } catch (_) {}
+        }
+
+        function clearUserStorage() {
+            try {
+                localStorage.removeItem('gag_user');
+            } catch (_) {}
+        }
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
+            loadUserFromStorage(); // Load user if previously logged in
             initializeApp();
         });
 
@@ -1368,8 +1395,8 @@
                 userDropdown.style.display = 'flex';
                 loginButton.style.display = 'none';
                 
-                if (userAvatar) userAvatar.textContent = currentUser.name[0].toUpperCase();
-                if (userName) userName.textContent = currentUser.name;
+                if (userAvatar && currentUser.name) userAvatar.textContent = currentUser.name[0].toUpperCase();
+                if (userName) userName.textContent = currentUser.name || 'User';
                 
                 // Show post button for admin
                 if (currentUser.role === 'admin' && postButton) {
@@ -1380,6 +1407,8 @@
                 loginButton.style.display = 'flex';
                 if (postButton) postButton.classList.remove('show');
             }
+            // Sync global for other scripts
+            window.currentUser = currentUser;
         }
 
         function setupEventListeners() {
@@ -1479,10 +1508,11 @@
                 // Mock successful login
                 currentUser = {
                     role: email.includes('admin') ? 'admin' : 'user',
-                    name: email.includes('admin') ? 'Admin User' : 'Regular User',
+                    name: name || (email.split('@')[0] || 'User'),
                     email: email
                 };
                 isLoggedIn = true;
+                saveUserToStorage(currentUser);
                 
                 updateAuthUI();
                 hideAuthModal();
@@ -1528,6 +1558,7 @@
                     email: email
                 };
                 isLoggedIn = true;
+                saveUserToStorage(currentUser);
                 
                 updateAuthUI();
                 hideAuthModal();
@@ -1543,6 +1574,8 @@
         function logout() {
             currentUser = null;
             isLoggedIn = false;
+            clearUserStorage();
+            window.currentUser = null;
             updateAuthUI();
             showToast('Đăng xuất thành công!', 'success');
         }
@@ -1849,5 +1882,7 @@
         `;
         document.head.appendChild(style);
     </script>
-</body>
-</html>
+        <script src="main.js"></script>
+    <script src="devtools-protection.js"></script>
+ </body>
+ </html>
