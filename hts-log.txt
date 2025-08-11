@@ -1,0 +1,19 @@
+HTTrack3.49-2+htsswf+htsjava launched on Sun, 10 Aug 2025 13:55:04 at https://shopgrowgarden.com/ +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar
+(winhttrack -qwC2%Ps2u1%s%uN0%I0p3DaK0H0%kf2A25000%f#f -F "Mozilla/4.5 (compatible; HTTrack 3.0x; Windows 98)" -%F "<!-- Mirrored from %s%s by HTTrack Website Copier/3.x [XR&CO'2014], %s -->" -%l "en, *" https://shopgrowgarden.com/ -O1 "C:\Users\Asus\Desktop\shop 3\shop" +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+13:57:23	Warning: 	Retry after error -4 (Connect Error) at link https://i.ibb.co/L4r5D0S/5b33fa47bc98ea6da11d21885a25de37-png.png (from https://shopgrowgarden.com/)
+13:57:31	Warning: 	Retry after error -4 (Connect Error) at link https://i.ibb.co/NgJYZj42/3629aedd6c29f0d8ebdecd5f6e9a8095-jpg.jpg (from https://shopgrowgarden.com/)
+13:57:31	Warning: 	Retry after error -4 (Connect Error) at link https://i.ibb.co/QvbCRdmC/4f619c4bf4e2715439ba1aaab0dbe9d5-jpg.jpg (from https://shopgrowgarden.com/)
+13:57:53	Warning: 	Retry after error -4 (Connect Error) at link https://i.ibb.co/qYHJ0Mhb/299065bc39fec276d885f0a0484f8380-jpg.jpg (from https://shopgrowgarden.com/)
+13:57:54	Error: 	"Not Found" (404) at link https://shopgrowgarden.com/IMG_3478.png (from https://shopgrowgarden.com/assets/css/styles.css?=126)
+13:57:54	Error: 	"Not Found" (404) at link https://shopgrowgarden.com/themes/fonts/element-icons.313f7da.woff (from https://shopgrowgarden.com/assets/css/modal.css?=157)
+13:57:54	Error: 	"Not Found" (404) at link https://shopgrowgarden.com/themes/fonts/element-icons.4520188.ttf (from https://shopgrowgarden.com/assets/css/modal.css?=157)
+13:57:57	Warning: 	Retry after error -4 (Connect Error) at link https://i.ibb.co/QvbCRdmC/4f619c4bf4e2715439ba1aaab0dbe9d5-jpg.jpg (from https://shopgrowgarden.com/)
+
+HTTrack Website Copier/3.49-2 mirror complete in 2 minutes 54 seconds : 73 links scanned, 64 files written (10901294 bytes overall) [6458755 bytes received at 37119 bytes/sec], 5678334 bytes transferred using HTTP compression in 50 files, ratio 16%, 1.8 requests per connection
+(3 errors, 5 warnings, 0 messages)

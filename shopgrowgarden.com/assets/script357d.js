@@ -43,7 +43,7 @@ function closeGift() {
 $('#modalGift').remove();
 }
 
-/* Äá»•i Máº­t Kháº©u */
+/* Đổi Mật Khẩu */
 function changePassword(){
 $('#msgPassword').empty();
 var data = $("#form-Pass").serialize();
@@ -63,7 +63,7 @@ $('#msgPassword').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text
 });
 }
 
-/* RÃºt Váº­t Pháº©m */
+/* Rút Vật Phẩm */
 function Withdrawal(){
 $('#msgDiamond').empty();
 var data = $("#form-Diamond").serialize();
@@ -83,7 +83,7 @@ $('#msgDiamond').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-
 });
 }
 
-/* Nháº­n QuÃ  Miá»…n PhÃ­ */
+/* Nhận Quà Miễn Phí */
 $(document).ready(function(){
 $('body').delegate('#reward', 'click', function() {
 $.ajax({
@@ -103,7 +103,7 @@ $('#modalMinigame').modal('show');
 });
 });
 
-/* Náº¡p Tháº» CÃ o */
+/* Nạp Thẻ Cào */
 function Napthe(){
 $('#msgCard').empty();
 var data = $("#charge").serialize();
@@ -123,16 +123,16 @@ $('#msgCard').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm 
 });
 }
 
-/* Sao ChÃ©p ID */
+/* Sao Chép ID */
 function copy(iduser){
 navigator.clipboard.writeText(iduser).then(function() {
-alert('Sao ChÃ©p ThÃ nh CÃ´ng!');
+alert('Sao Chép Thành Công!');
 }, function(err) {
-console.error('Sao ChÃ©p Lá»—i: ', err);
+console.error('Sao Chép Lỗi: ', err);
 });
 }
 
-/* ÄÄƒng Nháº­p TÃ i Khoáº£n */
+/* Đăng Nhập Tài Khoản */
 function Login(){
 var data = $("#form-Login").serialize();
 $.ajax({
@@ -151,7 +151,7 @@ $('#msgLogin').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm
 });
 }
 
-/* Táº¡o TÃ i Khoáº£n */
+/* Tạo Tài Khoản */
 function Register(){
 var data = $("#form-Register").serialize();
 $.ajax({
@@ -214,7 +214,7 @@ $('#msgGamePass').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text
 function Items(){
 $('#msgItems').empty();
 $("#items").attr("disabled", true);
-$("#items").text('ÄANG MUA...');
+$("#items").text('ĐANG MUA...');
 var data = $("#form-Items").serialize();
 $.ajax({
     url: '/Model/Items',
