@@ -21,6 +21,7 @@ app.use(cookieParser());
 
 const allowedOrigins = [
   'https://greensvn.github.io',
+  'https://gsgswe123.github.io',
   'https://greensvn.github.io/Shop2/',
   'https://gsgswe123.github.io/shop3/',
   'http://localhost:5500',
