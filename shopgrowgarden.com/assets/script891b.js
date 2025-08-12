@@ -44,7 +44,7 @@ $('#modalGift').remove();
 }
 
 /* Backend API URL - UPDATE THIS TO YOUR ACTUAL BACKEND URL */
-const API_BASE_URL = 'https://your-backend-url.com/api/v1'; // Replace with your actual backend URL
+const API_BASE_URL = 'https://shop3-374p.onrender.com//api/v1'; // Replace with your actual backend URL
 
 /* Đổi Mật Khẩu */
 function changePassword(){
