@@ -52,47 +52,7 @@ const DB = process.env.DATABASE.replace(
   process.env.DATABASE_PASSWORD
 );
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(DB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    await createDefaultAdmin();
-  } catch (error) {
-    process.exit(1);
-  }
-};
-
-const createDefaultAdmin = async () => {
-  try {
-    const adminEmails = [
-      'chinhan20917976549a@gmail.com',
-      'ryantran149@gmail.com'
-    ];
-    for (const email of adminEmails) {
-      let user = await User.findOne({ email: email.toLowerCase() });
-      if (user) {
-        if (user.role !== 'admin') {
-          user.role = 'admin';
-          await user.save({ validateBeforeSave: false });
-        }
-      } else {
-        const adminData = {
-          name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
-          email: email.toLowerCase(),
-          password: 'admin123456',
-          passwordConfirm: 'admin123456',
-          role: 'admin'
-        };
-        user = await User.create(adminData);
-      }
-    }
-  } catch (error) {}
-};
-
-connectDB();
-
+// Mongoose Schemas
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -349,6 +309,7 @@ reviewSchema.pre(/^find/, function(next) {
 
 const Review = mongoose.model('Review', reviewSchema);
 
+// Utility functions
 const catchAsync = (fn) => {
   return (req, res, next) => {
     fn(req, res, next).catch(next);
@@ -392,6 +353,7 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
+// Error handling functions
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`;
   return new Error(message);
@@ -452,6 +414,7 @@ const globalErrorHandler = (err, req, res, next) => {
   }
 };
 
+// Controllers
 const authController = {
   signup: catchAsync(async (req, res, next) => {
     const { name, email, password, passwordConfirm, role } = req.body;
@@ -477,6 +440,7 @@ const authController = {
     });
     createSendToken(newUser, 201, res);
   }),
+
   login: catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -497,6 +461,7 @@ const authController = {
     }
     createSendToken(user, 200, res);
   }),
+
   logout: (req, res) => {
     res.cookie('jwt', 'loggedout', {
       expires: new Date(Date.now() + 10 * 1000),
@@ -507,6 +472,7 @@ const authController = {
       message: 'Logged out successfully'
     });
   },
+
   protect: catchAsync(async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -538,6 +504,7 @@ const authController = {
     res.locals.user = currentUser;
     next();
   }),
+
   restrictTo: (...roles) => {
     return (req, res, next) => {
       if (!req.user) {
@@ -555,6 +522,7 @@ const authController = {
       next();
     };
   },
+
   forgotPassword: catchAsync(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
@@ -571,6 +539,7 @@ const authController = {
       resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
     });
   }),
+
   resetPassword: catchAsync(async (req, res, next) => {
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
     const user = await User.findOne({
@@ -618,6 +587,7 @@ const userController = {
       },
     });
   }),
+
   updateMe: catchAsync(async (req, res, next) => {
     const { name } = req.body;
     if (!name || name.trim().length === 0) {
@@ -651,6 +621,7 @@ const userController = {
       },
     });
   }),
+
   deleteMe: catchAsync(async (req, res, next) => {
     await User.findByIdAndUpdate(req.user.id, { active: false });
     res.status(204).json({
@@ -658,6 +629,7 @@ const userController = {
       data: null,
     });
   }),
+
   getAllUsers: catchAsync(async (req, res, next) => {
     const users = await User.find({ active: { $ne: false } }).select('-password');
     res.status(200).json({
@@ -668,6 +640,7 @@ const userController = {
       },
     });
   }),
+
   getUser: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
@@ -683,6 +656,7 @@ const userController = {
       },
     });
   }),
+
   updateUser: catchAsync(async (req, res, next) => {
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -701,6 +675,7 @@ const userController = {
       },
     });
   }),
+
   deleteUser: catchAsync(async (req, res, next) => {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
@@ -714,6 +689,7 @@ const userController = {
       data: null,
     });
   }),
+
   makeUserAdmin: catchAsync(async (req, res, next) => {
     const { email } = req.body;
     if (!email) {
@@ -783,6 +759,7 @@ const productController = {
       },
     });
   }),
+
   getProduct: catchAsync(async (req, res, next) => {
     const product = await Product.findById(req.params.id).populate({
       path: 'createdBy',
@@ -801,6 +778,7 @@ const productController = {
       },
     });
   }),
+
   createProduct: catchAsync(async (req, res, next) => {
     const { title, description, price, images, link } = req.body;
     if (!title || !description || !price || !link) {
@@ -842,6 +820,7 @@ const productController = {
       },
     });
   }),
+
   updateProduct: catchAsync(async (req, res, next) => {
     const product = await Product.findById(req.params.id);
     if (!product) {
@@ -879,6 +858,7 @@ const productController = {
       },
     });
   }),
+
   deleteProduct: catchAsync(async (req, res, next) => {
     const product = await Product.findById(req.params.id);
     if (!product) {
@@ -899,6 +879,7 @@ const productController = {
       data: null,
     });
   }),
+
   getProductStats: catchAsync(async (req, res, next) => {
     const stats = await Product.aggregate([
       {
@@ -964,6 +945,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   getCart: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id).populate({
       path: 'cart.product',
@@ -976,6 +958,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   updateCartItem: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
     const { quantity } = req.body;
@@ -1005,6 +988,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   removeFromCart: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
     const user = await User.findById(req.user.id);
@@ -1020,6 +1004,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   clearCart: catchAsync(async (req, res, next) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -1034,6 +1019,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   addToFavorites: catchAsync(async (req, res, next) => {
     const { productId } = req.body;
     if (!productId) {
@@ -1062,6 +1048,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   getFavorites: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id).populate({
       path: 'favorites',
@@ -1074,6 +1061,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   removeFromFavorites: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
     const user = await User.findById(req.user.id);
@@ -1089,6 +1077,7 @@ const cartFavoriteController = {
       }
     });
   }),
+
   checkFavorite: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
     const user = await User.findById(req.user.id);
@@ -1117,6 +1106,7 @@ const reviewController = {
       },
     });
   }),
+
   createReview: catchAsync(async (req, res, next) => {
     if (!req.body.product) req.body.product = req.params.productId;
     if (!req.body.user) req.body.user = req.user.id;
@@ -1128,6 +1118,7 @@ const reviewController = {
       },
     });
   }),
+
   getReview: catchAsync(async (req, res, next) => {
     const review = await Review.findById(req.params.id);
     if (!review) {
@@ -1143,6 +1134,7 @@ const reviewController = {
       },
     });
   }),
+
   updateReview: catchAsync(async (req, res, next) => {
     const review = await Review.findById(req.params.id);
     if (!review) {
@@ -1168,7 +1160,8 @@ const reviewController = {
       },
     });
   }),
-  deleteReview = catchAsync(async (req, res, next) => {
+
+  deleteReview: catchAsync(async (req, res, next) => {
     const review = await Review.findById(req.params.id);
     if (!review) {
       return res.status(404).json({
@@ -1187,110 +1180,184 @@ const reviewController = {
       status: 'success',
       data: null,
     });
-  });
+  })
+};
 
-  // Health check route
-  app.get('/api/v1/health', (req, res) => {
-    res.status(200).json({
-      status: 'success',
-      message: 'Server is running',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development'
+// Database connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(DB, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
+    console.log('DB connection successful!');
+    await createDefaultAdmin();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    process.exit(1);
+  }
+};
+
+const createDefaultAdmin = async () => {
+  try {
+    const adminEmails = [
+      'chinhan20917976549a@gmail.com',
+      'ryantran149@gmail.com'
+    ];
+    for (const email of adminEmails) {
+      let user = await User.findOne({ email: email.toLowerCase() });
+      if (user) {
+        if (user.role !== 'admin') {
+          user.role = 'admin';
+          await user.save({ validateBeforeSave: false });
+        }
+      } else {
+        const adminData = {
+          name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
+          email: email.toLowerCase(),
+          password: 'admin123456',
+          passwordConfirm: 'admin123456',
+          role: 'admin'
+        };
+        user = await User.create(adminData);
+      }
+    }
+  } catch (error) {
+    console.error('Error creating default admin:', error);
+  }
+};
+
+connectDB();
+
+// Routes
+
+// Health check route
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
+});
 
-  // Public routes
-  app.post('/api/v1/users/signup', authController.signup);
-  app.post('/api/v1/users/login', authController.login);
-  app.get('/api/v1/users/logout', authController.logout);
-  app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
-  app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
+// Public routes
+app.post('/api/v1/users/signup', authController.signup);
+app.post('/api/v1/users/login', authController.login);
+app.get('/api/v1/users/logout', authController.logout);
+app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
+app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
 
-  app.get('/api/v1/products', productController.getAllProducts);
-  app.get('/api/v1/products/:id', productController.getProduct);
-  app.get('/api/v1/products/stats', productController.getProductStats);
+app.get('/api/v1/products', productController.getAllProducts);
+app.get('/api/v1/products/stats', productController.getProductStats);
+app.get('/api/v1/products/:id', productController.getProduct);
 
-  app.get('/api/v1/reviews', reviewController.getAllReviews);
-  app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
+app.get('/api/v1/reviews', reviewController.getAllReviews);
+app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
-  // Protected routes
-  app.use('/api/v1', authController.protect);
+// Protected routes
+app.use('/api/v1/users/me', authController.protect);
+app.get('/api/v1/users/me', userController.getMe);
+app.patch('/api/v1/users/updateMe', authController.protect, userController.updateMe);
+app.delete('/api/v1/users/deleteMe', authController.protect, userController.deleteMe);
 
-  app.get('/api/v1/users/me', userController.getMe);
-  app.patch('/api/v1/users/updateMe', userController.updateMe);
-  app.delete('/api/v1/users/deleteMe', userController.deleteMe);
+// Cart routes
+app.use('/api/v1/cart', authController.protect);
+app.route('/api/v1/cart')
+  .get(cartFavoriteController.getCart)
+  .post(cartFavoriteController.addToCart)
+  .delete(cartFavoriteController.clearCart);
 
-  app.route('/api/v1/cart')
-    .get(cartFavoriteController.getCart)
-    .post(cartFavoriteController.addToCart)
-    .delete(cartFavoriteController.clearCart);
+app.route('/api/v1/cart/:productId')
+  .patch(cartFavoriteController.updateCartItem)
+  .delete(cartFavoriteController.removeFromCart);
 
-  app.route('/api/v1/cart/:productId')
-    .patch(cartFavoriteController.updateCartItem)
-    .delete(cartFavoriteController.removeFromCart);
+// Favorites routes
+app.use('/api/v1/favorites', authController.protect);
+app.route('/api/v1/favorites')
+  .get(cartFavoriteController.getFavorites)
+  .post(cartFavoriteController.addToFavorites);
 
-  app.route('/api/v1/favorites')
-    .get(cartFavoriteController.getFavorites)
-    .post(cartFavoriteController.addToFavorites);
+app.route('/api/v1/favorites/:productId')
+  .delete(cartFavoriteController.removeFromFavorites);
 
-  app.route('/api/v1/favorites/:productId')
-    .delete(cartFavoriteController.removeFromFavorites);
+app.get('/api/v1/favorites/check/:productId', authController.protect, cartFavoriteController.checkFavorite);
 
-  app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
+// Review routes (protected)
+app.use('/api/v1/reviews', authController.protect);
+app.post('/api/v1/reviews', reviewController.createReview);
+app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
 
-  app.route('/api/v1/reviews')
-    .post(reviewController.createReview);
+app.route('/api/v1/reviews/:id')
+  .get(reviewController.getReview)
+  .patch(reviewController.updateReview)
+  .delete(reviewController.deleteReview);
 
-  app.route('/api/v1/reviews/:id')
-    .get(reviewController.getReview)
-    .patch(reviewController.updateReview)
-    .delete(reviewController.deleteReview);
+// Admin only routes
+app.use('/api/v1/admin', authController.protect, authController.restrictTo('admin'));
 
-  app.route('/api/v1/products/:productId/reviews')
-    .post(reviewController.createReview);
+app.route('/api/v1/admin/users')
+  .get(userController.getAllUsers);
 
-  // Admin only routes
-  app.use('/api/v1', authController.restrictTo('admin'));
+app.route('/api/v1/admin/users/:id')
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
 
-  app.route('/api/v1/users')
-    .get(userController.getAllUsers);
+app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
 
-  app.route('/api/v1/users/:id')
-    .get(userController.getUser)
-    .patch(userController.updateUser)
-    .delete(userController.deleteUser);
+app.route('/api/v1/admin/products')
+  .post(productController.createProduct);
 
-  app.post('/api/v1/users/make-admin', userController.makeUserAdmin);
+app.route('/api/v1/admin/products/:id')
+  .patch(productController.updateProduct)
+  .delete(productController.deleteProduct);
 
-  app.route('/api/v1/products')
-    .post(productController.createProduct);
+// User product management (own products)
+app.use('/api/v1/my-products', authController.protect);
+app.post('/api/v1/my-products', productController.createProduct);
+app.patch('/api/v1/my-products/:id', productController.updateProduct);
+app.delete('/api/v1/my-products/:id', productController.deleteProduct);
 
-  app.route('/api/v1/products/:id')
-    .patch(productController.updateProduct)
-    .delete(productController.deleteProduct);
-
-  app.all('*', (req, res, next) => {
-    res.status(404).json({
-      status: 'fail',
-      message: `Can't find ${req.originalUrl} on this server!`,
-    });
+// 404 handler
+app.all('*', (req, res, next) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Can't find ${req.originalUrl} on this server!`,
   });
+});
 
-  app.use(globalErrorHandler);
+// Global error handler
+app.use(globalErrorHandler);
 
-  const port = process.env.PORT || 3000;
-  const server = app.listen(port, () => {});
+// Start server
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () => {
+  console.log(`App running on port ${port}...`);
+});
 
-  process.on('unhandledRejection', (err) => {
-    server.close(() => {
-      process.exit(1);
-    });
-  });
-  process.on('uncaughtException', (err) => {
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.log('UNHANDLED REJECTION! 💥 Shutting down...');
+  console.log(err.name, err.message);
+  server.close(() => {
     process.exit(1);
   });
-  process.on('SIGTERM', () => {
-    server.close(() => {});
-  });
+});
 
-  module.exports = app;
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+// Handle SIGTERM
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
+  server.close(() => {
+    console.log('💥 Process terminated!');
+  });
+});
+
+module.exports = app;
