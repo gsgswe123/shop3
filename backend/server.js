@@ -22,9 +22,6 @@ app.use(cookieParser());
 const allowedOrigins = [
   'https://greensvn.github.io',
   'https://gsgswe123.github.io',
-  'https://greensvn.github.io/Shop2/',
-  'https://gsgswe123.github.io/shop3/',
-  'https://gsgswe123.github.io/shop3/shopgrowgarden.com/',
   'http://localhost:5500',
   'http://127.0.0.1:5500'
 ];
