@@ -11,19 +11,20 @@ const { promisify } = require('util');
 const nodemailer = require('nodemailer');
 const validator = require('validator');
 
+// Load environment variables
 dotenv.config({ path: './config.env' });
 
 const app = express();
 
+// Body parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
+// CORS configuration
 const allowedOrigins = [
-  'https://greensvn.github.io',
-  'https://greensvn.github.io/Shop2/',
+  'https://gsgswe123.github.io',
   'https://gsgswe123.github.io/shop3/',
-  'http://localhost:5500',
   'http://127.0.0.1:5500'
 ];
 
@@ -43,10 +44,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+// Development logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Database configuration
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
@@ -131,9 +134,11 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+// User schema indexes
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 
+// User schema middleware
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
@@ -141,6 +146,13 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+// User schema methods
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -156,12 +168,13 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
   return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);
 
+// Product Schema
 const productSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -249,17 +262,21 @@ const productSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+// Product schema indexes
 productSchema.index({ createdAt: -1 });
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ createdBy: 1 });
+productSchema.index({ active: 1 });
 
+// Product virtual fields
 productSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'product',
   localField: '_id'
 });
 
+// Product middleware
 productSchema.pre('save', function(next) {
   if (this.images && this.images.length > 0 && !this.image) {
     this.image = this.images[0];
@@ -269,6 +286,7 @@ productSchema.pre('save', function(next) {
 
 const Product = mongoose.model('Product', productSchema);
 
+// Review Schema
 const reviewSchema = new mongoose.Schema({
   review: {
     type: String,
@@ -297,8 +315,12 @@ const reviewSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+// Review indexes
 reviewSchema.index({ product: 1, user: 1 }, { unique: true });
+reviewSchema.index({ product: 1 });
+reviewSchema.index({ user: 1 });
 
+// Review middleware
 reviewSchema.pre(/^find/, function(next) {
   this.populate({
     path: 'user',
@@ -316,6 +338,16 @@ const catchAsync = (fn) => {
   };
 };
 
+const AppError = class extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+    this.isOperational = true;
+    Error.captureStackTrace(this, this.constructor);
+  }
+};
+
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '90d',
@@ -330,10 +362,12 @@ const createSendToken = (user, statusCode, res) => {
     ),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   };
+
   res.cookie('jwt', token, cookieOptions);
   user.password = undefined;
+  
   const userResponse = {
     _id: user._id,
     id: user._id,
@@ -344,6 +378,7 @@ const createSendToken = (user, statusCode, res) => {
     avatarText: user.avatarText,
     createdAt: user.createdAt
   };
+
   res.status(statusCode).json({
     status: 'success',
     token,
@@ -356,23 +391,23 @@ const createSendToken = (user, statusCode, res) => {
 // Error handling functions
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`;
-  return new Error(message);
+  return new AppError(message, 400);
 };
 
 const handleDuplicateFieldsDB = (err) => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  const value = err.errmsg ? err.errmsg.match(/(["'])(\\?.)*?\1/)?.[0] : 'duplicate value';
   const message = `Duplicate field value: ${value}. Please use another value!`;
-  return new Error(message);
+  return new AppError(message, 400);
 };
 
 const handleValidationErrorDB = (err) => {
   const errors = Object.values(err.errors).map(el => el.message);
   const message = `Invalid input data. ${errors.join('. ')}`;
-  return new Error(message);
+  return new AppError(message, 400);
 };
 
-const handleJWTError = () => new Error('Invalid token. Please log in again!');
-const handleJWTExpiredError = () => new Error('Your token has expired! Please log in again.');
+const handleJWTError = () => new AppError('Invalid token. Please log in again!', 401);
+const handleJWTExpiredError = () => new AppError('Your token has expired! Please log in again.', 401);
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode || 500).json({
@@ -390,6 +425,7 @@ const sendErrorProd = (err, res) => {
       message: err.message,
     });
   } else {
+    console.error('ERROR 💥', err);
     res.status(500).json({
       status: 'error',
       message: 'Something went wrong!',
@@ -400,65 +436,71 @@ const sendErrorProd = (err, res) => {
 const globalErrorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
+
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   } else {
     let error = { ...err };
     error.message = err.message;
+    error.name = err.name;
+
     if (error.name === 'CastError') error = handleCastErrorDB(error);
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
+
     sendErrorProd(error, res);
   }
 };
 
-// Controllers
+// Authentication Controller
 const authController = {
   signup: catchAsync(async (req, res, next) => {
     const { name, email, password, passwordConfirm, role } = req.body;
+
+    // Validation
     if (!name || !email || !password || !passwordConfirm) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide all required fields',
-      });
+      return next(new AppError('Please provide all required fields', 400));
     }
-    const existingUser = await User.findOne({ email });
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'User with this email already exists',
-      });
+      return next(new AppError('User with this email already exists', 400));
     }
+
+    // Create new user
     const newUser = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
       passwordConfirm,
-      role: role || 'user',
+      role: role === 'admin' ? 'user' : (role || 'user'), // Prevent admin signup
     });
+
     createSendToken(newUser, 201, res);
   }),
 
   login: catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
+
+    // Check if email and password exist
     if (!email || !password) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide email and password',
-      });
+      return next(new AppError('Please provide email and password', 400));
     }
+
+    // Check if user exists and password is correct
     const user = await User.findOne({ 
       email: email.toLowerCase().trim(),
       active: { $ne: false }
     }).select('+password');
+
     if (!user || !(await user.correctPassword(password, user.password))) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'Incorrect email or password',
-      });
+      return next(new AppError('Incorrect email or password', 401));
     }
+
+    // Send token to client
     createSendToken(user, 200, res);
   }),
 
@@ -474,32 +516,33 @@ const authController = {
   },
 
   protect: catchAsync(async (req, res, next) => {
+    // Get token and check if it exists
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
-    } else if (req.cookies.jwt) {
+    } else if (req.cookies.jwt && req.cookies.jwt !== 'loggedout') {
       token = req.cookies.jwt;
     }
+
     if (!token) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'You are not logged in! Please log in to get access.',
-      });
+      return next(new AppError('You are not logged in! Please log in to get access.', 401));
     }
+
+    // Verify token
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    // Check if user still exists
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'The user belonging to this token no longer exists.',
-      });
+      return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
+
+    // Check if user changed password after the token was issued
     if (currentUser.changedPasswordAfter(decoded.iat)) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'User recently changed password! Please log in again.',
-      });
+      return next(new AppError('User recently changed password! Please log in again.', 401));
     }
+
+    // Grant access to protected route
     req.user = currentUser;
     res.locals.user = currentUser;
     next();
@@ -508,31 +551,26 @@ const authController = {
   restrictTo: (...roles) => {
     return (req, res, next) => {
       if (!req.user) {
-        return res.status(401).json({
-          status: 'fail',
-          message: 'You are not logged in',
-        });
+        return next(new AppError('You are not logged in', 401));
       }
       if (!roles.includes(req.user.role)) {
-        return res.status(403).json({
-          status: 'fail',
-          message: 'You do not have permission to perform this action',
-        });
+        return next(new AppError('You do not have permission to perform this action', 403));
       }
       next();
     };
   },
 
   forgotPassword: catchAsync(async (req, res, next) => {
-    const user = await User.findOne({ email: req.body.email });
+    // Get user based on POSTed email
+    const user = await User.findOne({ email: req.body.email?.toLowerCase().trim() });
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'There is no user with that email address.',
-      });
+      return next(new AppError('There is no user with that email address.', 404));
     }
+
+    // Generate the random reset token
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
+
     res.status(200).json({
       status: 'success',
       message: 'Password reset token sent to email!',
@@ -541,35 +579,56 @@ const authController = {
   }),
 
   resetPassword: catchAsync(async (req, res, next) => {
+    // Get user based on the token
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
     });
+
+    // If token has not expired, and there is a user, set the new password
     if (!user) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Token is invalid or has expired',
-      });
+      return next(new AppError('Token is invalid or has expired', 400));
     }
+
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
+
+    // Log the user in, send JWT
+    createSendToken(user, 200, res);
+  }),
+
+  updatePassword: catchAsync(async (req, res, next) => {
+    // Get user from collection
+    const user = await User.findById(req.user.id).select('+password');
+
+    // Check if POSTed current password is correct
+    if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+      return next(new AppError('Your current password is incorrect.', 401));
+    }
+
+    // If so, update password
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save();
+
+    // Log user in, send JWT
     createSendToken(user, 200, res);
   }),
 };
 
+// User Controller
 const userController = {
   getMe: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'User not found'
-      });
+      return next(new AppError('User not found', 404));
     }
+
     const userResponse = {
       _id: user._id,
       id: user._id,
@@ -580,6 +639,7 @@ const userController = {
       avatarText: user.avatarText,
       createdAt: user.createdAt
     };
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -589,13 +649,17 @@ const userController = {
   }),
 
   updateMe: catchAsync(async (req, res, next) => {
+    // Create error if user POSTs password data
+    if (req.body.password || req.body.passwordConfirm) {
+      return next(new AppError('This route is not for password updates. Please use /updateMyPassword.', 400));
+    }
+
     const { name } = req.body;
     if (!name || name.trim().length === 0) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide a valid name'
-      });
+      return next(new AppError('Please provide a valid name', 400));
     }
+
+    // Update user document
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
       { 
@@ -607,6 +671,7 @@ const userController = {
         runValidators: true,
       }
     );
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -624,6 +689,7 @@ const userController = {
 
   deleteMe: catchAsync(async (req, res, next) => {
     await User.findByIdAndUpdate(req.user.id, { active: false });
+
     res.status(204).json({
       status: 'success',
       data: null,
@@ -632,6 +698,7 @@ const userController = {
 
   getAllUsers: catchAsync(async (req, res, next) => {
     const users = await User.find({ active: { $ne: false } }).select('-password');
+
     res.status(200).json({
       status: 'success',
       results: users.length,
@@ -643,12 +710,11 @@ const userController = {
 
   getUser: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.params.id).select('-password');
+    
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No user found with that ID'
-      });
+      return next(new AppError('No user found with that ID', 404));
     }
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -658,16 +724,20 @@ const userController = {
   }),
 
   updateUser: catchAsync(async (req, res, next) => {
+    // Don't allow password updates through this route
+    if (req.body.password || req.body.passwordConfirm) {
+      return next(new AppError('This route is not for password updates.', 400));
+    }
+
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     }).select('-password');
+
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No user found with that ID'
-      });
+      return next(new AppError('No user found with that ID', 404));
     }
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -678,12 +748,11 @@ const userController = {
 
   deleteUser: catchAsync(async (req, res, next) => {
     const user = await User.findByIdAndDelete(req.params.id);
+
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No user found with that ID'
-      });
+      return next(new AppError('No user found with that ID', 404));
     }
+
     res.status(204).json({
       status: 'success',
       data: null,
@@ -692,21 +761,19 @@ const userController = {
 
   makeUserAdmin: catchAsync(async (req, res, next) => {
     const { email } = req.body;
+
     if (!email) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide email address'
-      });
+      return next(new AppError('Please provide email address', 400));
     }
+
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'User not found'
-      });
+      return next(new AppError('User not found', 404));
     }
+
     user.role = 'admin';
     await user.save({ validateBeforeSave: false });
+
     res.status(200).json({
       status: 'success',
       message: `${email} is now an admin`,
@@ -722,35 +789,52 @@ const userController = {
   }),
 };
 
+// Product Controller
 const productController = {
   getAllProducts: catchAsync(async (req, res, next) => {
+    // Build query
     const queryObj = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryObj[el]);
+
+    // Add active filter
     queryObj.active = { $ne: false };
+
+    // Advanced filtering
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+
     let query = Product.find(JSON.parse(queryStr));
+
+    // Sorting
     if (req.query.sort) {
       const sortBy = req.query.sort.split(',').join(' ');
       query = query.sort(sortBy);
     } else {
       query = query.sort('-createdAt');
     }
+
+    // Field limiting
     if (req.query.fields) {
       const fields = req.query.fields.split(',').join(' ');
       query = query.select(fields);
     } else {
       query = query.select('-__v');
     }
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
+
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 100;
     const skip = (page - 1) * limit;
+
     query = query.skip(skip).limit(limit);
+
+    // Execute query
     const products = await query.populate({
       path: 'createdBy',
       select: 'name email'
     });
+
     res.status(200).json({
       status: 'success',
       results: products.length,
@@ -761,16 +845,18 @@ const productController = {
   }),
 
   getProduct: catchAsync(async (req, res, next) => {
-    const product = await Product.findById(req.params.id).populate({
+    const product = await Product.findOne({ 
+      _id: req.params.id, 
+      active: { $ne: false } 
+    }).populate({
       path: 'createdBy',
       select: 'name email'
-    });
+    }).populate('reviews');
+
     if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No product found with that ID',
-      });
+      return next(new AppError('No product found with that ID', 404));
     }
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -781,38 +867,42 @@ const productController = {
 
   createProduct: catchAsync(async (req, res, next) => {
     const { title, description, price, images, link } = req.body;
+
+    // Validation
     if (!title || !description || !price || !link) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide all required fields: title, description, price, and link',
-      });
+      return next(new AppError('Please provide all required fields: title, description, price, and link', 400));
     }
+
+    // Process images
     let productImages = images;
     if (typeof images === 'string') {
       productImages = [images];
     } else if (!Array.isArray(images) || images.length === 0) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide at least one product image',
-      });
+      return next(new AppError('Please provide at least one product image', 400));
     }
+
+    // Create product data
     const productData = {
       title: title.trim(),
       description: description.trim(),
-      price: parseInt(price),
+      price: parseInt(price, 10),
       images: productImages,
       link: link.trim(),
       category: req.body.category || 'services',
       badge: req.body.badge || null,
-      sales: parseInt(req.body.sales) || 0,
-      stock: parseInt(req.body.stock) || 999,
+      sales: parseInt(req.body.sales, 10) || 0,
+      stock: parseInt(req.body.stock, 10) || 999,
+      features: req.body.features || [],
+      oldPrice: req.body.oldPrice ? parseInt(req.body.oldPrice, 10) : undefined,
       createdBy: req.user._id,
     };
+
     const newProduct = await Product.create(productData);
     await newProduct.populate({
       path: 'createdBy',
       select: 'name email'
     });
+
     res.status(201).json({
       status: 'success',
       data: {
@@ -823,23 +913,23 @@ const productController = {
 
   updateProduct: catchAsync(async (req, res, next) => {
     const product = await Product.findById(req.params.id);
+
     if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No product found with that ID',
-      });
+      return next(new AppError('No product found with that ID', 404));
     }
+
+    // Check ownership
     if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'You do not have permission to update this product',
-      });
+      return next(new AppError('You do not have permission to update this product', 403));
     }
+
+    // Process images if provided
     if (req.body.images) {
       if (typeof req.body.images === 'string') {
         req.body.images = [req.body.images];
       }
     }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id, 
       req.body, 
@@ -851,6 +941,7 @@ const productController = {
       path: 'createdBy',
       select: 'name email'
     });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -861,19 +952,18 @@ const productController = {
 
   deleteProduct: catchAsync(async (req, res, next) => {
     const product = await Product.findById(req.params.id);
+
     if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No product found with that ID',
-      });
+      return next(new AppError('No product found with that ID', 404));
     }
+
+    // Check ownership
     if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'You do not have permission to delete this product',
-      });
+      return next(new AppError('You do not have permission to delete this product', 403));
     }
+
     await Product.findByIdAndDelete(req.params.id);
+
     res.status(204).json({
       status: 'success',
       data: null,
@@ -899,6 +989,7 @@ const productController = {
         $sort: { numProducts: -1 }
       }
     ]);
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -908,35 +999,40 @@ const productController = {
   }),
 };
 
+// Cart and Favorites Controller
 const cartFavoriteController = {
   addToCart: catchAsync(async (req, res, next) => {
     const { productId, quantity = 1 } = req.body;
+
     if (!productId) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide a product ID',
-      });
+      return next(new AppError('Please provide a product ID', 400));
     }
-    const product = await Product.findById(productId);
+
+    const product = await Product.findOne({ 
+      _id: productId, 
+      active: { $ne: false } 
+    });
+    
     if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Product not found',
-      });
+      return next(new AppError('Product not found', 404));
     }
+
     const user = await User.findById(req.user.id);
     const existingItemIndex = user.cart.findIndex(item => 
       item.product.toString() === productId
     );
+
     if (existingItemIndex !== -1) {
-      user.cart[existingItemIndex].quantity += parseInt(quantity);
+      user.cart[existingItemIndex].quantity += parseInt(quantity, 10);
     } else {
       user.cart.push({ 
         product: productId, 
-        quantity: parseInt(quantity) 
+        quantity: parseInt(quantity, 10) 
       });
     }
+
     await user.save({ validateBeforeSave: false });
+
     res.status(200).json({
       status: 'success',
       message: 'Product added to cart',
@@ -951,6 +1047,7 @@ const cartFavoriteController = {
       path: 'cart.product',
       select: 'title price images link category badge'
     });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -962,24 +1059,23 @@ const cartFavoriteController = {
   updateCartItem: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
     const { quantity } = req.body;
+
     if (!quantity || quantity < 1) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Quantity must be at least 1',
-      });
+      return next(new AppError('Quantity must be at least 1', 400));
     }
+
     const user = await User.findById(req.user.id);
     const cartItemIndex = user.cart.findIndex(item => 
       item.product.toString() === productId
     );
+
     if (cartItemIndex === -1) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Product not found in cart',
-      });
+      return next(new AppError('Product not found in cart', 404));
     }
-    user.cart[cartItemIndex].quantity = parseInt(quantity);
+
+    user.cart[cartItemIndex].quantity = parseInt(quantity, 10);
     await user.save({ validateBeforeSave: false });
+
     res.status(200).json({
       status: 'success',
       message: 'Cart updated successfully',
@@ -991,11 +1087,20 @@ const cartFavoriteController = {
 
   removeFromCart: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
+
     const user = await User.findById(req.user.id);
+    const initialCartLength = user.cart.length;
+    
     user.cart = user.cart.filter(item => 
       item.product.toString() !== productId
     );
+
+    if (user.cart.length === initialCartLength) {
+      return next(new AppError('Product not found in cart', 404));
+    }
+
     await user.save({ validateBeforeSave: false });
+
     res.status(200).json({
       status: 'success',
       message: 'Product removed from cart',
@@ -1011,6 +1116,7 @@ const cartFavoriteController = {
       { cart: [] },
       { new: true }
     );
+
     res.status(200).json({
       status: 'success',
       message: 'Cart cleared successfully',
@@ -1022,24 +1128,27 @@ const cartFavoriteController = {
 
   addToFavorites: catchAsync(async (req, res, next) => {
     const { productId } = req.body;
+
     if (!productId) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide a product ID',
-      });
+      return next(new AppError('Please provide a product ID', 400));
     }
-    const product = await Product.findById(productId);
+
+    const product = await Product.findOne({ 
+      _id: productId, 
+      active: { $ne: false } 
+    });
+    
     if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Product not found',
-      });
+      return next(new AppError('Product not found', 404));
     }
+
     const user = await User.findById(req.user.id);
+    
     if (!user.favorites.includes(productId)) {
       user.favorites.push(productId);
       await user.save({ validateBeforeSave: false });
     }
+
     res.status(200).json({
       status: 'success',
       message: 'Product added to favorites',
@@ -1052,8 +1161,10 @@ const cartFavoriteController = {
   getFavorites: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id).populate({
       path: 'favorites',
-      select: 'title price images link category badge sales'
+      select: 'title price images link category badge sales',
+      match: { active: { $ne: false } }
     });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -1064,11 +1175,20 @@ const cartFavoriteController = {
 
   removeFromFavorites: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
+
     const user = await User.findById(req.user.id);
+    const initialFavoritesLength = user.favorites.length;
+    
     user.favorites = user.favorites.filter(id => 
       id.toString() !== productId
     );
+
+    if (user.favorites.length === initialFavoritesLength) {
+      return next(new AppError('Product not found in favorites', 404));
+    }
+
     await user.save({ validateBeforeSave: false });
+
     res.status(200).json({
       status: 'success',
       message: 'Product removed from favorites',
@@ -1080,10 +1200,12 @@ const cartFavoriteController = {
 
   checkFavorite: catchAsync(async (req, res, next) => {
     const { productId } = req.params;
+
     const user = await User.findById(req.user.id);
     const isFavorite = user.favorites.some(id => 
       id.toString() === productId
     );
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -1093,11 +1215,14 @@ const cartFavoriteController = {
   }),
 };
 
+// Review Controller
 const reviewController = {
   getAllReviews: catchAsync(async (req, res, next) => {
     let filter = {};
     if (req.params.productId) filter = { product: req.params.productId };
+
     const reviews = await Review.find(filter);
+
     res.status(200).json({
       status: 'success',
       results: reviews.length,
@@ -1108,9 +1233,22 @@ const reviewController = {
   }),
 
   createReview: catchAsync(async (req, res, next) => {
+    // Allow nested routes
     if (!req.body.product) req.body.product = req.params.productId;
     if (!req.body.user) req.body.user = req.user.id;
+
+    // Check if product exists
+    const product = await Product.findOne({ 
+      _id: req.body.product, 
+      active: { $ne: false } 
+    });
+    
+    if (!product) {
+      return next(new AppError('Product not found', 404));
+    }
+
     const newReview = await Review.create(req.body);
+
     res.status(201).json({
       status: 'success',
       data: {
@@ -1121,12 +1259,11 @@ const reviewController = {
 
   getReview: catchAsync(async (req, res, next) => {
     const review = await Review.findById(req.params.id);
+
     if (!review) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No review found with that ID',
-      });
+      return next(new AppError('No review found with that ID', 404));
     }
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -1137,22 +1274,21 @@ const reviewController = {
 
   updateReview: catchAsync(async (req, res, next) => {
     const review = await Review.findById(req.params.id);
+
     if (!review) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No review found with that ID',
-      });
+      return next(new AppError('No review found with that ID', 404));
     }
+
+    // Check ownership
     if (review.user._id.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'You do not have permission to update this review',
-      });
+      return next(new AppError('You do not have permission to update this review', 403));
     }
+
     const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -1163,19 +1299,18 @@ const reviewController = {
 
   deleteReview: catchAsync(async (req, res, next) => {
     const review = await Review.findById(req.params.id);
+
     if (!review) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No review found with that ID',
-      });
+      return next(new AppError('No review found with that ID', 404));
     }
+
+    // Check ownership or admin role
     if (review.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'You do not have permission to delete this review',
-      });
+      return next(new AppError('You do not have permission to delete this review', 403));
     }
+
     await Review.findByIdAndDelete(req.params.id);
+
     res.status(204).json({
       status: 'success',
       data: null,
@@ -1204,14 +1339,19 @@ const createDefaultAdmin = async () => {
       'chinhan20917976549a@gmail.com',
       'ryantran149@gmail.com'
     ];
+
     for (const email of adminEmails) {
       let user = await User.findOne({ email: email.toLowerCase() });
+      
       if (user) {
+        // Update existing user to admin if not already
         if (user.role !== 'admin') {
           user.role = 'admin';
           await user.save({ validateBeforeSave: false });
+          console.log(`Updated ${email} to admin role`);
         }
       } else {
+        // Create new admin user
         const adminData = {
           name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
           email: email.toLowerCase(),
@@ -1219,7 +1359,9 @@ const createDefaultAdmin = async () => {
           passwordConfirm: 'admin123456',
           role: 'admin'
         };
+        
         user = await User.create(adminData);
+        console.log(`Created admin user: ${email}`);
       }
     }
   } catch (error) {
@@ -1227,6 +1369,7 @@ const createDefaultAdmin = async () => {
   }
 };
 
+// Initialize database connection
 connectDB();
 
 // Routes
@@ -1241,24 +1384,27 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
-// Public routes
+// Authentication routes
 app.post('/api/v1/users/signup', authController.signup);
 app.post('/api/v1/users/login', authController.login);
 app.get('/api/v1/users/logout', authController.logout);
 app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
 app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
 
+// Public product routes
 app.get('/api/v1/products', productController.getAllProducts);
 app.get('/api/v1/products/stats', productController.getProductStats);
 app.get('/api/v1/products/:id', productController.getProduct);
 
+// Public review routes
 app.get('/api/v1/reviews', reviewController.getAllReviews);
 app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
-// Protected routes
+// Protected user routes
 app.use('/api/v1/users/me', authController.protect);
 app.get('/api/v1/users/me', userController.getMe);
 app.patch('/api/v1/users/updateMe', authController.protect, userController.updateMe);
+app.patch('/api/v1/users/updateMyPassword', authController.protect, authController.updatePassword);
 app.delete('/api/v1/users/deleteMe', authController.protect, userController.deleteMe);
 
 // Cart routes
@@ -1283,7 +1429,7 @@ app.route('/api/v1/favorites/:productId')
 
 app.get('/api/v1/favorites/check/:productId', authController.protect, cartFavoriteController.checkFavorite);
 
-// Review routes (protected)
+// Protected review routes
 app.use('/api/v1/reviews', authController.protect);
 app.post('/api/v1/reviews', reviewController.createReview);
 app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
@@ -1293,9 +1439,16 @@ app.route('/api/v1/reviews/:id')
   .patch(reviewController.updateReview)
   .delete(reviewController.deleteReview);
 
+// User product management routes (for users to manage their own products)
+app.use('/api/v1/my-products', authController.protect);
+app.post('/api/v1/my-products', productController.createProduct);
+app.patch('/api/v1/my-products/:id', productController.updateProduct);
+app.delete('/api/v1/my-products/:id', productController.deleteProduct);
+
 // Admin only routes
 app.use('/api/v1/admin', authController.protect, authController.restrictTo('admin'));
 
+// Admin user management
 app.route('/api/v1/admin/users')
   .get(userController.getAllUsers);
 
@@ -1306,6 +1459,7 @@ app.route('/api/v1/admin/users/:id')
 
 app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
 
+// Admin product management
 app.route('/api/v1/admin/products')
   .post(productController.createProduct);
 
@@ -1313,30 +1467,22 @@ app.route('/api/v1/admin/products/:id')
   .patch(productController.updateProduct)
   .delete(productController.deleteProduct);
 
-// User product management (own products)
-app.use('/api/v1/my-products', authController.protect);
-app.post('/api/v1/my-products', productController.createProduct);
-app.patch('/api/v1/my-products/:id', productController.updateProduct);
-app.delete('/api/v1/my-products/:id', productController.deleteProduct);
-
-// 404 handler
+// 404 handler for undefined routes
 app.all('*', (req, res, next) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Can't find ${req.originalUrl} on this server!`,
-  });
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Global error handler
+// Global error handling middleware
 app.use(globalErrorHandler);
 
 // Start server
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Handle unhandled promise rejections
+// Graceful shutdown handlers
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.log(err.name, err.message);
@@ -1345,14 +1491,12 @@ process.on('unhandledRejection', (err) => {
   });
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
   console.log(err.name, err.message);
   process.exit(1);
 });
 
-// Handle SIGTERM
 process.on('SIGTERM', () => {
   console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
   server.close(() => {
