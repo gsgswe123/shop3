@@ -25,6 +25,13 @@ const allowedOrigins = [
   'http://127.0.0.1:5500'
 ];
 
+const cors = require('cors');
+
+// Chỉ cho phép origin GitHub Pages
+app.use(cors({
+  origin: 'https://gsgswe123.github.io'
+}));
+
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
