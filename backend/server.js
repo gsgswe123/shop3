@@ -20,7 +20,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 const allowedOrigins = [
-  'https://greensvn.github.io',
   'https://gsgswe123.github.io',
   'http://localhost:5500',
   'http://127.0.0.1:5500'
