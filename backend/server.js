@@ -21,7 +21,7 @@ app.use(cookieParser());
 
 const allowedOrigins = [
   'https://gsgswe123.github.io',
-  'http://localhost:5500',
+  'https://gsgswe123.github.io/shop3/',
   'http://127.0.0.1:5500'
 ];
 
