@@ -39,247 +39,76 @@
     <script src="../cdn.jsdelivr.net/npm/lazyload%402.0.0-rc.2/lazyload.js"></script>
     <link rel="stylesheet" href="../cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-    <style>
-        .hidden-cs{
-            display: flex;
-        }
-        @media (max-width: 767px) {
-            .hidden-cs{
-                display: none;
-            }
-        }
-        #reward{
-            position: fixed;
-            bottom: 15px;
-            left: 15px;
-            width: 13%;
-            z-index: 1000;
-            cursor: pointer;
-        }
-        #reward img{
-            width: 100%;
-        }
-        #reward_login{
-            display:block;
-            position: fixed;
-            bottom: 15px;
-            left: 15px;
-            width: 13%;
-            z-index: 1000;
-            cursor: pointer;
-        }
-        #reward_login img{
-            width: 100%;
-        }
-        .mobile{
-            width: 30%!important;
-        }
-        @media  only screen and (max-width: 640px) {
-            #reward_login{width: 50%!important;!important;}
-            #reward {
-                width: 50%!important;
-            }
-            #reward img{
-                width: 65%!important;}
-        }
-        #rewardModal .modal-body p,#rewardModal .modal-body b{display:inline;color:#000}
-
-        /* --- START: CSS for new user dropdown --- */
-        .user-menu {
-            position: relative;
-            display: inline-block;
-        }
-
-        .user-menu-button {
-            background-color: #e53e3e;
-            color: white;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            border-radius: 9999px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            height: 40px;
-        }
-        .user-menu-button:hover {
-            background-color: #c53030;
-        }
-        .user-menu-button img {
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            border: 1px solid white;
-        }
-
-        .user-dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 280px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            right: 0;
-            border-radius: 8px;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            border: 1px solid #ddd;
-        }
-
-        .user-dropdown-content.show {
-            display: block;
-        }
-
-        .user-info-header {
-            background-color: #f1f1f1;
-            padding: 15px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            align-items: center;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #e53e3e;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            margin-right: 12px;
-        }
-        
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-uid {
-            font-weight: bold;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .user-balance-dropdown {
-            color: #e53e3e;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .user-balance-dropdown small{
-            text-decoration: underline;
-        }
-
-        .user-dropdown-content .main-menu,
-        .user-dropdown-content .history-menu {
-            list-style: none;
-            padding: 10px 0;
-            margin: 0;
-            border-bottom: 1px solid #ddd;
-        }
-        .user-dropdown-content .main-menu:last-child {
-            border-bottom: none;
-        }
-
-        .user-dropdown-content .menu-title {
-            padding: 8px 15px;
-            font-size: 12px;
-            color: #777;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .user-dropdown-content a,
-        .user-dropdown-content button {
-            color: #333;
-            padding: 10px 15px;
-            text-decoration: none;
-            display: block;
-            font-size: 14px;
-            background: none;
-            border: none;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-        }
-
-        .user-dropdown-content a:hover,
-        .user-dropdown-content button:hover {
-            background-color: #f1f1f1;
-        }
-
-        .charge-section {
-            padding: 15px;
-        }
-        
-        .charge-section input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .charge-button, .logout-button {
-            width: 100%;
-            padding: 10px;
-            border-radius: 4px;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .charge-button {
-            background-color: #3b82f6; /* Blue */
-            margin-bottom: 5px;
-        }
-        .charge-button:hover {
-            background-color: #2563eb;
-        }
-        
-        .logout-button {
-            background-color: #e53e3e; /* Red */
-        }
-        .logout-button:hover {
-            background-color: #c53030;
-        }
-
-        /* --- END: CSS for new user dropdown --- */
-
-    </style>
 </head>
-<body>
-<div id="element">
-    <section>
-        <div class="tw-sticky tw-top-0 tw-bg-white tw-border-b tw-border-gray-100" style="z-index: 1000;">
-            <div class="tw-max-w-6xl tw-mx-auto tw-flex tw-justify-between tw-items-center tw-px-2 tw-py-1 md:tw-py-2">
-                <div class="tw-menu-left tw-flex tw-items-center">
-                    <a href="index.html"><img class="tw-h-11" src="../i.ibb.co/M5Dj4rpk/8574d186247eba75669b7d50d42bd650-png.png"/></a>
-                    <a href="index.html" class="hidden-cs md:tw-flex tw-ml-10 tw-font-bold tw-text-red-600 hover:tw-text-red-500 tw-px-3 tw-text-sm tw-items-center tw-cursor-pointer"><span class="tw-inline-flex tw-items-center tw-justify-center tw-h-6 tw-w-7 tw-rounded tw-bg-red-100 tw-mr-2"><i class="tw-text-lg bx bx-home"></i></span>TRANG CHỦ</a>
-                </div>
-                <!-- START: Updated User Menu section -->
-                <div class="tw-menu-right tw-flex tw-flex-wrap tw-items-center tw-justify-right">
-                    <button class="tw-bg-red-500 hover:tw-bg-red-600 tw-transition tw-duration-200 tw-text-white tw-text-sm tw-px-4 tw-rounded-full tw-font-semibold tw-h-8 md:tw-h-10 tw-relative" data-toggle="modal" data-target="#loginModal">
-                        <span class="tw-hidden md:tw-inline-block"><i class="tw-absolute tw-text-lg bx bxs-user" style="top: 10px;"></i></span> <span class="md:tw-ml-6">ĐĂNG NHẬP</span>
-                    </button>
-                </div>
-                 <!-- END: Updated User Menu section -->
-            </div>
+<style>
+.hidden-cs{
+    display: flex;
+}
+@media (max-width: 767px) {
+.hidden-cs{
+    display: none;
+    }
+}
+#reward{
+position: fixed;
+bottom: 15px;
+left: 15px;
+width: 13%;
+z-index: 1000;
+cursor: pointer;
+}
+#reward img{
+width: 100%;
+}
+#reward_login{
+display:block;
+position: fixed;
+bottom: 15px;
+left: 15px;
+width: 13%;
+z-index: 1000;
+cursor: pointer;
+}
+#reward_login img{
+width: 100%;
+}
+.mobile{
+width: 30%!important;
+}
+@media  only screen and (max-width: 640px) {
+#reward_login{width: 50%!important;!important;}
+#reward {
+width: 50%!important;
+}
+#reward img{
+width: 65%!important;}
+}
+#rewardModal .modal-body p,#rewardModal .modal-body b{display:inline;color:#000}
+</style>
+<body><div id="element">
+<section>
+<div class="tw-sticky tw-top-0 tw-bg-white tw-border-b tw-border-gray-100" style="z-index: 1000;">
+    <div class="tw-max-w-6xl tw-mx-auto tw-flex tw-justify-between tw-items-center tw-px-2 tw-py-1 md:tw-py-2">
+        <div class="tw-menu-left tw-flex tw-items-center">
+        <a href="index.html"><img class="tw-h-11" src="../i.ibb.co/M5Dj4rpk/8574d186247eba75669b7d50d42bd650-png.png"/></a>
+        <a href="index.html" class="hidden-cs md:tw-flex tw-ml-10 tw-font-bold tw-text-red-600 hover:tw-text-red-500 tw-px-3 tw-text-sm tw-items-center tw-cursor-pointer"><span class="tw-inline-flex tw-items-center tw-justify-center tw-h-6 tw-w-7 tw-rounded tw-bg-red-100 tw-mr-2"><i class="tw-text-lg bx bx-home"></i></span>TRANG CHỦ</a>
         </div>
-        <div class="tw-max-w-7xl tw-mx-auto">
-            <div class="tw-grid tw-grid-cols-12 tw-gap-2 md:tw-gap-4 tw-mt-4 tw-mb-2 tw-px-2 md:tw-px-0">
-                <div class="tw-col-span-12 md:tw-col-span-8">
-                    <div class="tw-relative">
-                        <div class="tw-relative slick-slider slick-initialized">
-                            <div class="slick-list">
-                                <img class="tw-object-center tw-object-fill tw-h-48 md:tw-h-80 tw-w-full tw-rounded" src="../i.ibb.co/JjN8mQ32/74b34e148c58fabd4ad53fe68bd2c4f9-png.png"/>
-                            </div>
-                        </div>
+        <div class="tw-menu-right tw-flex tw-flex-wrap tw-items-center tw-justify-right">
+                <button class="tw-bg-red-500 hover:tw-bg-red-600 tw-transition tw-duration-200 tw-text-white tw-text-sm tw-px-4 tw-rounded-full tw-font-semibold tw-h-8 md:tw-h-10 tw-relative" data-toggle="modal" data-target="#loginModal">
+        <span class="tw-hidden md:tw-inline-block"><i class="tw-absolute tw-text-lg bx bxs-user" style="top: 10px;"></i></span> <span class="md:tw-ml-6">ĐĂNG NHẬP</span>
+        </button> 
+                </div>
+    </div>
+</div><div class="tw-max-w-7xl tw-mx-auto">
+    <div class="tw-grid tw-grid-cols-12 tw-gap-2 md:tw-gap-4 tw-mt-4 tw-mb-2 tw-px-2 md:tw-px-0">
+        <div class="tw-col-span-12 md:tw-col-span-8">
+            <div class="tw-relative">
+                <div class="tw-relative slick-slider slick-initialized">
+                    <div class="slick-list">
+                        
+                    <img class="tw-object-center tw-object-fill tw-h-48 md:tw-h-80 tw-w-full tw-rounded" src="../i.ibb.co/JjN8mQ32/74b34e148c58fabd4ad53fe68bd2c4f9-png.png"/>
+                                                        </div>
+            </div>
                         <span class="pagination tw-absolute tw-inline-block tw-px-1 tw-rounded tw-text-white tw-font-bold tw-text-xs" style="bottom: 10px; right: 5px;">1/1</span>
                     </div>
                 </div>
@@ -1169,394 +998,39 @@
             </div>
         </div>
     </div>
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery First, Then Popper.js, Then Bootstrap JS -->
-    <script src="../cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="../stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="../transvelo.github.io/electro-html/2.0/assets/vendor/slick-carousel/slick/slick.js"></script>
-    <script src="../transvelo.github.io/electro-html/2.0/assets/js/hs.core.js"></script>
-    <script src="../transvelo.github.io/electro-html/2.0/assets/js/components/hs.slick-carousel.js"></script>
-
-    <script>
-        // Backend API URL - UPDATE THIS TO YOUR ACTUAL BACKEND URL
-        const API_BASE_URL = 'https://shop3-t86z.onrender.com/api/v1'; // Replace with your actual backend URL
-
-        function Tab(id){
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(id).style.display = "block";
-            event.currentTarget.className += " active";
-        }
-
-        var hscheck = false;
-        $(document).ready(()=>{
-            $.HSCore.components.HSSlickCarousel.init('.js-slick-carousel');
-            $("#sliderSyncingNav .js-slide img").on("click", function(){
-                $("#viewModal").modal("show");
-                if(hscheck != 1){
-                    $.HSCore.components.HSSlickCarousel.init('.js-slick-carousel2');
-                    hscheck = true;
-                }
-            })
-        });
-
-        $("#form-Login input").keyup(function(e){
-            if(e.keyCode == 13){
-                Login();
-            }
-        });
-
-        $("#form-Register input").keyup(function(e){
-            if(e.keyCode == 13){
-                Register();
-            }
-        });
-
-        /* Menu */
-        $(document).ready(function(){
-            $("#menuToggle").on('click', function(){
-                $(this).hide();
-                $("#menuProfile").show();
-            });
-
-            $("#menuHide").on('click', function(){
-                $("#menuToggle").show();
-                $("#menuProfile").hide();
-            });
-        });
-
-        /* Back To TOP */
-        $('#backToTop').on('click', function(e) {
-            e.preventDefault();
-            $('html, body').animate({ scrollTop: 0 }, '300');
-        });
-
-        /* Alert */
-        $(document).ready(function(){
-            $("#modalThongBao").modal('show');
-        });
-
-        /* Index modal */
-        function closeModalindex(){
-            $("#modalThongBao").hide();
-        }
-
-        function closeModal(){
-            $("#modalMinigame").removeClass("show");
-        }
-
-        function closeGift() {
-            $('#modalGift').remove();
-        }
-
-        /* Đổi Mật Khẩu */
-        function changePassword(){
-            $('#msgPassword').empty();
-            var data = $("#form-Pass").serialize();
-            $.ajax({
-                url: `${API_BASE_URL}/users/updateMyPassword`, // Sửa lại đúng endpoint
-                data: data,
-                dataType: "json",
-                type: "PATCH", // Sửa lại đúng method
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(data) {
-                    if (data.status == 'success') {
-                        $('#msgPassword').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-green-100 tw-border-green-300 tw-text-green-500"><div class="relative">'+'Đổi mật khẩu thành công!'+'</div>');
-                        setTimeout(function(){window.location.reload();}, 2000);
-                    } else {
-                        $('#msgPassword').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">'+data.message+'</div>');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'Có lỗi xảy ra. Vui lòng thử lại!';
-                    $('#msgPassword').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">'+errorMsg+'</div>');
-                }
-            });
-        }
-
-        /* Rút Vật Phẩm (Chức năng này không có endpoint trong server.js, tạm thời giữ nguyên) */
-        function Withdrawal(){
-            $('#msgDiamond').empty();
-             $('#msgDiamond').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">Chức năng đang được phát triển.</div>');
-        }
-
-        /* Nhận Quà Miễn Phí (Chức năng này không có endpoint trong server.js, tạm thời giữ nguyên) */
-        $(document).ready(function(){
-            $('body').delegate('#reward', 'click', function() {
-                $("#loginModal").modal('show');
-                // Hoặc hiển thị thông báo khác nếu cần
-                // $('.content-popup').html("Vui lòng đăng nhập để nhận thưởng");
-                // $('#modalMinigame').modal('show');
-            });
-        });
-
-        /* Nạp Thẻ Cào (Chức năng này không có endpoint trong server.js, tạm thời giữ nguyên) */
-        function Napthe(){
-            $('#msgCard').empty();
-            $('#msgCard').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">Chức năng nạp thẻ đang bảo trì.</div>');
-        }
-
-        /* Sao Chép ID */
-        function copy(iduser){
-            navigator.clipboard.writeText(iduser).then(function() {
-                alert('Sao Chép Thành Công!');
-            }, function(err) {
-                console.error('Sao Chép Lỗi: ', err);
-            });
-        }
-
-        /* Đăng Nhập Tài Khoản */
-        function Login(){
-            $('#msgLogin').empty();
-            var data = $("#form-Login").serialize(); // Dùng email và password
-            $.ajax({
-                url: `${API_BASE_URL}/users/login`,
-                data: data,
-                dataType: "json",
-                type: "POST",
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(data) {
-                    if (data.status == 'success') {
-                        $('#msgLogin').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-green-100 tw-border-green-300 tw-text-green-500"><div class="relative">Đăng nhập thành công!</div>');
-                        if(data.data && data.data.user) {
-                            localStorage.setItem('user', JSON.stringify(data.data.user));
-                        }
-                        setTimeout(function(){window.location.reload();}, 1000);
-                    } else {
-                        $('#msgLogin').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">'+(data.message || 'Đăng nhập thất bại')+'</div>');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Login error:', xhr.responseText);
-                    let errorMsg = 'Có lỗi xảy ra. Vui lòng thử lại!';
-                    if(xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    }
-                    $('#msgLogin').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">'+errorMsg+'</div>');
-                }
-            });
-        }
-
-        /* Tạo Tài Khoản - ĐÃ SỬA LỖI */
-        function Register(){
-            $('#msgReg').empty();
-
-            var name = $('#form-Register input[name="name"]').val();
-            var email = $('#form-Register input[name="email"]').val();
-            var password = $('#form-Register input[name="password"]').val();
-            var passwordConfirm = $('#form-Register input[name="passwordConfirm"]').val();
-
-            if (!name || !email || !password || !passwordConfirm) {
-                $('#msgReg').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">Vui lòng điền đầy đủ thông tin!</div>');
-                return;
-            }
-
-            if (password !== passwordConfirm) {
-                $('#msgReg').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">Mật khẩu xác nhận không khớp!</div>');
-                return;
-            }
-
-            var formData = {
-                name: name,
-                email: email,
-                password: password,
-                passwordConfirm: passwordConfirm
-            };
-
-            $.ajax({
-                url: `${API_BASE_URL}/users/signup`,
-                data: JSON.stringify(formData),
-                dataType: "json",
-                type: "POST",
-                contentType: 'application/json', // Bắt buộc khi gửi JSON
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(data){
-                    if(data.status == 'success') {
-                        $('#msgReg').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-green-100 tw-border-green-300 tw-text-green-500"><div class="relative">Đăng ký thành công! Đang đăng nhập...</div>');
-                        if(data.data && data.data.user) {
-                            localStorage.setItem('user', JSON.stringify(data.data.user));
-                        }
-                        setTimeout(function(){window.location.reload();}, 1000);
-                    } else {
-                        $('#msgReg').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">'+(data.message || 'Đăng ký thất bại')+'</div>');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Register error:', xhr.responseText);
-                    let errorMsg = 'Có lỗi xảy ra. Vui lòng thử lại!';
-                    if(xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    }
-                    $('#msgReg').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">'+errorMsg+'</div>');
-                }
-            });
-        }
-
-        /* Các chức năng chưa có API (giữ nguyên) */
-        function RobuxGamePass(){
-            $('#msgRobuxGamePass').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">Chức năng đang được phát triển.</div>');
-        }
-        function GamePass(){
-            $('#msgGamePass').html('<div class="tw-py-2 tw-px-3 tw-border tw-rounded tw-text-sm tw-w-full tw-block tw-font-semibold tw-bg-red-100 tw-border-red-300 tw-text-red-500"><div class="relative">Chức năng đang được phát triển.</div>');
-        }
-        function Items(){
-            $('#msgItems').html('<div class="ws-py-2 ws-px-3 ws-border ws-rounded ws-text-sm ws-w-full ws-block ws-font-semibold ws-bg-red-100 ws-border-red-300 ws-text-red-500"><div class="relative">Chức năng đang được phát triển.</div>');
-        }
-
-        /* Logout function */
-        function Logout() {
-            $.ajax({
-                url: `${API_BASE_URL}/users/logout`,
-                type: "GET",
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(data) {
-                    localStorage.removeItem('user');
-                    window.location.href = '/';
-                },
-                error: function(xhr, status, error) {
-                    console.error('Logout error:', error);
-                    localStorage.removeItem('user');
-                    window.location.href = '/';
-                }
-            });
-        }
-
-        /* Check if user is logged in */
-        function checkAuthStatus() {
-            const token = document.cookie.split('; ').find(row => row.startsWith('jwt='));
-            if (token) {
-                 $.ajax({
-                    url: `${API_BASE_URL}/users/me`,
-                    type: "GET",
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    success: function(data) {
-                        if(data.status === 'success' && data.data.user) {
-                            localStorage.setItem('user', JSON.stringify(data.data.user));
-                            updateUIForLoggedInUser(data.data.user);
-                        } else {
-                             updateUIForLoggedOutUser();
-                        }
-                    },
-                    error: function() {
-                        localStorage.removeItem('user');
-                        updateUIForLoggedOutUser();
-                    }
-                });
-            } else {
-                 updateUIForLoggedOutUser();
-            }
-        }
-
-        /* Update UI based on auth status */
-        function updateUIForLoggedInUser(user) {
-            // Function to generate a simple UID from the user's Mongo _id
-            const generateSimpleUID = (mongoId) => {
-                 // A simple hash function to get a number
-                let hash = 0;
-                for (let i = 0; i < mongoId.length; i++) {
-                    const char = mongoId.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash |= 0; // Convert to 32bit integer
-                }
-                return Math.abs(hash).toString().slice(0, 5); // Take first 5 digits
-            }
-            const simpleUID = generateSimpleUID(user._id);
-
-            const userMenu = `
-                <div class="user-menu">
-                    <button class="user-menu-button">
-                        <img src="https://ui-avatars.com/api/?name=${user.avatarText}&amp;background=random&amp;color=fff" alt="Avatar">
-                        ${user.name} | ${user.balance.toLocaleString('vi-VN')}đ
-                    </button>
-                    <div class="user-dropdown-content">
-                        <div class="user-info-header">
-                            <div class="user-avatar">${user.avatarText}</div>
-                            <div class="user-details">
-                                <span class="user-uid">UID: ${simpleUID}</span>
-                                <span class="user-balance-dropdown">Số dư: ${user.balance.toLocaleString('vi-VN')} <small>đ</small></span>
-                            </div>
-                        </div>
-
-                        <div class="charge-section">
-                             <input type="text" placeholder="Nhập Mã Siêu Sale..." />
-                             <input type="text" placeholder="Nhập Số Seri..." />
-                             <button class="charge-button" onclick="Napthe()">NẠP THẺ</button>
-                        </div>
-
-                        <ul class="main-menu">
-                           <h3 class="menu-title">-- Chọn Lọc</h3>
-                            <li><a href="/user/profile">Thông Tin Tài Khoản</a></li>
-                            <li><a href="/user/change-password">Đổi Mật Khẩu</a></li>
-                        </ul>
-                        <ul class="main-menu">
-                             <h3 class="menu-title">-- Giao Dịch</h3>
-                             <li><a href="#">Nạp Thẻ Cào (Tự Động)</a></li>
-                        </ul>
-
-                        <ul class="history-menu">
-                            <h3 class="menu-title">-- Lịch Sử</h3>
-                            <li><a href="/user/orders">Lịch Sử Chơi Trò Chơi</a></li>
-                            <li><a href="/user/transactions">Lịch Sử Giao Dịch</a></li>
-                        </ul>
-
-                         <div class="charge-section">
-                              <button class="logout-button" onclick="Logout()">Đăng Xuất</button>
-                        </div>
-                    </div>
-                </div>`;
-            $('.tw-menu-right').html(userMenu);
-            
-            // Add event listeners for the new dropdown
-            $('.user-menu-button').on('click', function(event) {
-                event.stopPropagation();
-                $('.user-dropdown-content').toggleClass('show');
-            });
-            
-            $(document).on('click', function (e) {
-                if (!$('.user-menu').is(e.target) && $('.user-menu').has(e.target).length === 0) {
-                    $('.user-dropdown-content').removeClass('show');
-                }
-            });
-        }
-
-
-        function updateUIForLoggedOutUser() {
-            const loginButton = `
-                 <button class="tw-bg-red-500 hover:tw-bg-red-600 tw-transition tw-duration-200 tw-text-white tw-text-sm tw-px-4 tw-rounded-full tw-font-semibold tw-h-8 md:tw-h-10 tw-relative" data-toggle="modal" data-target="#loginModal">
-                    <span class="tw-hidden md:tw-inline-block"><i class="tw-absolute tw-text-lg bx bxs-user" style="top: 10px;"></i></span> <span class="md:tw-ml-6">ĐĂNG NHẬP</span>
-                </button>`;
-             $('.tw-menu-right').html(loginButton);
-        }
-
-        /* Initialize on page load */
-        $(document).ready(function() {
-            checkAuthStatus();
-        });
-    </script>
 </div>
+<!-- Optional JavaScript -->
+<!-- jQuery First, Then Popper.js, Then Bootstrap JS -->
+<script src="../cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="../stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="../transvelo.github.io/electro-html/2.0/assets/vendor/slick-carousel/slick/slick.js"></script>
+<script src="../transvelo.github.io/electro-html/2.0/assets/js/hs.core.js"></script>
+<script src="../transvelo.github.io/electro-html/2.0/assets/js/components/hs.slick-carousel.js"></script>
+<script>
+var hscheck = false;
+$(document).ready(()=>{
+$.HSCore.components.HSSlickCarousel.init('.js-slick-carousel');
+$("#sliderSyncingNav .js-slide img").on("click", function(){
+$("#viewModal").modal("show");
+if(hscheck != 1){
+$.HSCore.components.HSSlickCarousel.init('.js-slick-carousel2');
+hscheck = true;
+}
+})
+})
+</script>
+<script>
+$("#form-Login input").keyup(function(e){
+if(e.keyCode == 13){
+Login();
+} 
+});
+$("#form-Register input").keyup(function(e){
+if(e.keyCode == 13){
+Register();
+}
+});
+</script>
+<script src="assets/script3705.js?887316"></script>
 </body>
 </html>
