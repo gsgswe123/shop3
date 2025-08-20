@@ -83,6 +83,124 @@
                 width: 65%!important;}
         }
         #rewardModal .modal-body p,#rewardModal .modal-body b{display:inline;color:#000}
+        
+        /* NEW STYLES FOR USER DROPDOWN */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f1f1f1;
+            min-width: 280px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            margin-top: 15px; /* Space for the arrow */
+            padding-top: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+
+        .user-dropdown-content.show {
+            display: block;
+        }
+
+        /* Arrow */
+        .user-dropdown-content::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            border-width: 0 10px 10px 10px;
+            border-style: solid;
+            border-color: transparent transparent white transparent;
+        }
+        
+        .user-dropdown-header {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #555;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .user-info .user-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .user-info .user-balance {
+            font-size: 14px;
+            color: #d9534f;
+            font-weight: bold;
+        }
+        
+        .dropdown-section {
+            padding: 5px 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #999;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .user-dropdown-content a {
+            color: black;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .user-dropdown-content a:hover {
+            background-color: #ddd;
+        }
+        
+        .dropdown-footer {
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #e5e5e5;
+            margin-top: 5px;
+        }
+        
+        .dropdown-footer .btn {
+            flex: 1;
+            margin: 0 5px;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-top-up {
+            background-color: #d9534f;
+            color: white;
+        }
+        
+        .btn-logout {
+            background-color: #f0f0f0;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +212,7 @@
                     <a href="index.html"><img class="tw-h-11" src="../i.ibb.co/M5Dj4rpk/8574d186247eba75669b7d50d42bd650-png.png"/></a>
                     <a href="index.html" class="hidden-cs md:tw-flex tw-ml-10 tw-font-bold tw-text-red-600 hover:tw-text-red-500 tw-px-3 tw-text-sm tw-items-center tw-cursor-pointer"><span class="tw-inline-flex tw-items-center tw-justify-center tw-h-6 tw-w-7 tw-rounded tw-bg-red-100 tw-mr-2"><i class="tw-text-lg bx bx-home"></i></span>TRANG CHỦ</a>
                 </div>
+                <!-- This div will be updated by JavaScript after login -->
                 <div class="tw-menu-right tw-flex tw-flex-wrap tw-items-center tw-justify-right">
                     <button class="tw-bg-red-500 hover:tw-bg-red-600 tw-transition tw-duration-200 tw-text-white tw-text-sm tw-px-4 tw-rounded-full tw-font-semibold tw-h-8 md:tw-h-10 tw-relative" data-toggle="modal" data-target="#loginModal">
                         <span class="tw-hidden md:tw-inline-block"><i class="tw-absolute tw-text-lg bx bxs-user" style="top: 10px;"></i></span> <span class="md:tw-ml-6">ĐĂNG NHẬP</span>
@@ -1050,18 +1169,6 @@
             }
         });
 
-        /* Dropdown Profile */
-        $(document).ready(function() {
-            $(".dropdown-profile").on("click", function(event) {
-                console.log("click");
-                $(".dropdown-content").toggleClass("open");
-            });
-
-            $(document).click(function (e) {
-                $('.dropdown-profile').not($('.dropdown-profile').has($(e.target))).children('.dropdown-content').removeClass('open');
-            })
-        });
-
         /* Menu */
         $(document).ready(function(){
             $("#menuToggle").on('click', function(){
@@ -1275,12 +1382,12 @@
                 },
                 success: function(data) {
                     localStorage.removeItem('user');
-                    window.location.href = '/';
+                    window.location.reload();
                 },
                 error: function(xhr, status, error) {
                     console.error('Logout error:', error);
                     localStorage.removeItem('user');
-                    window.location.href = '/';
+                    window.location.reload();
                 }
             });
         }
@@ -1288,7 +1395,7 @@
         /* Check if user is logged in */
         function checkAuthStatus() {
             const token = document.cookie.split('; ').find(row => row.startsWith('jwt='));
-            if (token) {
+            if (token && token !== 'jwt=loggedout') {
                  $.ajax({
                     url: `${API_BASE_URL}/users/me`,
                     type: "GET",
@@ -1313,18 +1420,47 @@
             }
         }
 
-        /* Update UI based on auth status */
+        /**
+         * UPDATE UI FOR LOGGED IN USER
+         * This function now creates the new dropdown menu based on the provided image.
+        */
         function updateUIForLoggedInUser(user) {
+            // Ensure balance is a number and format it
+            const balance = typeof user.balance === 'number' ? user.balance : 0;
+            const formattedBalance = balance.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+            
+            // Create a simple UID from the beginning of the user._id for display
+            const displayUID = user._id ? user._id.substring(0, 5).toUpperCase() : 'N/A';
+
             const userMenu = `
-                <div class="tw-relative dropdown-profile">
-                    <button class="tw-bg-green-500 hover:tw-bg-green-600 tw-transition tw-duration-200 tw-text-white tw-text-sm tw-px-4 tw-rounded-full tw-font-semibold tw-h-8 md:tw-h-10 tw-relative">
+                <div class="user-dropdown">
+                    <button id="user-dropdown-button" class="tw-bg-red-500 hover:tw-bg-red-600 tw-transition tw-duration-200 tw-text-white tw-text-sm tw-px-4 tw-rounded-full tw-font-semibold tw-h-8 md:tw-h-10 tw-relative">
                         <span class="tw-hidden md:tw-inline-block"><i class="tw-absolute tw-text-lg bx bxs-user" style="top: 10px;"></i></span>
-                        <span class="md:tw-ml-6">${user.name} - ${user.balance.toLocaleString('vi-VN')}đ</span>
+                        <span class="md:tw-ml-6">${user.name} | ${formattedBalance}</span>
                     </button>
-                    <div class="dropdown-content">
-                        <a href="/user/profile">Thông Tin Tài Khoản</a>
-                        <a href="/user/changepass">Đổi Mật Khẩu</a>
-                        <a href="#" onclick="Logout()">Đăng Xuất</a>
+                    <div id="user-dropdown-content" class="user-dropdown-content">
+                        <div class="user-dropdown-header">
+                            <div class="user-avatar">${user.avatarText || 'U'}</div>
+                            <div class="user-info">
+                                <div class="user-name">${user.name}</div>
+                                <div class="user-id" style="font-size: 12px; color: #666;">UID: ${displayUID}</div>
+                                <div class="user-balance">Số dư: ${formattedBalance}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="dropdown-section">Tài Khoản</div>
+                            <a href="#">Thông Tin Tài Khoản</a>
+                            <a href="#">Đổi Mật Khẩu</a>
+                            <div class="dropdown-section">Giao Dịch</div>
+                            <a href="#">Nạp Thẻ Cào (Tự Động)</a>
+                            <div class="dropdown-section">Lịch Sử</div>
+                            <a href="#">Lịch Sử Chơi Trò</a>
+                            <a href="#">Lịch Sử Giao Dịch</a>
+                        </div>
+                        <div class="dropdown-footer">
+                            <button class="btn btn-top-up">NẠP THẺ</button>
+                            <button class="btn btn-logout" onclick="Logout()">ĐĂNG XUẤT</button>
+                        </div>
                     </div>
                 </div>`;
             $('.tw-menu-right').html(userMenu);
@@ -1341,6 +1477,22 @@
         /* Initialize on page load */
         $(document).ready(function() {
             checkAuthStatus();
+
+            // Event listener for the new dropdown
+            // We use event delegation since the button is added dynamically
+            $('body').on('click', '#user-dropdown-button', function(event) {
+                event.stopPropagation(); // Prevent the click from propagating to the document
+                $('#user-dropdown-content').toggleClass('show');
+            });
+
+            // Close the dropdown if the user clicks outside of it
+            $(document).on('click', function(event) {
+                if (!$(event.target).closest('.user-dropdown').length) {
+                    if ($('#user-dropdown-content').hasClass('show')) {
+                        $('#user-dropdown-content').removeClass('show');
+                    }
+                }
+            });
         });
     </script>
 </div>
