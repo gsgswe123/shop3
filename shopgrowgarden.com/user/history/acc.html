@@ -21,81 +21,78 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/stylesdfb3.css?=126">
     
-    <!-- jQuery -->
+    <!-- Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         :root {
             --primary-red: #ef4444;
             --primary-red-dark: #dc2626;
+            --primary-blue: #3b82f6;
+            --primary-blue-dark: #2563eb;
             --light-red-bg: #fef2f2;
             --medium-red-bg: #fee2e2;
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
             --background-light: #f3f4f6;
+            --background-white: #ffffff;
             --border-color: #e5e7eb;
+            --border-color-light: #f3f4f6;
+            --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.07), 0 1px 2px -1px rgba(0,0,0,.07);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
+            --border-radius: 0.75rem; /* 12px */
+        }
+
+        /* --- Global Enhancements --- */
+        * {
+            transition: all 0.2s ease-in-out;
         }
 
         body {
             background-color: var(--background-light);
             font-family: 'Roboto', sans-serif;
+            color: var(--text-primary);
         }
 
-        /* --- Header / Navigation Bar --- */
+        /* --- Header / Navigation Bar (No changes from original) --- */
         .main-header {
-            position: sticky;
-            top: 0;
-            background-color: white;
+            position: sticky; top: 0;
+            background-color: var(--background-white);
             border-bottom: 1px solid var(--border-color);
             z-index: 1000;
         }
-        
-        .header-container {
-            max-width: 6xl;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.25rem 0.5rem; /* py-1 md:py-2, px-2 */
-        }
 
-        /* --- Sidebar Menu --- */
+        /* --- Sidebar Menu Enhancements --- */
         .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
+            list-style: none; padding: 0; margin: 0;
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
         }
         
         .sidebar-title {
-            padding: 1rem 1rem 0.5rem;
-            font-size: 0.75rem; /* 12px */
-            font-weight: 700;
-            color: #9ca3af;
+            padding: 1.25rem 1rem 0.5rem;
+            font-size: 0.75rem; font-weight: 700;
+            color: var(--text-tertiary);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
         .sidebar-link {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            font-size: 0.875rem; /* 14px */
-            font-weight: 500;
-            color: #4b5563;
-            text-decoration: none;
-            border-left: 3px solid transparent;
-            transition: all 0.2s ease-in-out;
+            display: flex; align-items: center;
+            padding: 0.8rem 1rem;
+            font-size: 0.9rem; font-weight: 500;
+            color: #4b5563; text-decoration: none;
+            border-left: 4px solid transparent;
         }
 
         .sidebar-link i {
-            margin-right: 0.75rem;
-            font-size: 1.25rem; /* 20px */
+            margin-right: 0.85rem; font-size: 1.3rem;
+            width: 24px; text-align: center;
             color: var(--text-secondary);
-            transition: color 0.2s ease-in-out;
         }
         
         .sidebar-link:hover {
@@ -111,74 +108,138 @@
         .sidebar-link.active {
             background-color: var(--medium-red-bg);
             color: var(--primary-red-dark);
-            font-weight: 600;
+            font-weight: 700;
             border-left-color: var(--primary-red);
         }
 
         .sidebar-link.active i {
             color: var(--primary-red-dark);
         }
-
-        /* --- Main Content Profile Card --- */
+        
+        /* --- UPGRADED Main Content Profile Card --- */
         .profile-card {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
-            overflow: hidden;
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden; /* Important for keeping child elements inside rounded corners */
         }
-        .profile-header {
-            padding: 1rem;
+        
+        /* New Profile Summary section */
+        .profile-summary {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        #user-avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 4px solid var(--background-white);
+            box-shadow: var(--shadow-md);
+        }
+
+        .user-identity h2 {
+            font-size: 1.75rem;
             font-weight: 700;
-            text-transform: uppercase;
             color: var(--text-primary);
+            margin: 0;
         }
 
+        .user-identity #user-email {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Redesigned Profile Body */
         .profile-body {
-            padding: 1rem 1.5rem;
+            padding: 1rem 2rem 2rem 2rem;
         }
-
+        
+        .section-header {
+            margin: 2rem 0 1rem 0;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color-light);
+            padding-bottom: 0.5rem;
+        }
+        
         .info-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.1rem 0;
-            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 0.5rem;
+            border-bottom: 1px solid var(--border-color-light);
         }
         
         .info-row:last-child {
             border-bottom: none;
         }
         
-        .info-row span {
-            font-size: 0.9375rem; /* 15px */
+        .info-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem; /* 15px */
             color: var(--text-secondary);
         }
-        
-        .info-row strong {
-            font-size: 0.9375rem;
-            color: var(--text-primary);
-            font-weight: 600;
+
+        .info-label i {
+            font-size: 1.4rem;
+            margin-right: 1rem;
+            color: var(--text-tertiary);
+            width: 24px;
         }
         
+        .info-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .info-value.highlight {
+            font-weight: 700;
+            color: var(--primary-red);
+            font-size: 1.1rem;
+        }
+        
+        /* Redesigned Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
         .action-btn {
-            padding: 0.5rem 1rem; /* 8px 16px */
+            padding: 0.6rem 1.2rem;
             border: none;
-            border-radius: 0.375rem; /* 6px */
-            font-size: 0.875rem; /* 14px */
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+        
+        .action-btn i { font-size: 1.1rem; }
         
         .blue-btn {
-            background-color: #3b82f6; color: white; margin-right: 0.5rem;
+            background-color: var(--primary-blue);
+            color: white;
         }
-        .blue-btn:hover { background-color: #2563eb; }
-        .red-btn { background-color: var(--primary-red); color: white; }
+        .blue-btn:hover { background-color: var(--primary-blue-dark); }
+        
+        .red-btn {
+            background-color: var(--primary-red);
+            color: white;
+        }
         .red-btn:hover { background-color: var(--primary-red-dark); }
         
-        /* --- Dropdown User Menu (from script.js logic) --- */
+        /* Dropdown User Menu CSS (No changes from original) */
         .user-menu{position:relative;display:inline-block}.user-menu-button{background-color:#e53e3e;color:white;padding:8px 16px;font-size:14px;font-weight:600;border:none;border-radius:9999px;cursor:pointer;display:flex;align-items:center;height:40px}.user-menu-button:hover{background-color:#c53030}.user-menu-button img{border-radius:50%;width:24px;height:24px;margin-right:8px;border:1px solid white}.user-dropdown-content{display:none;position:absolute;background-color:#f9f9f9;min-width:280px;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);z-index:1001;right:0;border-radius:8px;overflow:hidden;font-family:Arial,sans-serif;border:1px solid #ddd}.user-dropdown-content.show{display:block}.user-info-header{background-color:#f1f1f1;padding:15px;border-bottom:1px solid #ddd;display:flex;align-items:center}.user-avatar{width:40px;height:40px;border-radius:50%;background-color:#e53e3e;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;margin-right:12px}.user-details{display:flex;flex-direction:column}.user-uid{font-weight:bold;color:#333;font-size:14px}.user-balance-dropdown{color:#e53e3e;font-weight:bold;font-size:14px}.user-balance-dropdown small{text-decoration:underline}.user-dropdown-content .main-menu,.user-dropdown-content .history-menu{list-style:none;padding:10px 0;margin:0}.user-dropdown-content .main-menu:last-of-type,.user-dropdown-content .history-menu{border-top:1px solid #ddd}.user-dropdown-content .menu-title{padding:8px 15px;font-size:12px;color:#777;text-transform:uppercase;font-weight:bold}.user-dropdown-content a,.user-dropdown-content button{color:#333;padding:10px 15px;text-decoration:none;display:block;font-size:14px;background:none;border:none;width:100%;text-align:left;cursor:pointer}.user-dropdown-content a:hover,.user-dropdown-content button:hover{background-color:#f1f1f1}.charge-section{padding:15px;}.logout-button{width:100%;padding:10px;border-radius:4px;border:none;color:white;cursor:pointer;background-color:#e53e3e}.logout-button:hover{background-color:#c53030}
     </style>
 </head>
@@ -219,38 +280,50 @@
                     </ul>
                 </aside>
 
-                <!-- Profile Details (Right Column) -->
+                <!-- Profile Details (Right Column) - UPGRADED LAYOUT -->
                 <article class="tw-col-span-12 md:tw-col-span-9">
                     <div class="profile-card">
-                        <header class="profile-header">
-                            Thông Tin Tài Khoản
-                        </header>
+                        <!-- New Profile Summary Header -->
+                        <div class="profile-summary">
+                             <img id="user-avatar" src="https://ui-avatars.com/api/?name=?&background=e5e7eb&color=fff" alt="User Avatar">
+                             <div class="user-identity">
+                                 <h2 id="user-name-main">Đang tải...</h2>
+                                 <span id="user-email">Đang tải...</span>
+                             </div>
+                        </div>
+
+                        <!-- Main Profile Body with Details -->
                         <div class="profile-body">
+                            <h3 class="section-header">Chi tiết tài khoản</h3>
+
                             <div class="info-row">
-                                <span>UID:</span>
-                                <strong id="user-uid">Đang tải...</strong>
+                                <span class="info-label"><i class='bx bx-id-card'></i> UID:</span>
+                                <strong id="user-uid" class="info-value">...</strong>
                             </div>
                             <div class="info-row">
-                                <span>Tên Tài Khoản:</span>
-                                <strong id="user-name">Đang tải...</strong>
+                                <span class="info-label"><i class='bx bxs-user-detail'></i> Tên Tài Khoản:</span>
+                                <strong id="user-name-detail" class="info-value">...</strong>
                             </div>
                             <div class="info-row">
-                                <span>Số Dư Tài Khoản:</span>
-                                <strong id="user-balance" class="tw-text-red-600">Đang tải...</strong>
+                                <span class="info-label"><i class='bx bxs-wallet'></i> Số Dư Tài Khoản:</span>
+                                <strong id="user-balance" class="info-value highlight">...</strong>
                             </div>
                             <div class="info-row">
-                                <span>Số Robux:</span>
-                                <strong id="user-robux">Đang tải...</strong>
+                                <span class="info-label"><i class='bx bxl-roblox'></i> Số Robux:</span>
+                                <strong id="user-robux" class="info-value">...</strong>
                             </div>
                             <div class="info-row">
-                                <span>Thời Gian Tham Gia:</span>
-                                <strong id="user-created-at">Đang tải...</strong>
+                                <span class="info-label"><i class='bx bx-calendar-plus'></i> Thời Gian Tham Gia:</span>
+                                <strong id="user-created-at" class="info-value">...</strong>
                             </div>
+                            
+                            <h3 class="section-header">Thao tác</h3>
+
                             <div class="info-row">
-                                <span>Thao Tác:</span>
-                                <div>
-                                    <button class="action-btn blue-btn">Rút Robux</button>
-                                    <button class="action-btn red-btn" onclick="Logout()">Đăng Xuất</button>
+                                <span class="info-label">Thực hiện hành động:</span>
+                                <div class="action-buttons">
+                                    <button class="action-btn blue-btn"><i class='bx bxs-package'></i>Rút Robux</button>
+                                    <button class="action-btn red-btn" onclick="Logout()"><i class='bx bx-log-out-circle'></i>Đăng Xuất</button>
                                 </div>
                             </div>
                         </div>
@@ -268,25 +341,28 @@
     <script>
         $(document).ready(function() {
             /**
-             * Formats a date string or Date object into "HH:mm:ss - DD/MM/YYYY" format.
-             * @param {string|Date} dateInput The date to format.
-             * @returns {string} The formatted date string.
+             * Formats a date string into "HH:mm:ss - DD/MM/YYYY".
              */
             function formatJoinDate(dateInput) {
                 try {
                     const date = new Date(dateInput);
-                    if (isNaN(date)) return "N/A"; // Invalid date check
-
+                    if (isNaN(date)) return "Không xác định";
                     const pad = (num) => num.toString().padStart(2, '0');
+                    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} - ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+                } catch { return "Không xác định"; }
+            }
 
-                    const time = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-                    const day = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
-
-                    return `${time} - ${day}`;
-                } catch (error) {
-                    console.error("Date formatting failed:", error);
-                    return "N/A";
+            /**
+             * Generates a consistent 5-digit UID from a MongoDB ID string.
+             */
+            function generateSimpleUID(mongoId) {
+                if (!mongoId) return 'N/A';
+                let hash = 0;
+                for (let i = 0; i < mongoId.length; i++) {
+                    hash = ((hash << 5) - hash) + mongoId.charCodeAt(i);
+                    hash |= 0;
                 }
+                return Math.abs(hash).toString().slice(0, 5);
             }
             
             /**
@@ -296,44 +372,44 @@
                 const userString = localStorage.getItem('user');
                 
                 if (!userString) {
-                    alert("Vui lòng đăng nhập để xem thông tin tài khoản.");
-                    window.location.href = "../index.html";
+                    Swal.fire({
+                        icon: 'warning', title: 'Chưa Đăng Nhập',
+                        text: 'Vui lòng đăng nhập để xem thông tin tài khoản.',
+                        confirmButtonText: 'Đăng nhập ngay'
+                    }).then(() => { window.location.href = "../index.html"; });
                     return;
                 }
 
                 try {
                     const user = JSON.parse(userString);
 
-                    // --- Data Population ---
-                    
-                    // UID: Static value to match the visual design requirement.
-                    $('#user-uid').text('16432');
-                    
-                    // Name: Dynamic from the logged-in user object.
-                    $('#user-name').text(user.name || 'Chưa cập nhật');
+                    // --- Populate Header Summary ---
+                    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.avatarText)}&background=random&color=fff&size=128`;
+                    $('#user-avatar').attr('src', avatarUrl);
+                    $('#user-name-main').text(user.name || 'Người dùng');
+                    $('#user-email').text(user.email || 'Chưa cập nhật email');
 
-                    // Balance: Dynamic, formatted as Vietnamese currency.
+                    // --- Populate Details List ---
+                    $('#user-uid').text(generateSimpleUID(user._id));
+                    $('#user-name-detail').text(user.name || 'Chưa cập nhật');
                     $('#user-balance').text((user.balance || 0).toLocaleString('vi-VN') + 'đ');
-
-                    // Robux: Static value from the screenshot, as this data is not available in the backend user model.
-                    $('#user-robux').text('492');
-
-                    // Join Date: Dynamically formatted from the user's actual creation date.
+                    $('#user-robux').text('492'); // Static value as per original requirement
                     $('#user-created-at').text(formatJoinDate(user.createdAt));
 
                 } catch (e) {
-                    console.error("Could not parse user data from localStorage:", e);
-                    alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
-                    // Clear corrupted data and redirect
-                    localStorage.removeItem('user');
-                    window.location.href = "../index.html";
+                    Swal.fire({
+                        icon: 'error', title: 'Lỗi Phiên Đăng Nhập',
+                        text: 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        localStorage.removeItem('user');
+                        window.location.href = "../index.html";
+                    });
                 }
             }
             
-            // Step 1: Initialize site-wide authentication from script.js (updates header).
+            // --- INITIALIZATION ---
             checkAuthOnLoad();
-
-            // Step 2: Populate the specific profile fields on this page.
             populateProfileData();
         });
     </script>
