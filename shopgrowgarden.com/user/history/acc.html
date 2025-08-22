@@ -1,417 +1,2378 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <meta http-equiv="content-language" content="vi">
-    <meta name="robots" content="index, follow'">
-    <title>Thông Tin Tài Khoản - Shop Grow A Garden</title>
-    <link rel="shortcut icon" href="https://iili.io/F5yETmB.webp" type="image/x-icon">
-    <meta name="description" content="Quản lý thông tin tài khoản cá nhân tại Shop Grow A Garden.">
-    <meta name="keywords" content="Grow A Garden, Shop Grow A Garden, tài khoản người dùng">
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons and Core Styles -->
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/stylesdfb3.css?=126">
-    
-    <!-- Libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản - Shop Grow A Garden</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-red: #ef4444;
-            --primary-red-dark: #dc2626;
-            --primary-blue: #3b82f6;
-            --primary-blue-dark: #2563eb;
-            --light-red-bg: #fef2f2;
-            --medium-red-bg: #fee2e2;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --text-tertiary: #9ca3af;
-            --background-light: #f3f4f6;
-            --background-white: #ffffff;
-            --border-color: #e5e7eb;
-            --border-color-light: #f3f4f6;
-            --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.07), 0 1px 2px -1px rgba(0,0,0,.07);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
-            --border-radius: 0.75rem; /* 12px */
+            --primary-color: #e63946;
+            --secondary-color: #1d3557;
+            --accent-color: #a8dadc;
+            --light-color: #f1faee;
+            --dark-color: #1b1a1a;
+            --gray-color: #6c757d;
+            --success-color: #2a9d8f;
+            --warning-color: #f4a261;
+            --danger-color: #dc3545;
+            --border-color: #dee2e6;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+            --shadow-xl: 0 20px 40px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient-primary: linear-gradient(135deg, #e63946 0%, #d62839 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
         }
 
-        /* --- Global Enhancements --- */
         * {
-            transition: all 0.2s ease-in-out;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--background-light);
-            font-family: 'Roboto', sans-serif;
-            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--dark-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
         }
 
-        /* --- Header / Navigation Bar (No changes from original) --- */
-        .main-header {
-            position: sticky; top: 0;
-            background-color: var(--background-white);
-            border-bottom: 1px solid var(--border-color);
-            z-index: 1000;
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
         }
 
-        /* --- Sidebar Menu Enhancements --- */
-        .sidebar-menu {
-            list-style: none; padding: 0; margin: 0;
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-            overflow: hidden;
-        }
-        
-        .sidebar-title {
-            padding: 1.25rem 1rem 0.5rem;
-            font-size: 0.75rem; font-weight: 700;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
         }
 
-        .sidebar-link {
-            display: flex; align-items: center;
-            padding: 0.8rem 1rem;
-            font-size: 0.9rem; font-weight: 500;
-            color: #4b5563; text-decoration: none;
-            border-left: 4px solid transparent;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
-        .sidebar-link i {
-            margin-right: 0.85rem; font-size: 1.3rem;
-            width: 24px; text-align: center;
-            color: var(--text-secondary);
-        }
-        
-        .sidebar-link:hover {
-            background-color: var(--light-red-bg);
-            color: var(--primary-red);
-            border-left-color: #fca5a5;
-        }
-        
-        .sidebar-link:hover i {
-            color: var(--primary-red);
+        /* Header with Glass Effect */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.8s ease-out;
         }
 
-        .sidebar-link.active {
-            background-color: var(--medium-red-bg);
-            color: var(--primary-red-dark);
-            font-weight: 700;
-            border-left-color: var(--primary-red);
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        .sidebar-link.active i {
-            color: var(--primary-red-dark);
-        }
-        
-        /* --- UPGRADED Main Content Profile Card --- */
-        .profile-card {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-            overflow: hidden; /* Important for keeping child elements inside rounded corners */
-        }
-        
-        /* New Profile Summary section */
-        .profile-summary {
-            padding: 1.5rem 2rem;
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        
-        #user-avatar {
-            width: 80px; height: 80px;
-            border-radius: 50%;
-            border: 4px solid var(--background-white);
-            box-shadow: var(--shadow-md);
-        }
-
-        .user-identity h2 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .user-identity #user-email {
-            font-size: 1rem;
-            color: var(--text-secondary);
-        }
-
-        /* Redesigned Profile Body */
-        .profile-body {
-            padding: 1rem 2rem 2rem 2rem;
-        }
-        
-        .section-header {
-            margin: 2rem 0 1rem 0;
-            font-weight: 700;
-            font-size: 1rem;
-            text-transform: uppercase;
-            color: var(--text-tertiary);
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-color-light);
-            padding-bottom: 0.5rem;
-        }
-        
-        .info-row {
+        .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.25rem 0.5rem;
-            border-bottom: 1px solid var(--border-color-light);
         }
-        
-        .info-row:last-child {
-            border-bottom: none;
+
+        .logo {
+            height: 50px;
+            transition: var(--transition);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
         }
-        
-        .info-label {
+
+        .logo:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-link {
             display: flex;
             align-items: center;
-            font-size: 0.95rem; /* 15px */
-            color: var(--text-secondary);
-        }
-
-        .info-label i {
-            font-size: 1.4rem;
-            margin-right: 1rem;
-            color: var(--text-tertiary);
-            width: 24px;
-        }
-        
-        .info-value {
-            font-size: 1rem;
-            color: var(--text-primary);
+            gap: 8px;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: var(--transition);
             font-weight: 500;
-        }
-        
-        .info-value.highlight {
-            font-weight: 700;
-            color: var(--primary-red);
-            font-size: 1.1rem;
-        }
-        
-        /* Redesigned Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 0.75rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
         }
 
-        .action-btn {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 600;
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* User Actions */
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 50px;
+            transition: var(--transition);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .user-dropdown:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: white;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-xl);
+            min-width: 220px;
+            padding: 15px 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-15px) scale(0.95);
+            transition: var(--transition);
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: var(--dark-color);
+            text-decoration: none;
+            transition: var(--transition);
+            background: none;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(230, 57, 70, 0.1);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 10px 0;
+        }
+
+        .btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: none;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .action-btn i { font-size: 1.1rem; }
-        
-        .blue-btn {
-            background-color: var(--primary-blue);
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-outline {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
             color: white;
         }
-        .blue-btn:hover { background-color: var(--primary-blue-dark); }
-        
-        .red-btn {
-            background-color: var(--primary-red);
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 40px 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--accent-color);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .account-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 40px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        /* Sidebar with Advanced Glass Effect */
+        .account-sidebar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border-radius: var(--border-radius);
+            padding: 35px 25px;
+            box-shadow: var(--shadow-xl);
+            height: fit-content;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .account-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 35px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .account-avatar {
+            width: 90px;
+            height: 90px;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 auto 20px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .account-avatar::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: conic-gradient(from 0deg, var(--primary-color), var(--accent-color), var(--primary-color));
+            border-radius: 50%;
+            z-index: -1;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .account-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .account-id {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar-menu {
+            margin-bottom: 35px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .menu-item:hover::before {
+            left: 100%;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(8px);
+        }
+
+        .menu-item.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .menu-item i {
+            width: 22px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Content Area with Glass Effect */
+        .account-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .account-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .content-header {
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .content-title {
+            font-size: 28px;
+            color: white;
+            margin: 0;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Account Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+        }
+
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .info-label {
+            display: block;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin-bottom: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: rotate 10s linear infinite;
+        }
+
+        .balance-amount {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 25px;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .balance-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .balance-actions .btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .balance-actions .btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+        }
+
+        /* Quick Deposit */
+        .quick-deposit {
+            margin-top: 30px;
+        }
+
+        .quick-deposit h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .quick-amount {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-amount:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-amount.selected {
+            background: var(--gradient-primary);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* History and Empty States */
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+
+        .history-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 18px;
+        }
+
+        .history-icon.success {
+            background: rgba(42, 157, 143, 0.2);
+            color: var(--success-color);
+        }
+
+        .history-icon.purchase {
+            background: rgba(230, 57, 70, 0.2);
+            color: var(--primary-color);
+        }
+
+        .history-details {
+            flex: 1;
+        }
+
+        .history-title {
+            font-weight: 600;
+            margin-bottom: 5px;
             color: white;
         }
-        .red-btn:hover { background-color: var(--primary-red-dark); }
-        
-        /* Dropdown User Menu CSS (No changes from original) */
-        .user-menu{position:relative;display:inline-block}.user-menu-button{background-color:#e53e3e;color:white;padding:8px 16px;font-size:14px;font-weight:600;border:none;border-radius:9999px;cursor:pointer;display:flex;align-items:center;height:40px}.user-menu-button:hover{background-color:#c53030}.user-menu-button img{border-radius:50%;width:24px;height:24px;margin-right:8px;border:1px solid white}.user-dropdown-content{display:none;position:absolute;background-color:#f9f9f9;min-width:280px;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);z-index:1001;right:0;border-radius:8px;overflow:hidden;font-family:Arial,sans-serif;border:1px solid #ddd}.user-dropdown-content.show{display:block}.user-info-header{background-color:#f1f1f1;padding:15px;border-bottom:1px solid #ddd;display:flex;align-items:center}.user-avatar{width:40px;height:40px;border-radius:50%;background-color:#e53e3e;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;margin-right:12px}.user-details{display:flex;flex-direction:column}.user-uid{font-weight:bold;color:#333;font-size:14px}.user-balance-dropdown{color:#e53e3e;font-weight:bold;font-size:14px}.user-balance-dropdown small{text-decoration:underline}.user-dropdown-content .main-menu,.user-dropdown-content .history-menu{list-style:none;padding:10px 0;margin:0}.user-dropdown-content .main-menu:last-of-type,.user-dropdown-content .history-menu{border-top:1px solid #ddd}.user-dropdown-content .menu-title{padding:8px 15px;font-size:12px;color:#777;text-transform:uppercase;font-weight:bold}.user-dropdown-content a,.user-dropdown-content button{color:#333;padding:10px 15px;text-decoration:none;display:block;font-size:14px;background:none;border:none;width:100%;text-align:left;cursor:pointer}.user-dropdown-content a:hover,.user-dropdown-content button:hover{background-color:#f1f1f1}.charge-section{padding:15px;}.logout-button{width:100%;padding:10px;border-radius:4px;border:none;color:white;cursor:pointer;background-color:#e53e3e}.logout-button:hover{background-color:#c53030}
+
+        .history-date, .history-info {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .history-amount {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .history-amount.success {
+            color: var(--success-color);
+        }
+
+        .history-amount.purchase {
+            color: var(--primary-color);
+        }
+
+        /* Security Settings */
+        .security-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: var(--transition);
+        }
+
+        .security-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .security-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .security-info i {
+            font-size: 24px;
+            color: var(--primary-color);
+            width: 30px;
+            text-align: center;
+        }
+
+        .security-info h4 {
+            margin-bottom: 5px;
+            font-size: 16px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .security-info p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 25px;
+            opacity: 0.6;
+            color: white;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* Login Prompt */
+        .login-prompt {
+            text-align: center;
+            padding: 80px 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border-radius: var(--border-radius);
+            margin: 60px 0;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-xl);
+            animation: bounceIn 1s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .login-prompt i {
+            font-size: 80px;
+            color: white;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .login-prompt h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .login-prompt p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+
+        .login-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 60px 0 30px;
+            margin-top: 80px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            text-align: center;
+            padding: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+        }
+
+        .footer-logo img {
+            max-width: 160px;
+            margin-bottom: 20px;
+            filter: brightness(1.2);
+        }
+
+        .footer-title {
+            font-size: 20px;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-link {
+            margin-bottom: 12px;
+        }
+
+        .footer-link a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .footer-link a:hover {
+            color: white;
+            transform: translateX(8px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Messenger Chat Button */
+        .messenger-chat {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #0084ff, #006ce7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0, 132, 255, 0.4);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1000;
+            text-decoration: none;
+            color: white;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .messenger-chat:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 132, 255, 0.5);
+            color: white;
+        }
+
+        .messenger-chat i {
+            font-size: 28px;
+        }
+
+        .messenger-chat .tooltip {
+            position: absolute;
+            right: 85px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .messenger-chat .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            margin-top: -6px;
+            border: 6px solid transparent;
+            border-left-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .messenger-chat:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            max-width: 520px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: var(--transition);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: white;
+            font-size: 15px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group.has-error input,
+        .form-group.has-error select {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.2);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .form-group.has-error .error-message {
+            display: block;
+            animation: slideInUp 0.3s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .password-group {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+            transition: var(--transition);
+            font-size: 18px;
+        }
+
+        .password-toggle:hover {
+            color: white;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 12px;
+        }
+
+        .btn-submit.loading .spinner {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Card Types */
+        .card-types {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card-type {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-type:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-type.selected {
+            border-color: var(--primary-color);
+            background: rgba(230, 57, 70, 0.1);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-type .card-logo {
+            width: 100%;
+            max-width: 45px;
+            height: 35px;
+            border-radius: 6px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .card-type[data-type="viettel"] .card-logo {
+            background: #d70018;
+        }
+
+        .card-type[data-type="mobifone"] .card-logo {
+            background: #1f7a3e;
+        }
+
+        .card-type[data-type="vinaphone"] .card-logo {
+            background: #662d91;
+        }
+
+        .card-type[data-type="gate"] .card-logo {
+            background: #ff6600;
+        }
+
+        .card-type span {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .form-note {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(42, 157, 143, 0.15);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--success-color);
+            border: 1px solid rgba(42, 157, 143, 0.3);
+        }
+
+        .form-note i {
+            color: var(--success-color);
+            font-size: 16px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 25px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            box-shadow: var(--shadow-xl);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10000;
+            max-width: 400px;
+            backdrop-filter: blur(15px);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: rgba(42, 157, 143, 0.9);
+            border: 1px solid rgba(42, 157, 143, 0.3);
+        }
+
+        .toast.error {
+            background: rgba(220, 53, 69, 0.9);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .toast.info {
+            background: rgba(59, 130, 246, 0.9);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .toast.warning {
+            background: rgba(245, 158, 11, 0.9);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .account-layout {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .account-sidebar {
+                display: flex;
+                align-items: center;
+                text-align: left;
+                padding: 25px;
+            }
+
+            .sidebar-header {
+                display: flex;
+                align-items: center;
+                margin: 0 30px 0 0;
+                text-align: left;
+            }
+
+            .account-avatar {
+                margin: 0 20px 0 0;
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                gap: 15px;
+                margin: 0;
+                flex-wrap: wrap;
+                flex: 1;
+            }
+
+            .menu-item {
+                margin: 0;
+                padding: 12px 18px;
+                border-radius: 25px;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .balance-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .login-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .messenger-chat {
+                bottom: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .messenger-chat i {
+                font-size: 24px;
+            }
+
+            .messenger-chat .tooltip {
+                display: none;
+            }
+
+            .card-types {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .account-avatar {
+                margin: 0 0 15px 0;
+            }
+
+            .sidebar-menu {
+                justify-content: center;
+            }
+
+            .quick-amounts {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes shimmer {
+            0% {
+                background-position: -468px 0;
+            }
+            100% {
+                background-position: 468px 0;
+            }
+        }
+
+        .loading-skeleton {
+            animation: shimmer 1.2s ease-in-out infinite;
+            background: linear-gradient(to right, rgba(255,255,255,0.1) 8%, rgba(255,255,255,0.2) 18%, rgba(255,255,255,0.1) 33%);
+            background-size: 800px 104px;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
-
 <body>
-    <section>
-        <!-- Header Section -->
-        <header class="main-header">
-            <div class="tw-max-w-6xl tw-mx-auto tw-flex tw-justify-between tw-items-center tw-px-2 tw-py-1 md:tw-py-2">
-                <div class="tw-flex tw-items-center">
-                    <a href="../index.html"><img class="tw-h-11" src="https://i.ibb.co/M5Dj4rpk/8574d186247eba75669b7d50d42bd650-png.png" alt="Shop Grow A Garden Logo" /></a>
-                    <a href="../index.html" class="hidden-cs md:tw-flex tw-ml-10 tw-font-bold tw-text-red-600 hover:tw-text-red-500 tw-px-3 tw-text-sm tw-items-center tw-cursor-pointer"><span class="tw-inline-flex tw-items-center tw-justify-center tw-h-6 tw-w-7 tw-rounded tw-bg-red-100 tw-mr-2"><i class="tw-text-lg bx bx-home"></i></span>TRANG CHỦ</a>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-container">
+            <a href="index.html">
+                <img src="https://i.ibb.co/q3r1hTft/8574d186247eba75669b7d50d42bd650-png.png" alt="Shop Grow A Garden" class="logo">
+            </a>
+            
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Trang Chủ</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-seedling"></i>
+                    <span>Giống Cây</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-paw"></i>
+                    <span>Thú Cưng</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Tài Khoản Game</span>
+                </a>
+            </nav>
+
+            <div class="user-actions">
+                <!-- User dropdown (shown when logged in) -->
+                <div class="user-dropdown" id="userDropdown" style="display: none;">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span class="user-name" id="userName">User</span>
+                    <div class="dropdown-menu">
+                        <a href="account.html" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>Tài khoản</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>Yêu thích</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Giỏ hàng</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item" onclick="AccountManager.logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Đăng xuất</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="tw-menu-right tw-flex tw-items-center">
-                    <!-- User menu will be dynamically populated by script.js -->
-                </div>
+
+                <!-- Login button (shown when not logged in) -->
+                <a href="index.html" class="btn btn-primary" id="loginButton">
+                    <i class="fas fa-user"></i>
+                    <span>Đăng Nhập</span>
+                </a>
             </div>
-        </header>
-
-        <!-- Main Content Section -->
-        <main class="tw-max-w-6xl tw-mx-auto tw-py-4 md:tw-py-8 tw-px-2">
-            <div class="tw-grid tw-grid-cols-12 tw-gap-4 md:tw-gap-6">
-
-                <!-- Sidebar (Left Column) -->
-                <aside class="tw-col-span-12 md:tw-col-span-3">
-                    <ul class="sidebar-menu">
-                        <li><h3 class="sidebar-title">Tài Khoản</h3></li>
-                        <li><a href="#" class="sidebar-link active"><i class='bx bxs-user-circle'></i>Thông Tin Tài Khoản</a></li>
-                        <li><a href="#" class="sidebar-link"><i class='bx bxs-lock-alt'></i>Đổi Mật Khẩu</a></li>
-                        
-                        <li><h3 class="sidebar-title">Giao Dịch</h3></li>
-                        <li><a href="#" class="sidebar-link"><i class='bx bxs-package'></i>Rút Robux (Tự Động)</a></li>
-                        <li><a href="#" class="sidebar-link"><i class='bx bxs-credit-card'></i>Nạp Thẻ (Tự Động)</a></li>
-                        
-                        <li><h3 class="sidebar-title">Lịch Sử</h3></li>
-                        <li><a href="#" class="sidebar-link"><i class='bx bxs-cart-alt'></i>Lịch Sử Chơi Thử</a></li>
-                        <li><a href="#" class="sidebar-link"><i class='bx bx-history'></i>Lịch Sử Giao Dịch</a></li>
-                    </ul>
-                </aside>
-
-                <!-- Profile Details (Right Column) - UPGRADED LAYOUT -->
-                <article class="tw-col-span-12 md:tw-col-span-9">
-                    <div class="profile-card">
-                        <!-- New Profile Summary Header -->
-                        <div class="profile-summary">
-                             <img id="user-avatar" src="https://ui-avatars.com/api/?name=?&background=e5e7eb&color=fff" alt="User Avatar">
-                             <div class="user-identity">
-                                 <h2 id="user-name-main">Đang tải...</h2>
-                                 <span id="user-email">Đang tải...</span>
-                             </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="container main-content">
+        <div class="breadcrumb">
+            <a href="index.html">Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Tài khoản</span>
+        </div>
+        
+        <!-- Content for logged in users -->
+        <div id="accountContent" style="display: none;">
+            <div class="account-layout">
+                <!-- Sidebar -->
+                <div class="account-sidebar">
+                    <div class="sidebar-header">
+                        <div class="account-avatar" id="accountAvatar">U</div>
+                        <div>
+                            <h2 class="account-name" id="accountName">User</h2>
+                            <div class="account-id" id="accountId">ID: 000001</div>
                         </div>
-
-                        <!-- Main Profile Body with Details -->
-                        <div class="profile-body">
-                            <h3 class="section-header">Chi tiết tài khoản</h3>
-
-                            <div class="info-row">
-                                <span class="info-label"><i class='bx bx-id-card'></i> UID:</span>
-                                <strong id="user-uid" class="info-value">...</strong>
+                    </div>
+                    
+                    <nav class="sidebar-menu">
+                        <button class="menu-item active" data-tab="info">
+                            <i class="fas fa-user"></i>
+                            Thông tin tài khoản
+                        </button>
+                        <button class="menu-item" data-tab="balance">
+                            <i class="fas fa-wallet"></i>
+                            Số dư & Nạp tiền
+                        </button>
+                        <button class="menu-item" data-tab="history">
+                            <i class="fas fa-history"></i>
+                            Lịch sử giao dịch
+                        </button>
+                        <button class="menu-item" data-tab="security">
+                            <i class="fas fa-shield-alt"></i>
+                            Bảo mật
+                        </button>
+                    </nav>
+                    
+                    <button class="btn btn-outline" onclick="AccountManager.logout()" style="width: 100%;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Đăng xuất
+                    </button>
+                </div>
+                
+                <!-- Content -->
+                <div class="account-content">
+                    <!-- Account Info Tab -->
+                    <div class="tab-content active" id="infoTab">
+                        <div class="content-header">
+                            <h2 class="content-title">Thông tin tài khoản</h2>
+                        </div>
+                        
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label class="info-label">Họ và tên</label>
+                                <div class="info-value" id="userFullName">User</div>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label"><i class='bx bxs-user-detail'></i> Tên Tài Khoản:</span>
-                                <strong id="user-name-detail" class="info-value">...</strong>
+                            <div class="info-item">
+                                <label class="info-label">Email</label>
+                                <div class="info-value" id="userEmail">user@example.com</div>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label"><i class='bx bxs-wallet'></i> Số Dư Tài Khoản:</span>
-                                <strong id="user-balance" class="info-value highlight">...</strong>
+                            <div class="info-item">
+                                <label class="info-label">Số điện thoại</label>
+                                <div class="info-value" id="userPhone">Chưa cập nhật</div>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label"><i class='bx bxl-roblox'></i> Số Robux:</span>
-                                <strong id="user-robux" class="info-value">...</strong>
+                            <div class="info-item">
+                                <label class="info-label">Ngày đăng ký</label>
+                                <div class="info-value" id="userRegisterDate">02/08/2025</div>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label"><i class='bx bx-calendar-plus'></i> Thời Gian Tham Gia:</span>
-                                <strong id="user-created-at" class="info-value">...</strong>
+                            <div class="info-item">
+                                <label class="info-label">ID tài khoản</label>
+                                <div class="info-value" id="userAccountId">000001</div>
                             </div>
-                            
-                            <h3 class="section-header">Thao tác</h3>
-
-                            <div class="info-row">
-                                <span class="info-label">Thực hiện hành động:</span>
-                                <div class="action-buttons">
-                                    <button class="action-btn blue-btn"><i class='bx bxs-package'></i>Rút Robux</button>
-                                    <button class="action-btn red-btn" onclick="Logout()"><i class='bx bx-log-out-circle'></i>Đăng Xuất</button>
-                                </div>
+                            <div class="info-item">
+                                <label class="info-label">Trạng thái</label>
+                                <div class="info-value" style="color: var(--success-color);">Đã xác thực</div>
                             </div>
                         </div>
                     </div>
-                </article>
-
+                    
+                    <!-- Balance Tab -->
+                    <div class="tab-content" id="balanceTab">
+                        <div class="content-header">
+                            <h2 class="content-title">Số dư tài khoản</h2>
+                        </div>
+                        
+                        <div class="balance-card">
+                            <div class="balance-amount" id="balanceAmount">0đ</div>
+                            <div class="balance-actions">
+                                <button class="btn" id="depositBtn">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    Nạp tiền
+                                </button>
+                                <button class="btn" disabled>
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                    Rút tiền (Sớm ra mắt)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-deposit">
+                            <h3>Nạp nhanh theo mệnh giá</h3>
+                            <div class="quick-amounts">
+                                <button class="quick-amount" data-amount="10000">10,000đ</button>
+                                <button class="quick-amount" data-amount="20000">20,000đ</button>
+                                <button class="quick-amount" data-amount="50000">50,000đ</button>
+                                <button class="quick-amount" data-amount="100000">100,000đ</button>
+                                <button class="quick-amount" data-amount="200000">200,000đ</button>
+                                <button class="quick-amount" data-amount="500000">500,000đ</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- History Tab -->
+                    <div class="tab-content" id="historyTab">
+                        <div class="content-header">
+                            <h2 class="content-title">Lịch sử giao dịch</h2>
+                        </div>
+                        
+                        <div class="history-list" id="historyList">
+                            <div class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <h3>Chưa có giao dịch nào</h3>
+                                <p>Lịch sử giao dịch sẽ hiển thị tại đây khi bạn có giao dịch</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Tab -->
+                    <div class="tab-content" id="securityTab">
+                        <div class="content-header">
+                            <h2 class="content-title">Bảo mật tài khoản</h2>
+                        </div>
+                        
+                        <div class="security-settings">
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <i class="fas fa-lock"></i>
+                                    <div>
+                                        <h4>Mật khẩu</h4>
+                                        <p>••••••••••</p>
+                                        <small style="color: rgba(255,255,255,0.6);">Bảo mật tài khoản của bạn</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline" id="changePasswordBtn">
+                                    <i class="fas fa-edit"></i>
+                                    Đổi mật khẩu
+                                </button>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <div>
+                                        <h4>Xác thực 2 bước</h4>
+                                        <p style="color: rgba(255,255,255,0.7);">Chưa bật</p>
+                                        <small style="color: rgba(255,255,255,0.6);">Tăng cường bảo mật cho tài khoản</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline">
+                                    <i class="fas fa-toggle-off"></i>
+                                    Bật (Sớm ra mắt)
+                                </button>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <i class="fas fa-laptop"></i>
+                                    <div>
+                                        <h4>Thiết bị đã đăng nhập</h4>
+                                        <p style="color: rgba(255,255,255,0.7);">1 thiết bị</p>
+                                        <small style="color: rgba(255,255,255,0.6);">Trình duyệt hiện tại</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline">
+                                    <i class="fas fa-cog"></i>
+                                    Quản lý (Sớm ra mắt)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </main>
-    </section>
-
-    <!-- Shared site-wide script for authentication -->
-    <script src="../assets/script.js"></script>
-
-    <!-- Page-specific script -->
-    <script>
-        $(document).ready(function() {
-            /**
-             * Formats a date string into "HH:mm:ss - DD/MM/YYYY".
-             */
-            function formatJoinDate(dateInput) {
-                try {
-                    const date = new Date(dateInput);
-                    if (isNaN(date)) return "Không xác định";
-                    const pad = (num) => num.toString().padStart(2, '0');
-                    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} - ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
-                } catch { return "Không xác định"; }
-            }
-
-            /**
-             * Generates a consistent 5-digit UID from a MongoDB ID string.
-             */
-            function generateSimpleUID(mongoId) {
-                if (!mongoId) return 'N/A';
-                let hash = 0;
-                for (let i = 0; i < mongoId.length; i++) {
-                    hash = ((hash << 5) - hash) + mongoId.charCodeAt(i);
-                    hash |= 0;
-                }
-                return Math.abs(hash).toString().slice(0, 5);
-            }
-            
-            /**
-             * Populates the profile page with user data from localStorage.
-             */
-            function populateProfileData() {
-                const userString = localStorage.getItem('user');
+        </div>
+        
+        <!-- Login prompt for non-logged users -->
+        <div id="loginPrompt">
+            <div class="login-prompt">
+                <i class="fas fa-user-lock"></i>
+                <h2>Yêu cầu đăng nhập</h2>
+                <p>Bạn cần đăng nhập để xem thông tin tài khoản và sử dụng các tính năng</p>
+                <div class="login-actions">
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Đăng nhập ngay
+                    </a>
+                    <a href="index.html" class="btn btn-outline">
+                        <i class="fas fa-home"></i>
+                        Về trang chủ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Messenger Chat Button -->
+    <a href="https://www.messenger.com/e2ee/t/6933504863440412" target="_blank" class="messenger-chat">
+        <i class="fab fa-facebook-messenger"></i>
+        <div class="tooltip">Chat với chúng tôi</div>
+    </a>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-logo">
+                    <img src="https://i.ibb.co/k6BvctRR/t-i-xu-ng.jpg" alt="Shop Grow A Garden">
+                    <span>Shop Grow A Garden - Giống Cây - Thú Cưng</span>
+                </div>
                 
-                if (!userString) {
-                    Swal.fire({
-                        icon: 'warning', title: 'Chưa Đăng Nhập',
-                        text: 'Vui lòng đăng nhập để xem thông tin tài khoản.',
-                        confirmButtonText: 'Đăng nhập ngay'
-                    }).then(() => { window.location.href = "../index.html"; });
+                <div>
+                    <h3 class="footer-title">Về Chúng Tôi</h3>
+                    <p>Chuyên cung cấp dịch vụ, giống cây và thú cưng chất lượng. Giao dịch nhanh chóng, uy tín.</p>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">Liên Hệ</h3>
+                    <ul class="footer-links">
+                        <li class="footer-link">
+                            <a href="mailto:support@shopgrowgarden.com">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email: support@shopgrowgarden.com</span>
+                            </a>
+                        </li>
+                        <li class="footer-link">
+                            <a href="tel:0123456789">
+                                <i class="fas fa-phone"></i>
+                                <span>Hotline: 0123 456 789</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>© 2025 Shop Grow A Garden. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Deposit Modal -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="ModalManager.closeModal('depositModal')">&times;</button>
+            <h2 class="modal-title">Nạp tiền bằng thẻ cào</h2>
+            
+            <div class="card-types">
+                <div class="card-type selected" data-type="viettel">
+                    <div class="card-logo">VT</div>
+                    <span>Viettel</span>
+                </div>
+                <div class="card-type" data-type="mobifone">
+                    <div class="card-logo">MB</div>
+                    <span>Mobifone</span>
+                </div>
+                <div class="card-type" data-type="vinaphone">
+                    <div class="card-logo">VP</div>
+                    <span>Vinaphone</span>
+                </div>
+                <div class="card-type" data-type="gate">
+                    <div class="card-logo">GT</div>
+                    <span>Gate</span>
+                </div>
+            </div>
+            
+            <form id="depositForm">
+                <div class="form-group">
+                    <label for="cardNumber">Mã thẻ <small>(10-15 chữ số)</small></label>
+                    <input type="text" id="cardNumber" placeholder="Nhập mã thẻ" required maxlength="15">
+                    <div class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cardSerial">Số serial <small>(5-12 chữ số)</small></label>
+                    <input type="text" id="cardSerial" placeholder="Nhập số serial" required maxlength="12">
+                    <div class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cardAmount">Mệnh giá</label>
+                    <select id="cardAmount" required>
+                        <option value="">-- Chọn mệnh giá --</option>
+                        <option value="10000">10,000đ</option>
+                        <option value="20000">20,000đ</option>
+                        <option value="50000">50,000đ</option>
+                        <option value="100000">100,000đ</option>
+                        <option value="200000">200,000đ</option>
+                        <option value="500000">500,000đ</option>
+                    </select>
+                    <div class="error-message"></div>
+                </div>
+                
+                <div class="form-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Mã thẻ và số serial nằm ở mặt sau thẻ cào</span>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-submit">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Nạp tiền</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="ModalManager.closeModal('changePasswordModal')">&times;</button>
+            <h2 class="modal-title">Đổi mật khẩu</h2>
+            
+            <form id="changePasswordForm">
+                <div class="form-group password-group">
+                    <label for="currentPassword">Mật khẩu hiện tại</label>
+                    <input type="password" id="currentPassword" placeholder="Nhập mật khẩu hiện tại" required>
+                    <span class="password-toggle" onclick="AccountUtils.togglePassword('currentPassword')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                    <div class="error-message"></div>
+                </div>
+                
+                <div class="form-group password-group">
+                    <label for="newPassword">Mật khẩu mới</label>
+                    <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)" required minlength="6">
+                    <span class="password-toggle" onclick="AccountUtils.togglePassword('newPassword')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                    <div class="error-message"></div>
+                </div>
+                
+                <div class="form-group password-group">
+                    <label for="confirmNewPassword">Nhập lại mật khẩu mới</label>
+                    <input type="password" id="confirmNewPassword" placeholder="Nhập lại mật khẩu mới" required>
+                    <span class="password-toggle" onclick="AccountUtils.togglePassword('confirmNewPassword')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                    <div class="error-message"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-submit">
+                    <i class="fas fa-key"></i>
+                    <span>Đổi mật khẩu</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ===== FIXED UTILITIES - No Conflict with script.js =====
+        const AccountUtils = {
+            formatPrice: (price) => {
+                const num = typeof price === 'string' ? parseInt(price) : price;
+                return new Intl.NumberFormat('vi-VN').format(num) + 'đ';
+            },
+            
+            formatDate: (date) => {
+                return new Date(date).toLocaleDateString('vi-VN');
+            },
+            
+            formatDateTime: (date) => {
+                return new Date(date).toLocaleString('vi-VN');
+            },
+            
+            generateUserId: (userData) => {
+                if (userData && userData._id) return userData._id.slice(-6).toUpperCase();
+                if (userData && userData.id) return userData.id.toString().slice(-6).toUpperCase();
+                if (userData && userData.email) {
+                    let hash = 0;
+                    for (let i = 0; i < userData.email.length; i++) {
+                        const char = userData.email.charCodeAt(i);
+                        hash = ((hash << 5) - hash) + char;
+                    }
+                    return Math.abs(hash).toString().slice(-6).padStart(6, '0');
+                }
+                return '000001';
+            },
+
+            showToast: (message, type = 'success', duration = 3000) => {
+                // Remove existing toasts
+                document.querySelectorAll('.toast').forEach(toast => toast.remove());
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                        <span>${message}</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; margin-left: 15px; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">&times;</button>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 100);
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 400);
+                }, duration);
+            },
+
+            validateCard: (number, serial) => {
+                const cardRegex = /^[0-9]{10,15}$/;
+                const serialRegex = /^[0-9]{5,12}$/;
+                return cardRegex.test(number) && serialRegex.test(serial);
+            },
+
+            validatePassword: (password) => {
+                return password && password.length >= 6;
+            },
+
+            showError: (input, message) => {
+                const formGroup = input.closest('.form-group');
+                formGroup.classList.add('has-error');
+                const errorElement = formGroup.querySelector('.error-message');
+                if (errorElement) {
+                    errorElement.textContent = message;
+                }
+            },
+
+            clearError: (input) => {
+                const formGroup = input.closest('.form-group');
+                formGroup.classList.remove('has-error');
+            },
+
+            togglePassword: (inputId) => {
+                const input = document.getElementById(inputId);
+                const icon = document.querySelector(`[onclick*="${inputId}"] i`);
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        };
+
+        // ===== MODAL MANAGER =====
+        const ModalManager = {
+            showModal: (modalId) => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'flex';
+                    setTimeout(() => modal.classList.add('show'), 10);
+                    document.body.style.overflow = 'hidden';
+                }
+            },
+
+            closeModal: (modalId) => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('show');
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        
+                        const form = modal.querySelector('form');
+                        if (form) {
+                            form.reset();
+                            form.querySelectorAll('.form-group').forEach(group => {
+                                group.classList.remove('has-error');
+                            });
+                            const submitBtn = form.querySelector('.btn-submit');
+                            if (submitBtn) {
+                                submitBtn.classList.remove('loading');
+                                submitBtn.disabled = false;
+                            }
+                        }
+                    }, 300);
+                }
+            }
+        };
+
+        // ===== API MANAGER =====
+        const ApiManager = {
+            baseUrl: 'https://shop3-t86z.onrender.com/api/v1', // <-- MODIFIED: Synced API URL
+
+            async callApi(endpoint, method = 'GET', body = null, requiresAuth = true) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (requiresAuth) {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+                
+                const options = {
+                    method,
+                    headers
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                
+                try {
+                    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        let errorMessage = data.message || 'Có lỗi xảy ra, vui lòng thử lại';
+                        if (response.status === 401) errorMessage = 'Phiên đăng nhập đã hết hạn';
+                        throw new Error(errorMessage);
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // ===== ACCOUNT MANAGER =====
+        const AccountManager = {
+            currentUser: null,
+            userBalance: 0,
+            isProcessingDeposit: false,
+            currentPassword: null,
+
+            init() {
+                this.checkLoginStatus();
+                this.setupEventListeners();
+            },
+
+            checkLoginStatus() {
+                // First, check for user data in localStorage for instant UI update
+                const userString = localStorage.getItem('user');
+                if (userString) {
+                    try {
+                        const user = JSON.parse(userString);
+                        this.currentUser = user;
+                        this.userBalance = user.balance || 0;
+                        this.showAccountContent();
+                        this.updateUserDisplay();
+                        this.loadUserData();
+                    } catch (e) {
+                         console.error("Failed to parse user data from localStorage", e);
+                         localStorage.clear(); // Clear corrupted data
+                         this.showLoginPrompt();
+                         return;
+                    }
+                }
+                
+                // Then, verify with the server using the token
+                const token = localStorage.getItem('token');
+                if (token) {
+                    this.loadUserFromAPI();
+                } else if (!this.currentUser) {
+                    // Only show login prompt if we don't have user data from localStorage
+                    this.showLoginPrompt();
+                }
+            },
+
+            async loadUserFromAPI() {
+                try {
+                    const callApiFunction = window.callApi || ApiManager.callApi.bind(ApiManager);
+                    
+                    const response = await callApiFunction('/users/me');
+                    this.currentUser = response.data.user;
+                    this.userBalance = this.currentUser.balance || 0;
+                    
+                    localStorage.setItem('user', JSON.stringify(this.currentUser));
+
+                    this.showAccountContent();
+                    this.updateUserDisplay();
+                    this.loadUserData();
+                } catch (error) {
+                    console.error('Failed to load user data from API:', error);
+                    
+                    if (error.message.includes('hết hạn') || error.message.includes('401')) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        localStorage.removeItem('currentUser'); // for legacy compatibility
+                    }
+                    this.showLoginPrompt();
+                }
+            },
+
+            showAccountContent() {
+                document.getElementById('accountContent').style.display = 'block';
+                document.getElementById('loginPrompt').style.display = 'none';
+                document.getElementById('userDropdown').style.display = 'flex';
+                document.getElementById('loginButton').style.display = 'none';
+            },
+
+            showLoginPrompt() {
+                document.getElementById('accountContent').style.display = 'none';
+                document.getElementById('loginPrompt').style.display = 'block';
+                document.getElementById('userDropdown').style.display = 'none';
+                document.getElementById('loginButton').style.display = 'flex';
+            },
+
+            updateUserDisplay() {
+                if (!this.currentUser) return;
+
+                const firstLetter = this.currentUser.name ? this.currentUser.name[0].toUpperCase() : 'U';
+                const userId = AccountUtils.generateUserId(this.currentUser);
+                
+                document.getElementById('userAvatar').textContent = firstLetter;
+                document.getElementById('userName').textContent = this.currentUser.name || 'User';
+                
+                document.getElementById('accountAvatar').textContent = firstLetter;
+                document.getElementById('accountName').textContent = this.currentUser.name || 'User';
+                document.getElementById('accountId').textContent = `ID: ${userId}`;
+            },
+
+            loadUserData() {
+                if (!this.currentUser) return;
+                const userId = AccountUtils.generateUserId(this.currentUser);
+                
+                document.getElementById('userFullName').textContent = this.currentUser.name || 'User';
+                document.getElementById('userEmail').textContent = this.currentUser.email || 'user@example.com';
+                document.getElementById('userPhone').textContent = this.currentUser.phone || 'Chưa cập nhật';
+                document.getElementById('userRegisterDate').textContent = AccountUtils.formatDate(this.currentUser.createdAt || new Date());
+                document.getElementById('userAccountId').textContent = userId;
+                document.getElementById('balanceAmount').textContent = AccountUtils.formatPrice(this.userBalance);
+                
+                this.loadTransactionHistory();
+            },
+            
+            async loadTransactionHistory() {
+                 // Note: The '/users/transactions' endpoint doesn't exist on the server.
+                 // This function will gracefully show the empty state.
+                const historyList = document.getElementById('historyList');
+                try {
+                    const callApiFunction = window.callApi || ApiManager.callApi.bind(ApiManager);
+                    // This API call is expected to fail as per server.js
+                    const transactionsData = await callApiFunction('/users/transactions');
+                    const transactions = transactionsData.data.transactions;
+                    
+                    if (!transactions || transactions.length === 0) {
+                        this.showEmptyHistory();
+                    } else {
+                        historyList.innerHTML = transactions.map(t => this.createHistoryItem(t)).join('');
+                    }
+                } catch (error) {
+                    console.warn('Could not load transaction history (endpoint likely missing):', error);
+                    this.showEmptyHistory();
+                }
+            },
+
+
+            showEmptyHistory() {
+                document.getElementById('historyList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <h3>Chưa có giao dịch nào</h3>
+                        <p>Chức năng lịch sử giao dịch đang được phát triển.</p>
+                    </div>`;
+            },
+
+            createHistoryItem(transaction) {
+                 const isDeposit = transaction.type === 'deposit';
+                return `
+                    <div class="history-item">
+                        <div class="history-icon ${isDeposit ? 'success' : 'purchase'}">
+                            <i class="${isDeposit ? 'fas fa-plus' : 'fas fa-shopping-cart'}"></i>
+                        </div>
+                        <div class="history-details">
+                            <div class="history-title">${transaction.description || 'Giao dịch'}</div>
+                            <div class="history-date">${AccountUtils.formatDateTime(transaction.createdAt)}</div>
+                        </div>
+                        <div class="history-amount ${isDeposit ? 'success' : 'purchase'}">
+                            ${isDeposit ? '+' : '-'}${AccountUtils.formatPrice(transaction.amount)}
+                        </div>
+                    </div>
+                `;
+            },
+
+            setupEventListeners() {
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.addEventListener('click', (e) => this.switchTab(e.currentTarget.dataset.tab));
+                });
+
+                document.getElementById('depositBtn')?.addEventListener('click', () => ModalManager.showModal('depositModal'));
+
+                document.querySelectorAll('.quick-amount').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        document.querySelectorAll('.quick-amount').forEach(b => b.classList.remove('selected'));
+                        e.target.classList.add('selected');
+                        document.getElementById('cardAmount').value = e.target.dataset.amount;
+                        ModalManager.showModal('depositModal');
+                    });
+                });
+
+                document.querySelectorAll('.card-type').forEach(card => {
+                    card.addEventListener('click', e => {
+                        document.querySelectorAll('.card-type').forEach(c => c.classList.remove('selected'));
+                        e.currentTarget.classList.add('selected');
+                    });
+                });
+                
+                document.getElementById('changePasswordBtn')?.addEventListener('click', () => ModalManager.showModal('changePasswordModal'));
+
+                this.setupForms();
+
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', e => {
+                        if (e.target === modal) ModalManager.closeModal(modal.id);
+                    });
+                });
+
+                 document.querySelectorAll('.security-item .btn:not(#changePasswordBtn)').forEach(btn => {
+                    btn.addEventListener('click', () => AccountUtils.showToast('Tính năng này sẽ sớm ra mắt', 'info'));
+                 });
+            },
+
+            setupForms() {
+                document.getElementById('depositForm')?.addEventListener('submit', e => {
+                    e.preventDefault();
+                    if (!this.isProcessingDeposit) this.processDeposit();
+                });
+                
+                document.getElementById('changePasswordForm')?.addEventListener('submit', e => {
+                    e.preventDefault();
+                    this.changePassword();
+                });
+            },
+
+            async processDeposit() {
+                // Note: This feature is simulated as the endpoint doesn't exist on server.js.
+                if (this.isProcessingDeposit) return;
+                AccountUtils.showToast('Chức năng nạp thẻ đang được phát triển.', 'info');
+            },
+
+            async changePassword() {
+                const form = document.getElementById('changePasswordForm');
+                const submitBtn = form.querySelector('.btn-submit');
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+                let isValid = true;
+                
+                form.querySelectorAll('.form-group').forEach(group => AccountUtils.clearError(group.querySelector('input')));
+
+                if (!currentPassword) {
+                    AccountUtils.showError(document.getElementById('currentPassword'), 'Vui lòng nhập mật khẩu hiện tại');
+                    isValid = false;
+                }
+                if (!newPassword || newPassword.length < 6) {
+                    AccountUtils.showError(document.getElementById('newPassword'), 'Mật khẩu mới phải có ít nhất 6 ký tự');
+                    isValid = false;
+                }
+                if (newPassword !== confirmNewPassword) {
+                    AccountUtils.showError(document.getElementById('confirmNewPassword'), 'Mật khẩu mới không khớp');
+                    isValid = false;
+                }
+                if (currentPassword === newPassword) {
+                     AccountUtils.showError(document.getElementById('newPassword'), 'Mật khẩu mới phải khác mật khẩu hiện tại');
+                     isValid = false;
+                }
+                if (!isValid) return;
+
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+
+                try {
+                    const callApiFunction = window.callApi || ApiManager.callApi.bind(ApiManager);
+                    await callApiFunction('/users/updateMyPassword', 'PATCH', {
+                        passwordCurrent: currentPassword,
+                        password: newPassword,
+                        passwordConfirm: confirmNewPassword
+                    });
+                    
+                    AccountUtils.showToast('Đổi mật khẩu thành công', 'success');
+                    ModalManager.closeModal('changePasswordModal');
+                } catch (error) {
+                    console.error('Change password error:', error);
+                    AccountUtils.showError(document.getElementById('currentPassword'), error.message || 'Mật khẩu hiện tại không đúng');
+                } finally {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }
+            },
+
+            switchTab(tabId) {
+                document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+                document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById(tabId + 'Tab')?.classList.add('active');
+            },
+
+            logout() {
+                 // <-- MODIFIED: Check for window.Logout (capital L) from script.js
+                if (typeof window.Logout === 'function') {
+                    window.Logout();
                     return;
                 }
-
-                try {
-                    const user = JSON.parse(userString);
-
-                    // --- Populate Header Summary ---
-                    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.avatarText)}&background=random&color=fff&size=128`;
-                    $('#user-avatar').attr('src', avatarUrl);
-                    $('#user-name-main').text(user.name || 'Người dùng');
-                    $('#user-email').text(user.email || 'Chưa cập nhật email');
-
-                    // --- Populate Details List ---
-                    $('#user-uid').text(generateSimpleUID(user._id));
-                    $('#user-name-detail').text(user.name || 'Chưa cập nhật');
-                    $('#user-balance').text((user.balance || 0).toLocaleString('vi-VN') + 'đ');
-                    $('#user-robux').text('492'); // Static value as per original requirement
-                    $('#user-created-at').text(formatJoinDate(user.createdAt));
-
-                } catch (e) {
-                    Swal.fire({
-                        icon: 'error', title: 'Lỗi Phiên Đăng Nhập',
-                        text: 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        localStorage.removeItem('user');
-                        window.location.href = "../index.html";
-                    });
-                }
+                
+                // Fallback logout if global function not found
+                if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) return;
+                
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('currentUser'); // legacy
+                
+                this.currentUser = null;
+                
+                AccountUtils.showToast('Đăng xuất thành công', 'success');
+                setTimeout(() => { window.location.href = 'index.html'; }, 1000);
             }
-            
-            // --- INITIALIZATION ---
-            checkAuthOnLoad();
-            populateProfileData();
+        };
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+             // Let the main script (script.js) load first if it exists.
+             // This page-specific script will then take over for account management.
+            setTimeout(() => {
+                AccountManager.init();
+            }, 100);
         });
+
+        window.AccountManager = AccountManager;
     </script>
 </body>
 </html>
