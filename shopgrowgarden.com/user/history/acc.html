@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài khoản - Shop Grow A Garden</title>
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -245,6 +245,7 @@
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             padding: 12px 24px;
             border: none;
@@ -680,6 +681,10 @@
             margin-bottom: 10px;
             transition: var(--transition);
         }
+        
+        .history-list > .history-item:last-child {
+            border-bottom: none;
+        }
 
         .history-item:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -697,9 +702,14 @@
             font-size: 18px;
         }
 
-        .history-icon.success {
+        .history-icon.success { /* deposit */
             background: rgba(42, 157, 143, 0.2);
             color: var(--success-color);
+        }
+        
+        .history-icon.failed { /* deposit failed */
+             background: rgba(108, 117, 125, 0.2);
+             color: var(--gray-color);
         }
 
         .history-icon.purchase {
@@ -729,6 +739,11 @@
 
         .history-amount.success {
             color: var(--success-color);
+        }
+        
+        .history-amount.failed {
+            color: var(--gray-color);
+            text-decoration: line-through;
         }
 
         .history-amount.purchase {
@@ -1185,11 +1200,14 @@
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s linear infinite;
-            margin-left: 12px;
         }
 
         .btn-submit.loading .spinner {
             display: inline-block;
+        }
+        
+        .btn-submit.loading span {
+             margin-right: 10px;
         }
 
         @keyframes spin {
@@ -1298,6 +1316,13 @@
             z-index: 10000;
             max-width: 400px;
             backdrop-filter: blur(15px);
+        }
+        
+        .toast > div {
+             display: flex; 
+             align-items: center;
+             justify-content: space-between;
+             gap: 10px;
         }
 
         .toast.show {
@@ -1639,10 +1664,11 @@
                         </div>
                         
                         <div class="history-list" id="historyList">
+                            <!-- Transactions will be dynamically inserted here -->
                             <div class="empty-state">
                                 <i class="fas fa-history"></i>
                                 <h3>Chưa có giao dịch nào</h3>
-                                <p>Lịch sử giao dịch sẽ hiển thị tại đây khi bạn có giao dịch</p>
+                                <p>Lịch sử nạp tiền và mua hàng sẽ hiển thị tại đây.</p>
                             </div>
                         </div>
                     </div>
@@ -1678,7 +1704,7 @@
                                         <small style="color: rgba(255,255,255,0.6);">Tăng cường bảo mật cho tài khoản</small>
                                     </div>
                                 </div>
-                                <button class="btn btn-outline">
+                                <button class="btn btn-outline" disabled>
                                     <i class="fas fa-toggle-off"></i>
                                     Bật (Sớm ra mắt)
                                 </button>
@@ -1693,7 +1719,7 @@
                                         <small style="color: rgba(255,255,255,0.6);">Trình duyệt hiện tại</small>
                                     </div>
                                 </div>
-                                <button class="btn btn-outline">
+                                <button class="btn btn-outline" disabled>
                                     <i class="fas fa-cog"></i>
                                     Quản lý (Sớm ra mắt)
                                 </button>
@@ -1796,14 +1822,14 @@
             
             <form id="depositForm">
                 <div class="form-group">
-                    <label for="cardNumber">Mã thẻ <small>(10-15 chữ số)</small></label>
-                    <input type="text" id="cardNumber" placeholder="Nhập mã thẻ" required maxlength="15">
+                    <label for="cardNumber">Mã thẻ <small>(Số bí mật sau lớp tráng bạc)</small></label>
+                    <input type="text" id="cardNumber" placeholder="Nhập mã thẻ" required minlength="10" maxlength="15" inputmode="numeric">
                     <div class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="cardSerial">Số serial <small>(5-12 chữ số)</small></label>
-                    <input type="text" id="cardSerial" placeholder="Nhập số serial" required maxlength="12">
+                    <label for="cardSerial">Số serial</label>
+                    <input type="text" id="cardSerial" placeholder="Nhập số serial in trên thẻ" required minlength="5" maxlength="15" inputmode="numeric">
                     <div class="error-message"></div>
                 </div>
                 
@@ -1823,12 +1849,13 @@
                 
                 <div class="form-note">
                     <i class="fas fa-info-circle"></i>
-                    <span>Mã thẻ và số serial nằm ở mặt sau thẻ cào</span>
+                    <span>Vui lòng chọn đúng mệnh giá thẻ. Sai mệnh giá có thể dẫn đến mất thẻ.</span>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-submit">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Nạp tiền</span>
+                <button type="submit" class="btn btn-primary btn-submit" id="depositSubmitBtn">
+                    <span>
+                        <i class="fas fa-check-circle"></i> Nạp tiền
+                    </span>
                     <div class="spinner"></div>
                 </button>
             </form>
@@ -1870,8 +1897,9 @@
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-submit">
-                    <i class="fas fa-key"></i>
-                    <span>Đổi mật khẩu</span>
+                    <span>
+                        <i class="fas fa-key"></i> Đổi mật khẩu
+                    </span>
                     <div class="spinner"></div>
                 </button>
             </form>
@@ -1908,18 +1936,19 @@
                 return '000001';
             },
 
-            showToast: (message, type = 'success', duration = 3000) => {
-                // Remove existing toasts
+            showToast: (message, type = 'success', duration = 4000) => {
                 document.querySelectorAll('.toast').forEach(toast => toast.remove());
                 
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-                        <span>${message}</span>
+                    <div>
+                        <span>
+                           <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                           ${message}
+                        </span>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:inherit; font-size:18px; cursor:pointer;">&times;</button>
                     </div>
-                    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; margin-left: 15px; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">&times;</button>
                 `;
                 
                 document.body.appendChild(toast);
@@ -1931,11 +1960,33 @@
                     setTimeout(() => toast.remove(), 400);
                 }, duration);
             },
-
-            validateCard: (number, serial) => {
-                const cardRegex = /^[0-9]{10,15}$/;
-                const serialRegex = /^[0-9]{5,12}$/;
-                return cardRegex.test(number) && serialRegex.test(serial);
+            
+            validateCardForm: (form) => {
+                let isValid = true;
+                const numberInput = form.querySelector('#cardNumber');
+                const serialInput = form.querySelector('#cardSerial');
+                const amountSelect = form.querySelector('#cardAmount');
+                
+                AccountUtils.clearError(numberInput);
+                AccountUtils.clearError(serialInput);
+                AccountUtils.clearError(amountSelect);
+                
+                if (!/^[0-9]{10,15}$/.test(numberInput.value)) {
+                    AccountUtils.showError(numberInput, 'Mã thẻ phải là số và dài từ 10-15 ký tự.');
+                    isValid = false;
+                }
+                
+                if (!/^[a-zA-Z0-9]{5,15}$/.test(serialInput.value)) {
+                    AccountUtils.showError(serialInput, 'Số serial phải dài từ 5-15 ký tự.');
+                     isValid = false;
+                }
+                
+                if (amountSelect.value === "") {
+                    AccountUtils.showError(amountSelect, 'Vui lòng chọn mệnh giá thẻ.');
+                     isValid = false;
+                }
+                
+                return isValid;
             },
 
             validatePassword: (password) => {
@@ -1994,13 +2045,14 @@
                         const form = modal.querySelector('form');
                         if (form) {
                             form.reset();
-                            form.querySelectorAll('.form-group').forEach(group => {
+                            form.querySelectorAll('.form-group.has-error').forEach(group => {
                                 group.classList.remove('has-error');
                             });
                             const submitBtn = form.querySelector('.btn-submit');
                             if (submitBtn) {
                                 submitBtn.classList.remove('loading');
                                 submitBtn.disabled = false;
+                                submitBtn.querySelector('.spinner').style.display = 'none';
                             }
                         }
                     }, 300);
@@ -2010,28 +2062,19 @@
 
         // ===== API MANAGER =====
         const ApiManager = {
-            baseUrl: 'https://shop3-t86z.onrender.com/api/v1', // <-- MODIFIED: Synced API URL
+            baseUrl: 'https://shop3-t86z.onrender.com/api/v1',
 
             async callApi(endpoint, method = 'GET', body = null, requiresAuth = true) {
-                const headers = {
-                    'Content-Type': 'application/json',
-                };
+                const headers = { 'Content-Type': 'application/json', };
                 
                 if (requiresAuth) {
                     const token = localStorage.getItem('token');
-                    if (token) {
-                        headers['Authorization'] = `Bearer ${token}`;
-                    }
+                    if (token) { headers['Authorization'] = `Bearer ${token}`; } 
+                    else { throw new Error('Yêu cầu xác thực nhưng không tìm thấy token.'); }
                 }
                 
-                const options = {
-                    method,
-                    headers
-                };
-                
-                if (body) {
-                    options.body = JSON.stringify(body);
-                }
+                const options = { method, headers };
+                if (body) { options.body = JSON.stringify(body); }
                 
                 try {
                     const response = await fetch(`${this.baseUrl}${endpoint}`, options);
@@ -2039,10 +2082,9 @@
                     
                     if (!response.ok) {
                         let errorMessage = data.message || 'Có lỗi xảy ra, vui lòng thử lại';
-                        if (response.status === 401) errorMessage = 'Phiên đăng nhập đã hết hạn';
+                        if (response.status === 401) errorMessage = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
                         throw new Error(errorMessage);
                     }
-                    
                     return data;
                 } catch (error) {
                     console.error('API call failed:', error);
@@ -2056,75 +2098,58 @@
             currentUser: null,
             userBalance: 0,
             isProcessingDeposit: false,
-            currentPassword: null,
 
             init() {
                 this.checkLoginStatus();
                 this.setupEventListeners();
             },
 
-            checkLoginStatus() {
-                // First, check for user data in localStorage for instant UI update
-                const userString = localStorage.getItem('user');
-                if (userString) {
-                    try {
-                        const user = JSON.parse(userString);
-                        this.currentUser = user;
-                        this.userBalance = user.balance || 0;
-                        this.showAccountContent();
-                        this.updateUserDisplay();
-                        this.loadUserData();
-                    } catch (e) {
-                         console.error("Failed to parse user data from localStorage", e);
-                         localStorage.clear(); // Clear corrupted data
-                         this.showLoginPrompt();
-                         return;
-                    }
-                }
-                
-                // Then, verify with the server using the token
+            async checkLoginStatus() {
                 const token = localStorage.getItem('token');
                 if (token) {
-                    this.loadUserFromAPI();
-                } else if (!this.currentUser) {
-                    // Only show login prompt if we don't have user data from localStorage
-                    this.showLoginPrompt();
-                }
-            },
-
-            async loadUserFromAPI() {
-                try {
-                    const callApiFunction = window.callApi || ApiManager.callApi.bind(ApiManager);
-                    
-                    const response = await callApiFunction('/users/me');
-                    this.currentUser = response.data.user;
-                    this.userBalance = this.currentUser.balance || 0;
-                    
-                    localStorage.setItem('user', JSON.stringify(this.currentUser));
-
-                    this.showAccountContent();
-                    this.updateUserDisplay();
-                    this.loadUserData();
-                } catch (error) {
-                    console.error('Failed to load user data from API:', error);
-                    
-                    if (error.message.includes('hết hạn') || error.message.includes('401')) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        localStorage.removeItem('currentUser'); // for legacy compatibility
+                     // Get user data from local storage for instant UI
+                    const userString = localStorage.getItem('user');
+                    if (userString) {
+                         try {
+                            const user = JSON.parse(userString);
+                            this.currentUser = user;
+                            this.userBalance = user.balance || 0;
+                            this.updateUIOnLogin();
+                        } catch (e) {
+                            console.error("Failed to parse user data from localStorage", e);
+                            this.logout(false);
+                            return;
+                        }
                     }
-                    this.showLoginPrompt();
+                    // Then verify and fetch latest user data from API
+                    try {
+                        const response = await ApiManager.callApi('/users/me');
+                        this.currentUser = response.data.user;
+                        this.userBalance = this.currentUser.balance || 0;
+                        localStorage.setItem('user', JSON.stringify(this.currentUser));
+                        this.updateUIOnLogin(); // Update again with fresh data
+                        this.loadTransactionHistory(); // Load history after getting user data
+                    } catch (error) {
+                        AccountUtils.showToast(error.message, 'error');
+                        this.logout(false);
+                    }
+                } else {
+                    this.updateUIOnLogout();
                 }
             },
 
-            showAccountContent() {
+            updateUIOnLogin() {
+                if (!this.currentUser) return;
                 document.getElementById('accountContent').style.display = 'block';
                 document.getElementById('loginPrompt').style.display = 'none';
                 document.getElementById('userDropdown').style.display = 'flex';
                 document.getElementById('loginButton').style.display = 'none';
+                
+                this.updateUserDisplay();
+                this.updateDetailedInfo();
             },
 
-            showLoginPrompt() {
+            updateUIOnLogout() {
                 document.getElementById('accountContent').style.display = 'none';
                 document.getElementById('loginPrompt').style.display = 'block';
                 document.getElementById('userDropdown').style.display = 'none';
@@ -2132,98 +2157,108 @@
             },
 
             updateUserDisplay() {
-                if (!this.currentUser) return;
-
                 const firstLetter = this.currentUser.name ? this.currentUser.name[0].toUpperCase() : 'U';
-                const userId = AccountUtils.generateUserId(this.currentUser);
-                
                 document.getElementById('userAvatar').textContent = firstLetter;
                 document.getElementById('userName').textContent = this.currentUser.name || 'User';
-                
                 document.getElementById('accountAvatar').textContent = firstLetter;
                 document.getElementById('accountName').textContent = this.currentUser.name || 'User';
-                document.getElementById('accountId').textContent = `ID: ${userId}`;
             },
-
-            loadUserData() {
-                if (!this.currentUser) return;
-                const userId = AccountUtils.generateUserId(this.currentUser);
-                
+            
+            updateDetailedInfo() {
+                 const userId = AccountUtils.generateUserId(this.currentUser);
+                document.getElementById('accountId').textContent = `ID: ${userId}`;
+                document.getElementById('userAccountId').textContent = userId;
                 document.getElementById('userFullName').textContent = this.currentUser.name || 'User';
                 document.getElementById('userEmail').textContent = this.currentUser.email || 'user@example.com';
                 document.getElementById('userPhone').textContent = this.currentUser.phone || 'Chưa cập nhật';
                 document.getElementById('userRegisterDate').textContent = AccountUtils.formatDate(this.currentUser.createdAt || new Date());
-                document.getElementById('userAccountId').textContent = userId;
                 document.getElementById('balanceAmount').textContent = AccountUtils.formatPrice(this.userBalance);
-                
-                this.loadTransactionHistory();
             },
             
             async loadTransactionHistory() {
-                 // Note: The '/users/transactions' endpoint doesn't exist on the server.
-                 // This function will gracefully show the empty state.
                 const historyList = document.getElementById('historyList');
                 try {
-                    const callApiFunction = window.callApi || ApiManager.callApi.bind(ApiManager);
-                    // This API call is expected to fail as per server.js
-                    const transactionsData = await callApiFunction('/users/transactions');
-                    const transactions = transactionsData.data.transactions;
+                    const response = await ApiManager.callApi('/users/transactions');
+                    const transactions = response.data.transactions;
                     
                     if (!transactions || transactions.length === 0) {
-                        this.showEmptyHistory();
+                        historyList.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <h3>Chưa có giao dịch nào</h3>
+                                <p>Lịch sử nạp tiền và mua hàng sẽ hiển thị tại đây.</p>
+                            </div>`;
                     } else {
                         historyList.innerHTML = transactions.map(t => this.createHistoryItem(t)).join('');
                     }
                 } catch (error) {
-                    console.warn('Could not load transaction history (endpoint likely missing):', error);
-                    this.showEmptyHistory();
+                    console.error('Could not load transaction history:', error);
+                    AccountUtils.showToast('Không thể tải lịch sử giao dịch.', 'error');
                 }
             },
-
-
-            showEmptyHistory() {
-                document.getElementById('historyList').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-history"></i>
-                        <h3>Chưa có giao dịch nào</h3>
-                        <p>Chức năng lịch sử giao dịch đang được phát triển.</p>
-                    </div>`;
-            },
-
+            
             createHistoryItem(transaction) {
                  const isDeposit = transaction.type === 'deposit';
+                 const status = transaction.status; // success, failed, pending
+                 let statusClass, iconClass, amountPrefix, amount;
+
+                 switch(status) {
+                    case 'success':
+                        statusClass = 'success';
+                        iconClass = isDeposit ? 'fa-plus' : 'fa-shopping-cart';
+                        amountPrefix = isDeposit ? '+' : '-';
+                        amount = AccountUtils.formatPrice(transaction.amount);
+                        break;
+                    case 'failed':
+                         statusClass = 'failed';
+                         iconClass = 'fa-times-circle';
+                         amountPrefix = isDeposit ? '+' : '-';
+                         amount = AccountUtils.formatPrice(transaction.amount);
+                         break;
+                    default: // pending
+                         statusClass = 'pending';
+                         iconClass = 'fa-hourglass-half';
+                         amountPrefix = isDeposit ? '+' : '-';
+                         amount = AccountUtils.formatPrice(transaction.amount);
+                         break;
+                 }
+
                 return `
                     <div class="history-item">
-                        <div class="history-icon ${isDeposit ? 'success' : 'purchase'}">
-                            <i class="${isDeposit ? 'fas fa-plus' : 'fas fa-shopping-cart'}"></i>
+                        <div class="history-icon ${statusClass}">
+                            <i class="fas ${iconClass}"></i>
                         </div>
                         <div class="history-details">
                             <div class="history-title">${transaction.description || 'Giao dịch'}</div>
                             <div class="history-date">${AccountUtils.formatDateTime(transaction.createdAt)}</div>
                         </div>
-                        <div class="history-amount ${isDeposit ? 'success' : 'purchase'}">
-                            ${isDeposit ? '+' : '-'}${AccountUtils.formatPrice(transaction.amount)}
+                        <div class="history-amount ${statusClass}">
+                           ${amountPrefix}${amount}
                         </div>
                     </div>
                 `;
             },
-
+            
             setupEventListeners() {
+                // Tab switching
                 document.querySelectorAll('.menu-item').forEach(item => {
                     item.addEventListener('click', (e) => this.switchTab(e.currentTarget.dataset.tab));
                 });
 
+                // Modals
                 document.getElementById('depositBtn')?.addEventListener('click', () => ModalManager.showModal('depositModal'));
+                document.getElementById('changePasswordBtn')?.addEventListener('click', () => ModalManager.showModal('changePasswordModal'));
 
+                // Quick deposit buttons
                 document.querySelectorAll('.quick-amount').forEach(btn => {
                     btn.addEventListener('click', e => {
-                        document.querySelectorAll('.quick-amount').forEach(b => b.classList.remove('selected'));
-                        e.target.classList.add('selected');
-                        document.getElementById('cardAmount').value = e.target.dataset.amount;
+                        const amount = e.currentTarget.dataset.amount;
+                        document.getElementById('cardAmount').value = amount;
                         ModalManager.showModal('depositModal');
                     });
                 });
 
+                // Card type selection
                 document.querySelectorAll('.card-type').forEach(card => {
                     card.addEventListener('click', e => {
                         document.querySelectorAll('.card-type').forEach(c => c.classList.remove('selected'));
@@ -2231,89 +2266,96 @@
                     });
                 });
                 
-                document.getElementById('changePasswordBtn')?.addEventListener('click', () => ModalManager.showModal('changePasswordModal'));
-
-                this.setupForms();
-
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.addEventListener('click', e => {
-                        if (e.target === modal) ModalManager.closeModal(modal.id);
-                    });
-                });
-
-                 document.querySelectorAll('.security-item .btn:not(#changePasswordBtn)').forEach(btn => {
+                // Form submissions
+                document.getElementById('depositForm')?.addEventListener('submit', e => { e.preventDefault(); this.processDeposit(e.target); });
+                document.getElementById('changePasswordForm')?.addEventListener('submit', e => { e.preventDefault(); this.changePassword(e.target); });
+                
+                 // Other buttons with coming soon feature
+                 document.querySelectorAll('.security-item button[disabled]').forEach(btn => {
                     btn.addEventListener('click', () => AccountUtils.showToast('Tính năng này sẽ sớm ra mắt', 'info'));
                  });
             },
 
-            setupForms() {
-                document.getElementById('depositForm')?.addEventListener('submit', e => {
-                    e.preventDefault();
-                    if (!this.isProcessingDeposit) this.processDeposit();
-                });
-                
-                document.getElementById('changePasswordForm')?.addEventListener('submit', e => {
-                    e.preventDefault();
-                    this.changePassword();
-                });
-            },
-
-            async processDeposit() {
-                // Note: This feature is simulated as the endpoint doesn't exist on server.js.
+            async processDeposit(form) {
                 if (this.isProcessingDeposit) return;
-                AccountUtils.showToast('Chức năng nạp thẻ đang được phát triển.', 'info');
-            },
-
-            async changePassword() {
-                const form = document.getElementById('changePasswordForm');
-                const submitBtn = form.querySelector('.btn-submit');
-                const currentPassword = document.getElementById('currentPassword').value;
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-                let isValid = true;
                 
-                form.querySelectorAll('.form-group').forEach(group => AccountUtils.clearError(group.querySelector('input')));
-
-                if (!currentPassword) {
-                    AccountUtils.showError(document.getElementById('currentPassword'), 'Vui lòng nhập mật khẩu hiện tại');
-                    isValid = false;
-                }
-                if (!newPassword || newPassword.length < 6) {
-                    AccountUtils.showError(document.getElementById('newPassword'), 'Mật khẩu mới phải có ít nhất 6 ký tự');
-                    isValid = false;
-                }
-                if (newPassword !== confirmNewPassword) {
-                    AccountUtils.showError(document.getElementById('confirmNewPassword'), 'Mật khẩu mới không khớp');
-                    isValid = false;
-                }
-                if (currentPassword === newPassword) {
-                     AccountUtils.showError(document.getElementById('newPassword'), 'Mật khẩu mới phải khác mật khẩu hiện tại');
-                     isValid = false;
-                }
-                if (!isValid) return;
-
+                // Client-side validation
+                if (!AccountUtils.validateCardForm(form)) return;
+                
+                this.isProcessingDeposit = true;
+                const submitBtn = form.querySelector('.btn-submit');
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
 
+                const selectedType = document.querySelector('.card-type.selected').dataset.type;
+                const depositData = {
+                    cardType: selectedType.charAt(0).toUpperCase() + selectedType.slice(1),
+                    cardNumber: document.getElementById('cardNumber').value,
+                    cardSerial: document.getElementById('cardSerial').value,
+                    amount: document.getElementById('cardAmount').value
+                };
+                
                 try {
-                    const callApiFunction = window.callApi || ApiManager.callApi.bind(ApiManager);
-                    await callApiFunction('/users/updateMyPassword', 'PATCH', {
-                        passwordCurrent: currentPassword,
-                        password: newPassword,
-                        passwordConfirm: confirmNewPassword
+                    const response = await ApiManager.callApi('/users/deposit/card', 'POST', depositData);
+                    
+                    // Update balance and UI
+                    this.userBalance = response.data.newBalance;
+                    this.updateDetailedInfo();
+                    
+                    AccountUtils.showToast(response.message || `Nạp thành công ${AccountUtils.formatPrice(response.data.amount)}`, 'success');
+                    ModalManager.closeModal('depositModal');
+                    this.loadTransactionHistory();
+                    
+                } catch (error) {
+                    AccountUtils.showToast(error.message, 'error');
+                } finally {
+                    this.isProcessingDeposit = false;
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }
+            },
+            
+            async changePassword(form) {
+                const submitBtn = form.querySelector('.btn-submit');
+                const currentPasswordInput = form.querySelector('#currentPassword');
+                const newPasswordInput = form.querySelector('#newPassword');
+                const confirmPasswordInput = form.querySelector('#confirmNewPassword');
+                
+                // Clear previous errors
+                [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach(AccountUtils.clearError);
+                
+                let isValid = true;
+                
+                if (newPasswordInput.value.length < 6) {
+                    AccountUtils.showError(newPasswordInput, 'Mật khẩu mới phải có ít nhất 6 ký tự');
+                    isValid = false;
+                }
+                if (newPasswordInput.value !== confirmPasswordInput.value) {
+                     AccountUtils.showError(confirmPasswordInput, 'Mật khẩu mới không khớp');
+                     isValid = false;
+                }
+                 if (!isValid) return;
+
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                try {
+                    await ApiManager.callApi('/users/updateMyPassword', 'PATCH', {
+                        passwordCurrent: currentPasswordInput.value,
+                        password: newPasswordInput.value,
+                        passwordConfirm: confirmPasswordInput.value
                     });
                     
                     AccountUtils.showToast('Đổi mật khẩu thành công', 'success');
                     ModalManager.closeModal('changePasswordModal');
                 } catch (error) {
-                    console.error('Change password error:', error);
-                    AccountUtils.showError(document.getElementById('currentPassword'), error.message || 'Mật khẩu hiện tại không đúng');
+                     AccountUtils.showError(currentPasswordInput, error.message || 'Mật khẩu hiện tại không đúng');
                 } finally {
                     submitBtn.classList.remove('loading');
                     submitBtn.disabled = false;
                 }
             },
-
+            
             switchTab(tabId) {
                 document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
                 document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
@@ -2322,37 +2364,25 @@
                 document.getElementById(tabId + 'Tab')?.classList.add('active');
             },
 
-            logout() {
-                 // <-- MODIFIED: Check for window.Logout (capital L) from script.js
-                if (typeof window.Logout === 'function') {
-                    window.Logout();
-                    return;
-                }
-                
-                // Fallback logout if global function not found
-                if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) return;
+            logout(withConfirm = true) {
+                 if (withConfirm && !confirm('Bạn có chắc chắn muốn đăng xuất?')) return;
                 
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                localStorage.removeItem('currentUser'); // legacy
                 
                 this.currentUser = null;
+                this.updateUIOnLogout();
                 
                 AccountUtils.showToast('Đăng xuất thành công', 'success');
-                setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+                // Optional redirect
+                // setTimeout(() => { window.location.href = 'index.html'; }, 1000);
             }
         };
 
         // ===== INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', () => {
-             // Let the main script (script.js) load first if it exists.
-             // This page-specific script will then take over for account management.
-            setTimeout(() => {
-                AccountManager.init();
-            }, 100);
+             AccountManager.init();
         });
-
-        window.AccountManager = AccountManager;
     </script>
 </body>
 </html>
