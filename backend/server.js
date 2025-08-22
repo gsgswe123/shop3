@@ -331,6 +331,46 @@ reviewSchema.pre(/^find/, function(next) {
 
 const Review = mongoose.model('Review', reviewSchema);
 
+// **START: NEW CODE FOR DEPOSIT**
+// Transaction Schema for logging deposits and purchases
+const transactionSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  type: {
+    type: String,
+    enum: ['deposit', 'purchase'],
+    required: true,
+  },
+  method: {
+    type: String,
+    enum: ['card', 'system'],
+    default: 'card',
+  },
+  amount: {
+    type: Number,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'success', 'failed'],
+    default: 'pending',
+  },
+  description: String, // e.g., 'Nạp thẻ Viettel 100,000đ' or 'Mã thẻ đã qua sử dụng'
+  details: { // To store card info
+    cardType: String,
+    cardSerial: String,
+    cardNumber: String,
+  },
+}, { timestamps: true });
+
+transactionSchema.index({ user: 1, createdAt: -1 });
+
+const Transaction = mongoose.model('Transaction', transactionSchema);
+// **END: NEW CODE FOR DEPOSIT**
+
 // Utility functions
 const catchAsync = (fn) => {
   return (req, res, next) => {
@@ -620,6 +660,113 @@ const authController = {
     createSendToken(user, 200, res);
   }),
 };
+
+// **START: NEW CONTROLLER FOR DEPOSITS AND TRANSACTIONS**
+const transactionController = {
+  // SIMULATE card processing with a fake payment gateway
+  simulateCardGateway: (cardInfo) => {
+    return new Promise(resolve => {
+      // Simulate network delay
+      setTimeout(() => {
+        // Random outcome for demonstration purposes
+        const random = Math.random();
+
+        if (random < 0.75) { // 75% success rate
+          resolve({
+            success: true,
+            message: `Giao dịch thành công. Cộng ${Number(cardInfo.amount).toLocaleString('vi-VN')}đ.`,
+            transactionId: crypto.randomBytes(8).toString('hex')
+          });
+        } else if (random < 0.9) { // 15% incorrect card rate
+          resolve({
+            success: false,
+            message: 'Mã thẻ hoặc số serial không đúng. Vui lòng kiểm tra lại.',
+            errorCode: 'INVALID_CARD'
+          });
+        } else { // 10% used card rate
+          resolve({
+            success: false,
+            message: 'Thẻ đã được sử dụng hoặc đã hết hạn.',
+            errorCode: 'CARD_ALREADY_USED'
+          });
+        }
+      }, 1500); // 1.5 second delay
+    });
+  },
+
+  depositWithCard: catchAsync(async (req, res, next) => {
+    const { cardType, cardNumber, cardSerial, amount } = req.body;
+    const userId = req.user.id;
+
+    if (!cardType || !cardNumber || !cardSerial || !amount) {
+      return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào.', 400));
+    }
+
+    const parsedAmount = parseInt(amount, 10);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return next(new AppError('Mệnh giá thẻ không hợp lệ.', 400));
+    }
+
+    // Create an initial pending transaction log
+    const transaction = await Transaction.create({
+      user: userId,
+      type: 'deposit',
+      method: 'card',
+      amount: parsedAmount,
+      status: 'pending',
+      description: `Nạp thẻ ${cardType} ${parsedAmount.toLocaleString('vi-VN')}đ`,
+      details: { cardType, cardNumber, cardSerial }
+    });
+    
+    // Simulate calling the external payment gateway
+    const gatewayResponse = await transactionController.simulateCardGateway(req.body);
+
+    if (gatewayResponse.success) {
+      // If gateway confirms success, update user's balance and transaction status
+      
+      // Update balance atomically to prevent race conditions
+      const updatedUser = await User.findByIdAndUpdate(userId, 
+        { $inc: { balance: parsedAmount } }, 
+        { new: true, runValidators: true }
+      );
+      
+      // Update transaction log
+      transaction.status = 'success';
+      transaction.description = gatewayResponse.message;
+      await transaction.save();
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Nạp thẻ thành công!',
+        data: {
+          newBalance: updatedUser.balance,
+          amount: parsedAmount,
+        },
+      });
+
+    } else {
+      // If gateway reports failure, update transaction status and return error
+      transaction.status = 'failed';
+      transaction.description = gatewayResponse.message;
+      await transaction.save();
+
+      return next(new AppError(gatewayResponse.message, 400));
+    }
+  }),
+
+  getMyTransactions: catchAsync(async (req, res, next) => {
+    const transactions = await Transaction.find({ user: req.user.id }).sort('-createdAt');
+
+    res.status(200).json({
+      status: 'success',
+      results: transactions.length,
+      data: {
+        transactions
+      }
+    });
+  })
+};
+// **END: NEW CONTROLLER**
 
 // User Controller
 const userController = {
@@ -1401,14 +1548,19 @@ app.get('/api/v1/reviews', reviewController.getAllReviews);
 app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
 // Protected user routes
-app.use('/api/v1/users/me', authController.protect);
+app.use(authController.protect); // All routes below this are protected
+
 app.get('/api/v1/users/me', userController.getMe);
-app.patch('/api/v1/users/updateMe', authController.protect, userController.updateMe);
-app.patch('/api/v1/users/updateMyPassword', authController.protect, authController.updatePassword);
-app.delete('/api/v1/users/deleteMe', authController.protect, userController.deleteMe);
+app.patch('/api/v1/users/updateMe', userController.updateMe);
+app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
+app.delete('/api/v1/users/deleteMe', userController.deleteMe);
+
+// **START: NEW DEPOSIT & TRANSACTION ROUTES**
+app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
+app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
+// **END: NEW ROUTES**
 
 // Cart routes
-app.use('/api/v1/cart', authController.protect);
 app.route('/api/v1/cart')
   .get(cartFavoriteController.getCart)
   .post(cartFavoriteController.addToCart)
@@ -1419,7 +1571,6 @@ app.route('/api/v1/cart/:productId')
   .delete(cartFavoriteController.removeFromCart);
 
 // Favorites routes
-app.use('/api/v1/favorites', authController.protect);
 app.route('/api/v1/favorites')
   .get(cartFavoriteController.getFavorites)
   .post(cartFavoriteController.addToFavorites);
@@ -1427,10 +1578,9 @@ app.route('/api/v1/favorites')
 app.route('/api/v1/favorites/:productId')
   .delete(cartFavoriteController.removeFromFavorites);
 
-app.get('/api/v1/favorites/check/:productId', authController.protect, cartFavoriteController.checkFavorite);
+app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
 
 // Protected review routes
-app.use('/api/v1/reviews', authController.protect);
 app.post('/api/v1/reviews', reviewController.createReview);
 app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
 
@@ -1440,13 +1590,12 @@ app.route('/api/v1/reviews/:id')
   .delete(reviewController.deleteReview);
 
 // User product management routes (for users to manage their own products)
-app.use('/api/v1/my-products', authController.protect);
 app.post('/api/v1/my-products', productController.createProduct);
 app.patch('/api/v1/my-products/:id', productController.updateProduct);
 app.delete('/api/v1/my-products/:id', productController.deleteProduct);
 
 // Admin only routes
-app.use('/api/v1/admin', authController.protect, authController.restrictTo('admin'));
+app.use('/api/v1/admin', authController.restrictTo('admin'));
 
 // Admin user management
 app.route('/api/v1/admin/users')
