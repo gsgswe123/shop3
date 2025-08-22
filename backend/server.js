@@ -331,8 +331,7 @@ reviewSchema.pre(/^find/, function(next) {
 
 const Review = mongoose.model('Review', reviewSchema);
 
-// **START: NEW CODE FOR DEPOSIT**
-// Transaction Schema for logging deposits and purchases
+// **UPGRADE: Modified Transaction Schema**
 const transactionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
@@ -358,8 +357,10 @@ const transactionSchema = new mongoose.Schema({
     enum: ['pending', 'success', 'failed'],
     default: 'pending',
   },
-  description: String, // e.g., 'Nạp thẻ Viettel 100,000đ' or 'Mã thẻ đã qua sử dụng'
-  details: { // To store card info
+  description: String,
+  gatewayTransactionId: String, // To store ID from payment gateway
+  failureReason: String,      // To store reason for failure
+  details: {
     cardType: String,
     cardSerial: String,
     cardNumber: String,
@@ -369,7 +370,6 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ user: 1, createdAt: -1 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
-// **END: NEW CODE FOR DEPOSIT**
 
 // Utility functions
 const catchAsync = (fn) => {
@@ -407,7 +407,7 @@ const createSendToken = (user, statusCode, res) => {
 
   res.cookie('jwt', token, cookieOptions);
   user.password = undefined;
-  
+
   const userResponse = {
     _id: user._id,
     id: user._id,
@@ -499,24 +499,21 @@ const authController = {
   signup: catchAsync(async (req, res, next) => {
     const { name, email, password, passwordConfirm, role } = req.body;
 
-    // Validation
     if (!name || !email || !password || !passwordConfirm) {
       return next(new AppError('Please provide all required fields', 400));
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
       return next(new AppError('User with this email already exists', 400));
     }
 
-    // Create new user
     const newUser = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
       passwordConfirm,
-      role: role === 'admin' ? 'user' : (role || 'user'), // Prevent admin signup
+      role: role === 'admin' ? 'user' : (role || 'user'),
     });
 
     createSendToken(newUser, 201, res);
@@ -525,13 +522,11 @@ const authController = {
   login: catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
 
-    // Check if email and password exist
     if (!email || !password) {
       return next(new AppError('Please provide email and password', 400));
     }
 
-    // Check if user exists and password is correct
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       email: email.toLowerCase().trim(),
       active: { $ne: false }
     }).select('+password');
@@ -540,7 +535,6 @@ const authController = {
       return next(new AppError('Incorrect email or password', 401));
     }
 
-    // Send token to client
     createSendToken(user, 200, res);
   }),
 
@@ -549,14 +543,13 @@ const authController = {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
     });
-    res.status(200).json({ 
+    res.status(200).json({
       status: 'success',
       message: 'Logged out successfully'
     });
   },
 
   protect: catchAsync(async (req, res, next) => {
-    // Get token and check if it exists
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
@@ -568,21 +561,17 @@ const authController = {
       return next(new AppError('You are not logged in! Please log in to get access.', 401));
     }
 
-    // Verify token
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-    // Check if user still exists
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
 
-    // Check if user changed password after the token was issued
     if (currentUser.changedPasswordAfter(decoded.iat)) {
       return next(new AppError('User recently changed password! Please log in again.', 401));
     }
 
-    // Grant access to protected route
     req.user = currentUser;
     res.locals.user = currentUser;
     next();
@@ -601,13 +590,11 @@ const authController = {
   },
 
   forgotPassword: catchAsync(async (req, res, next) => {
-    // Get user based on POSTed email
     const user = await User.findOne({ email: req.body.email?.toLowerCase().trim() });
     if (!user) {
       return next(new AppError('There is no user with that email address.', 404));
     }
 
-    // Generate the random reset token
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
@@ -619,7 +606,6 @@ const authController = {
   }),
 
   resetPassword: catchAsync(async (req, res, next) => {
-    // Get user based on the token
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
     const user = await User.findOne({
@@ -627,7 +613,6 @@ const authController = {
       passwordResetExpires: { $gt: Date.now() },
     });
 
-    // If token has not expired, and there is a user, set the new password
     if (!user) {
       return next(new AppError('Token is invalid or has expired', 400));
     }
@@ -638,62 +623,63 @@ const authController = {
     user.passwordResetExpires = undefined;
     await user.save();
 
-    // Log the user in, send JWT
     createSendToken(user, 200, res);
   }),
 
   updatePassword: catchAsync(async (req, res, next) => {
-    // Get user from collection
     const user = await User.findById(req.user.id).select('+password');
 
-    // Check if POSTed current password is correct
     if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
       return next(new AppError('Your current password is incorrect.', 401));
     }
 
-    // If so, update password
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
     await user.save();
 
-    // Log user in, send JWT
     createSendToken(user, 200, res);
   }),
 };
 
-// **START: NEW CONTROLLER FOR DEPOSITS AND TRANSACTIONS**
-const transactionController = {
-  // SIMULATE card processing with a fake payment gateway
-  simulateCardGateway: (cardInfo) => {
+
+// --- UPGRADE: Abstracted simulated payment gateway into its own service ---
+const paymentGatewayService = {
+  processCard: (cardInfo) => {
     return new Promise(resolve => {
       // Simulate network delay
       setTimeout(() => {
-        // Random outcome for demonstration purposes
         const random = Math.random();
+        const gatewayId = `GATEWAY_${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+        const amount = Number(cardInfo.amount).toLocaleString('vi-VN');
 
-        if (random < 0.75) { // 75% success rate
+        if (random < 0.75) { // 75% success
           resolve({
             success: true,
-            message: `Giao dịch thành công. Cộng ${Number(cardInfo.amount).toLocaleString('vi-VN')}đ.`,
-            transactionId: crypto.randomBytes(8).toString('hex')
+            message: `Giao dịch thành công. Cộng ${amount}đ.`,
+            transactionId: gatewayId,
           });
-        } else if (random < 0.9) { // 15% incorrect card rate
+        } else if (random < 0.9) { // 15% invalid card
           resolve({
             success: false,
-            message: 'Mã thẻ hoặc số serial không đúng. Vui lòng kiểm tra lại.',
-            errorCode: 'INVALID_CARD'
+            message: 'Mã thẻ hoặc số serial không đúng.',
+            failureReason: 'INVALID_CARD',
+            transactionId: gatewayId,
           });
-        } else { // 10% used card rate
+        } else { // 10% used card
           resolve({
             success: false,
-            message: 'Thẻ đã được sử dụng hoặc đã hết hạn.',
-            errorCode: 'CARD_ALREADY_USED'
+            message: 'Thẻ đã được sử dụng hoặc hết hạn.',
+            failureReason: 'CARD_ALREADY_USED',
+            transactionId: gatewayId,
           });
         }
       }, 1500); // 1.5 second delay
     });
-  },
+  }
+};
 
+// --- UPGRADE: Heavily refactored controller ---
+const transactionController = {
   depositWithCard: catchAsync(async (req, res, next) => {
     const { cardType, cardNumber, cardSerial, amount } = req.body;
     const userId = req.user.id;
@@ -703,59 +689,67 @@ const transactionController = {
     }
 
     const parsedAmount = parseInt(amount, 10);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    if (isNaN(parsedAmount) || parsedAmount < 10000) {
       return next(new AppError('Mệnh giá thẻ không hợp lệ.', 400));
     }
 
-    // Create an initial pending transaction log
-    const transaction = await Transaction.create({
+    // Step 1: Create an initial 'pending' transaction log.
+    const pendingTransaction = await Transaction.create({
       user: userId,
       type: 'deposit',
       method: 'card',
       amount: parsedAmount,
       status: 'pending',
-      description: `Nạp thẻ ${cardType} ${parsedAmount.toLocaleString('vi-VN')}đ`,
+      description: `Đang xử lý nạp thẻ ${cardType} ${parsedAmount.toLocaleString('vi-VN')}đ`,
       details: { cardType, cardNumber, cardSerial }
     });
     
-    // Simulate calling the external payment gateway
-    const gatewayResponse = await transactionController.simulateCardGateway(req.body);
+    // Step 2: Call the external payment gateway service.
+    const gatewayResponse = await paymentGatewayService.processCard(req.body);
 
+    // Step 3: Handle gateway response.
     if (gatewayResponse.success) {
-      // If gateway confirms success, update user's balance and transaction status
-      
-      // Update balance atomically to prevent race conditions
+      // If gateway confirms success, update user's balance and transaction.
       const updatedUser = await User.findByIdAndUpdate(userId, 
         { $inc: { balance: parsedAmount } }, 
         { new: true, runValidators: true }
       );
       
-      // Update transaction log
-      transaction.status = 'success';
-      transaction.description = gatewayResponse.message;
-      await transaction.save();
+      // Update transaction log to 'success'
+      pendingTransaction.status = 'success';
+      pendingTransaction.description = gatewayResponse.message;
+      pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
+      await pendingTransaction.save();
 
+      // Populate user info for the response
+      const finalTransaction = await Transaction.findById(pendingTransaction._id).populate({
+         path: 'user', select: 'name balance'
+      });
+      
       res.status(200).json({
         status: 'success',
         message: 'Nạp thẻ thành công!',
         data: {
-          newBalance: updatedUser.balance,
-          amount: parsedAmount,
+          transaction: finalTransaction,
         },
       });
 
     } else {
-      // If gateway reports failure, update transaction status and return error
-      transaction.status = 'failed';
-      transaction.description = gatewayResponse.message;
-      await transaction.save();
+      // If gateway reports failure, update transaction status and return an error.
+      pendingTransaction.status = 'failed';
+      pendingTransaction.description = gatewayResponse.message;
+      pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
+      pendingTransaction.failureReason = gatewayResponse.failureReason;
+      await pendingTransaction.save();
 
       return next(new AppError(gatewayResponse.message, 400));
     }
   }),
 
   getMyTransactions: catchAsync(async (req, res, next) => {
-    const transactions = await Transaction.find({ user: req.user.id }).sort('-createdAt');
+    const transactions = await Transaction.find({ user: req.user.id })
+      .sort('-createdAt')
+      .limit(50); // Add a limit for performance
 
     res.status(200).json({
       status: 'success',
@@ -766,7 +760,7 @@ const transactionController = {
     });
   })
 };
-// **END: NEW CONTROLLER**
+
 
 // User Controller
 const userController = {
@@ -809,7 +803,7 @@ const userController = {
     // Update user document
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { 
+      {
         name: name.trim(),
         avatarText: name.trim().charAt(0).toUpperCase()
       },
@@ -857,7 +851,7 @@ const userController = {
 
   getUser: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.params.id).select('-password');
-    
+
     if (!user) {
       return next(new AppError('No user found with that ID', 404));
     }
@@ -871,7 +865,6 @@ const userController = {
   }),
 
   updateUser: catchAsync(async (req, res, next) => {
-    // Don't allow password updates through this route
     if (req.body.password || req.body.passwordConfirm) {
       return next(new AppError('This route is not for password updates.', 400));
     }
@@ -939,21 +932,17 @@ const userController = {
 // Product Controller
 const productController = {
   getAllProducts: catchAsync(async (req, res, next) => {
-    // Build query
     const queryObj = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryObj[el]);
 
-    // Add active filter
     queryObj.active = { $ne: false };
 
-    // Advanced filtering
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
     let query = Product.find(JSON.parse(queryStr));
 
-    // Sorting
     if (req.query.sort) {
       const sortBy = req.query.sort.split(',').join(' ');
       query = query.sort(sortBy);
@@ -961,7 +950,6 @@ const productController = {
       query = query.sort('-createdAt');
     }
 
-    // Field limiting
     if (req.query.fields) {
       const fields = req.query.fields.split(',').join(' ');
       query = query.select(fields);
@@ -969,14 +957,12 @@ const productController = {
       query = query.select('-__v');
     }
 
-    // Pagination
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 100;
     const skip = (page - 1) * limit;
 
     query = query.skip(skip).limit(limit);
 
-    // Execute query
     const products = await query.populate({
       path: 'createdBy',
       select: 'name email'
@@ -992,9 +978,9 @@ const productController = {
   }),
 
   getProduct: catchAsync(async (req, res, next) => {
-    const product = await Product.findOne({ 
-      _id: req.params.id, 
-      active: { $ne: false } 
+    const product = await Product.findOne({
+      _id: req.params.id,
+      active: { $ne: false }
     }).populate({
       path: 'createdBy',
       select: 'name email'
@@ -1015,12 +1001,10 @@ const productController = {
   createProduct: catchAsync(async (req, res, next) => {
     const { title, description, price, images, link } = req.body;
 
-    // Validation
     if (!title || !description || !price || !link) {
       return next(new AppError('Please provide all required fields: title, description, price, and link', 400));
     }
 
-    // Process images
     let productImages = images;
     if (typeof images === 'string') {
       productImages = [images];
@@ -1028,7 +1012,6 @@ const productController = {
       return next(new AppError('Please provide at least one product image', 400));
     }
 
-    // Create product data
     const productData = {
       title: title.trim(),
       description: description.trim(),
@@ -1065,12 +1048,10 @@ const productController = {
       return next(new AppError('No product found with that ID', 404));
     }
 
-    // Check ownership
     if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return next(new AppError('You do not have permission to update this product', 403));
     }
 
-    // Process images if provided
     if (req.body.images) {
       if (typeof req.body.images === 'string') {
         req.body.images = [req.body.images];
@@ -1078,8 +1059,8 @@ const productController = {
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
+      req.params.id,
+      req.body,
       {
         new: true,
         runValidators: true,
@@ -1104,7 +1085,6 @@ const productController = {
       return next(new AppError('No product found with that ID', 404));
     }
 
-    // Check ownership
     if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return next(new AppError('You do not have permission to delete this product', 403));
     }
@@ -1155,26 +1135,26 @@ const cartFavoriteController = {
       return next(new AppError('Please provide a product ID', 400));
     }
 
-    const product = await Product.findOne({ 
-      _id: productId, 
-      active: { $ne: false } 
+    const product = await Product.findOne({
+      _id: productId,
+      active: { $ne: false }
     });
-    
+
     if (!product) {
       return next(new AppError('Product not found', 404));
     }
 
     const user = await User.findById(req.user.id);
-    const existingItemIndex = user.cart.findIndex(item => 
+    const existingItemIndex = user.cart.findIndex(item =>
       item.product.toString() === productId
     );
 
     if (existingItemIndex !== -1) {
       user.cart[existingItemIndex].quantity += parseInt(quantity, 10);
     } else {
-      user.cart.push({ 
-        product: productId, 
-        quantity: parseInt(quantity, 10) 
+      user.cart.push({
+        product: productId,
+        quantity: parseInt(quantity, 10)
       });
     }
 
@@ -1212,7 +1192,7 @@ const cartFavoriteController = {
     }
 
     const user = await User.findById(req.user.id);
-    const cartItemIndex = user.cart.findIndex(item => 
+    const cartItemIndex = user.cart.findIndex(item =>
       item.product.toString() === productId
     );
 
@@ -1237,8 +1217,8 @@ const cartFavoriteController = {
 
     const user = await User.findById(req.user.id);
     const initialCartLength = user.cart.length;
-    
-    user.cart = user.cart.filter(item => 
+
+    user.cart = user.cart.filter(item =>
       item.product.toString() !== productId
     );
 
@@ -1280,17 +1260,17 @@ const cartFavoriteController = {
       return next(new AppError('Please provide a product ID', 400));
     }
 
-    const product = await Product.findOne({ 
-      _id: productId, 
-      active: { $ne: false } 
+    const product = await Product.findOne({
+      _id: productId,
+      active: { $ne: false }
     });
-    
+
     if (!product) {
       return next(new AppError('Product not found', 404));
     }
 
     const user = await User.findById(req.user.id);
-    
+
     if (!user.favorites.includes(productId)) {
       user.favorites.push(productId);
       await user.save({ validateBeforeSave: false });
@@ -1325,8 +1305,8 @@ const cartFavoriteController = {
 
     const user = await User.findById(req.user.id);
     const initialFavoritesLength = user.favorites.length;
-    
-    user.favorites = user.favorites.filter(id => 
+
+    user.favorites = user.favorites.filter(id =>
       id.toString() !== productId
     );
 
@@ -1349,7 +1329,7 @@ const cartFavoriteController = {
     const { productId } = req.params;
 
     const user = await User.findById(req.user.id);
-    const isFavorite = user.favorites.some(id => 
+    const isFavorite = user.favorites.some(id =>
       id.toString() === productId
     );
 
@@ -1380,16 +1360,14 @@ const reviewController = {
   }),
 
   createReview: catchAsync(async (req, res, next) => {
-    // Allow nested routes
     if (!req.body.product) req.body.product = req.params.productId;
     if (!req.body.user) req.body.user = req.user.id;
 
-    // Check if product exists
-    const product = await Product.findOne({ 
-      _id: req.body.product, 
-      active: { $ne: false } 
+    const product = await Product.findOne({
+      _id: req.body.product,
+      active: { $ne: false }
     });
-    
+
     if (!product) {
       return next(new AppError('Product not found', 404));
     }
@@ -1426,7 +1404,6 @@ const reviewController = {
       return next(new AppError('No review found with that ID', 404));
     }
 
-    // Check ownership
     if (review.user._id.toString() !== req.user._id.toString()) {
       return next(new AppError('You do not have permission to update this review', 403));
     }
@@ -1451,7 +1428,6 @@ const reviewController = {
       return next(new AppError('No review found with that ID', 404));
     }
 
-    // Check ownership or admin role
     if (review.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return next(new AppError('You do not have permission to delete this review', 403));
     }
@@ -1489,16 +1465,14 @@ const createDefaultAdmin = async () => {
 
     for (const email of adminEmails) {
       let user = await User.findOne({ email: email.toLowerCase() });
-      
+
       if (user) {
-        // Update existing user to admin if not already
         if (user.role !== 'admin') {
           user.role = 'admin';
           await user.save({ validateBeforeSave: false });
           console.log(`Updated ${email} to admin role`);
         }
       } else {
-        // Create new admin user
         const adminData = {
           name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
           email: email.toLowerCase(),
@@ -1506,7 +1480,7 @@ const createDefaultAdmin = async () => {
           passwordConfirm: 'admin123456',
           role: 'admin'
         };
-        
+
         user = await User.create(adminData);
         console.log(`Created admin user: ${email}`);
       }
@@ -1516,12 +1490,9 @@ const createDefaultAdmin = async () => {
   }
 };
 
-// Initialize database connection
 connectDB();
 
 // Routes
-
-// Health check route
 app.get('/api/v1/health', (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -1531,36 +1502,30 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
-// Authentication routes
 app.post('/api/v1/users/signup', authController.signup);
 app.post('/api/v1/users/login', authController.login);
 app.get('/api/v1/users/logout', authController.logout);
 app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
 app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
 
-// Public product routes
 app.get('/api/v1/products', productController.getAllProducts);
 app.get('/api/v1/products/stats', productController.getProductStats);
 app.get('/api/v1/products/:id', productController.getProduct);
 
-// Public review routes
 app.get('/api/v1/reviews', reviewController.getAllReviews);
 app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
-// Protected user routes
-app.use(authController.protect); // All routes below this are protected
+app.use(authController.protect);
 
 app.get('/api/v1/users/me', userController.getMe);
 app.patch('/api/v1/users/updateMe', userController.updateMe);
 app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
 app.delete('/api/v1/users/deleteMe', userController.deleteMe);
 
-// **START: NEW DEPOSIT & TRANSACTION ROUTES**
+// **UPDATED: DEPOSIT & TRANSACTION ROUTES**
 app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
 app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
-// **END: NEW ROUTES**
 
-// Cart routes
 app.route('/api/v1/cart')
   .get(cartFavoriteController.getCart)
   .post(cartFavoriteController.addToCart)
@@ -1570,7 +1535,6 @@ app.route('/api/v1/cart/:productId')
   .patch(cartFavoriteController.updateCartItem)
   .delete(cartFavoriteController.removeFromCart);
 
-// Favorites routes
 app.route('/api/v1/favorites')
   .get(cartFavoriteController.getFavorites)
   .post(cartFavoriteController.addToFavorites);
@@ -1580,7 +1544,6 @@ app.route('/api/v1/favorites/:productId')
 
 app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
 
-// Protected review routes
 app.post('/api/v1/reviews', reviewController.createReview);
 app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
 
@@ -1589,15 +1552,12 @@ app.route('/api/v1/reviews/:id')
   .patch(reviewController.updateReview)
   .delete(reviewController.deleteReview);
 
-// User product management routes (for users to manage their own products)
 app.post('/api/v1/my-products', productController.createProduct);
 app.patch('/api/v1/my-products/:id', productController.updateProduct);
 app.delete('/api/v1/my-products/:id', productController.deleteProduct);
 
-// Admin only routes
 app.use('/api/v1/admin', authController.restrictTo('admin'));
 
-// Admin user management
 app.route('/api/v1/admin/users')
   .get(userController.getAllUsers);
 
@@ -1608,7 +1568,6 @@ app.route('/api/v1/admin/users/:id')
 
 app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
 
-// Admin product management
 app.route('/api/v1/admin/products')
   .post(productController.createProduct);
 
@@ -1616,22 +1575,18 @@ app.route('/api/v1/admin/products/:id')
   .patch(productController.updateProduct)
   .delete(productController.deleteProduct);
 
-// 404 handler for undefined routes
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Global error handling middleware
 app.use(globalErrorHandler);
 
-// Start server
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Graceful shutdown handlers
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.log(err.name, err.message);
