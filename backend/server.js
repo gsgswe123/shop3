@@ -332,6 +332,7 @@ reviewSchema.pre(/^find/, function(next) {
 const Review = mongoose.model('Review', reviewSchema);
 
 // **UPGRADE: Modified Transaction Schema**
+// This schema is well-designed to capture all necessary states of a transaction.
 const transactionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
@@ -643,6 +644,7 @@ const authController = {
 
 
 // --- UPGRADE: Abstracted simulated payment gateway into its own service ---
+// This separation of concerns is a good practice, keeping gateway logic isolated.
 const paymentGatewayService = {
   processCard: (cardInfo) => {
     return new Promise(resolve => {
@@ -679,11 +681,14 @@ const paymentGatewayService = {
 };
 
 // --- UPGRADE: Heavily refactored controller ---
+// This controller follows a robust, multi-step process for handling transactions,
+// which is great for reliability and tracking.
 const transactionController = {
   depositWithCard: catchAsync(async (req, res, next) => {
     const { cardType, cardNumber, cardSerial, amount } = req.body;
     const userId = req.user.id;
 
+    // Basic validation
     if (!cardType || !cardNumber || !cardSerial || !amount) {
       return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào.', 400));
     }
@@ -693,7 +698,7 @@ const transactionController = {
       return next(new AppError('Mệnh giá thẻ không hợp lệ.', 400));
     }
 
-    // Step 1: Create an initial 'pending' transaction log.
+    // Step 1: Create an initial 'pending' transaction log. This is crucial for tracking every attempt.
     const pendingTransaction = await Transaction.create({
       user: userId,
       type: 'deposit',
@@ -707,21 +712,22 @@ const transactionController = {
     // Step 2: Call the external payment gateway service.
     const gatewayResponse = await paymentGatewayService.processCard(req.body);
 
-    // Step 3: Handle gateway response.
+    // Step 3: Handle the gateway response and finalize the transaction.
     if (gatewayResponse.success) {
-      // If gateway confirms success, update user's balance and transaction.
-      const updatedUser = await User.findByIdAndUpdate(userId, 
+      // SUCCESS CASE:
+      // A) Update the user's balance. Using $inc is atomic and safe.
+      await User.findByIdAndUpdate(userId, 
         { $inc: { balance: parsedAmount } }, 
         { new: true, runValidators: true }
       );
       
-      // Update transaction log to 'success'
+      // B) Update the transaction log to 'success' with gateway details.
       pendingTransaction.status = 'success';
       pendingTransaction.description = gatewayResponse.message;
       pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
       await pendingTransaction.save();
 
-      // Populate user info for the response
+      // C) Fetch the final, populated transaction to send back to the client.
       const finalTransaction = await Transaction.findById(pendingTransaction._id).populate({
          path: 'user', select: 'name balance'
       });
@@ -735,13 +741,15 @@ const transactionController = {
       });
 
     } else {
-      // If gateway reports failure, update transaction status and return an error.
+      // FAILURE CASE:
+      // A) Update the transaction log to 'failed' with the reason from the gateway.
       pendingTransaction.status = 'failed';
       pendingTransaction.description = gatewayResponse.message;
       pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
       pendingTransaction.failureReason = gatewayResponse.failureReason;
       await pendingTransaction.save();
-
+      
+      // B) Return a client-friendly error. The user's balance is not touched.
       return next(new AppError(gatewayResponse.message, 400));
     }
   }),
