@@ -79,8 +79,8 @@ function updateUIForLoggedInUser(user) {
                 </div>
                 <ul class="main-menu">
                    <h3 class="menu-title">-- Tài Khoản</h3>
-                    <li><a href="acc.html">Thông Tin Tài Khoản</a></li>
-                    <li><a href="acc.html">Đổi Mật Khẩu</a></li>
+                    <li><a href="user/history/acc.html">Thông Tin Tài Khoản</a></li>
+                    <li><a href="user/history/acc.html">Đổi Mật Khẩu</a></li>
                 </ul>
                 <ul class="main-menu">
                      <h3 class="menu-title">-- Giao Dịch</h3>
