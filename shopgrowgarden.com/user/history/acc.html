@@ -691,9 +691,8 @@
             transform: translateX(10px);
         }
         
-        /* -- UPGRADE --: Added style for pending state */
         .history-item.pending {
-             opacity: 0.6;
+             opacity: 0.7;
         }
 
         .history-icon {
@@ -757,17 +756,8 @@
             font-weight: 700;
         }
 
-        .history-amount.success {
-            color: var(--success-color);
-        }
-        
-        /* -- UPGRADE --: Changed failed text-decoration and added pending style */
         .history-amount.failed, .history-amount.pending {
             color: var(--gray-color);
-        }
-
-        .history-amount.purchase {
-            color: var(--primary-color);
         }
 
         /* Security Settings */
@@ -1343,7 +1333,10 @@
              display: flex;
              align-items: center;
              justify-content: space-between;
-             gap: 10px;
+             gap: 15px;
+        }
+        .toast > div > span {
+            line-height: 1.4;
         }
 
         .toast.show {
@@ -1482,22 +1475,6 @@
             .modal-content {
                 padding: 30px 20px;
             }
-        }
-
-        /* Loading Animation */
-        @keyframes shimmer {
-            0% {
-                background-position: -468px 0;
-            }
-            100% {
-                background-position: 468px 0;
-            }
-        }
-
-        .loading-skeleton {
-            animation: shimmer 1.2s ease-in-out infinite;
-            background: linear-gradient(to right, rgba(255,255,255,0.1) 8%, rgba(255,255,255,0.2) 18%, rgba(255,255,255,0.1) 33%);
-            background-size: 800px 104px;
         }
 
         /* Scrollbar Styling */
@@ -1841,7 +1818,7 @@
                 </div>
             </div>
             
-            <form id="depositForm">
+            <form id="depositForm" novalidate>
                 <div class="form-group">
                     <label for="cardNumber">Mã thẻ <small>(Số bí mật sau lớp tráng bạc)</small></label>
                     <input type="text" id="cardNumber" placeholder="Nhập mã thẻ" required minlength="10" maxlength="15" inputmode="numeric">
@@ -1889,7 +1866,7 @@
             <button class="modal-close" onclick="ModalManager.closeModal('changePasswordModal')">&times;</button>
             <h2 class="modal-title">Đổi mật khẩu</h2>
             
-            <form id="changePasswordForm">
+            <form id="changePasswordForm" novalidate>
                 <div class="form-group password-group">
                     <label for="currentPassword">Mật khẩu hiện tại</label>
                     <input type="password" id="currentPassword" placeholder="Nhập mật khẩu hiện tại" required>
@@ -1927,7 +1904,7 @@
         </div>
     </div>
 
-    <!-- ===== UPGRADE: REFACTORED AND UPGRADED SCRIPT ===== -->
+    <!-- ===== FIXED AND UPGRADED SCRIPT ===== -->
     <script>
         // ===== UTILITY FUNCTIONS =====
         const AccountUtils = {
@@ -1937,12 +1914,14 @@
             },
             
             formatDate: (dateString) => {
+                if (!dateString) return 'Không xác định';
                 return new Date(dateString).toLocaleDateString('vi-VN', {
                     day: '2-digit', month: '2-digit', year: 'numeric'
                 });
             },
             
             formatDateTime: (dateString) => {
+                if (!dateString) return 'Không xác định';
                 return new Date(dateString).toLocaleString('vi-VN', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
                     hour: '2-digit', minute: '2-digit'
@@ -1967,7 +1946,7 @@
                 toast.innerHTML = `
                     <div>
                         <span><i class="fas ${icons[type]}"></i> ${message}</span>
-                        <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:inherit; font-size:18px; cursor:pointer;">&times;</button>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:inherit; font-size:18px; cursor:pointer; padding-left: 10px;">&times;</button>
                     </div>`;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.classList.add('show'), 10);
@@ -2070,17 +2049,25 @@
             baseUrl: 'https://shop3-t86z.onrender.com/api/v1',
             async call(endpoint, method = 'GET', body = null) {
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error('Yêu cầu xác thực nhưng không tìm thấy token.');
+                if (!token) {
+                     throw new Error('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
+                }
 
                 const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
-                const options = { method, headers, credentials: 'omit' }; // Use omit for fetch
+                const options = { method, headers };
                 if (body) options.body = JSON.stringify(body);
                 
                 const response = await fetch(`${this.baseUrl}${endpoint}`, options);
-                const data = await response.json();
+                
+                let data;
+                try {
+                     data = await response.json();
+                } catch(e) {
+                     throw new Error('Lỗi từ máy chủ. Vui lòng thử lại sau.');
+                }
                 
                 if (!response.ok) {
-                    let message = data.message || (response.status === 401 ? 'Phiên đăng nhập hết hạn.' : 'Lỗi không xác định.');
+                    const message = data.message || (response.status === 401 ? 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.' : 'Đã có lỗi xảy ra.');
                     throw new Error(message);
                 }
                 return data;
@@ -2103,15 +2090,14 @@
                 if (token && userString) {
                     try {
                         this.user = JSON.parse(userString);
-                        this.renderUI(true); // Initial render with cached data
-                        const response = await ApiManager.call('/users/me'); // Verify with server
+                        this.renderUI(true); 
+                        const response = await ApiManager.call('/users/me'); 
                         this.user = response.data.user;
                         localStorage.setItem('user', JSON.stringify(this.user));
-                        this.renderUI(true); // Re-render with fresh data
+                        this.renderUI(true);
                         this.loadTransactionHistory();
                     } catch (error) {
-                        AccountUtils.showToast(error.message, 'error');
-                        this.logout(false);
+                        this.handleApiError(error, 'Kiểm tra đăng nhập');
                     }
                 } else {
                     this.renderUI(false);
@@ -2128,22 +2114,15 @@
                     const avatar = this.user.name?.[0]?.toUpperCase() || 'U';
                     const userId = AccountUtils.generateUserId(this.user);
                     
-                    // Header dropdown
                     document.getElementById('userAvatar').textContent = avatar;
                     document.getElementById('userName').textContent = this.user.name;
-
-                    // Sidebar
                     document.getElementById('accountAvatar').textContent = avatar;
                     document.getElementById('accountName').textContent = this.user.name;
                     document.getElementById('accountId').textContent = `ID: ${userId}`;
-
-                    // Info Tab
                     document.getElementById('userFullName').textContent = this.user.name;
                     document.getElementById('userEmail').textContent = this.user.email;
                     document.getElementById('userRegisterDate').textContent = AccountUtils.formatDate(this.user.createdAt);
                     document.getElementById('userAccountId').textContent = userId;
-
-                    // Balance Tab
                     document.getElementById('balanceAmount').textContent = AccountUtils.formatPrice(this.user.balance);
                 }
             },
@@ -2164,48 +2143,51 @@
                                            </div>`;
                     }
                 } catch (error) {
-                    AccountUtils.showToast('Không thể tải lịch sử giao dịch.', 'error');
+                    this.handleApiError(error, 'tải lịch sử giao dịch');
                 }
             },
             
             createHistoryItemHTML(t) {
                 const isDeposit = t.type === 'deposit';
-                const { status } = t; // pending, success, failed
-                let iconClass, statusClass, amountPrefix, amountColor, statusText;
 
-                switch(status) {
-                    case 'success':
-                        statusClass = 'success';
-                        iconClass = isDeposit ? 'fa-plus' : 'fa-shopping-cart';
-                        amountColor = isDeposit ? 'var(--success-color)' : 'var(--danger-color)';
-                        statusText = `<div class="history-status" style="color: ${amountColor};">Thành công</div>`;
-                        break;
-                    case 'failed':
-                        statusClass = 'failed';
-                        iconClass = 'fa-times-circle';
-                        amountColor = 'var(--gray-color)';
-                        statusText = `<div class="history-status" style="color: var(--danger-color);">${t.description || 'Thất bại'}</div>`;
-                        break;
-                    default: // pending
-                        statusClass = 'pending';
-                        iconClass = 'fa-spinner fa-spin';
-                        amountColor = 'var(--gray-color)';
-                        statusText = `<div class="history-status" style="color: var(--gray-color);">Đang xử lý...</div>`;
-                        break;
-                }
-                amountPrefix = isDeposit ? '+' : '-';
+                const statusConfig = {
+                    success: {
+                        class: 'success',
+                        icon: isDeposit ? 'fa-plus' : 'fa-shopping-cart',
+                        color: isDeposit ? 'var(--success-color)' : 'var(--primary-color)',
+                        text: 'Thành công'
+                    },
+                    failed: {
+                        class: 'failed',
+                        icon: 'fa-times-circle',
+                        color: 'var(--gray-color)',
+                        text: t.description || 'Thất bại'
+                    },
+                    pending: {
+                        class: 'pending',
+                        icon: 'fa-spinner fa-spin',
+                        color: 'var(--gray-color)',
+                        text: 'Đang xử lý...'
+                    }
+                };
+
+                const config = statusConfig[t.status] || statusConfig.pending;
+                const amountPrefix = isDeposit ? '+' : '-';
                 const transactionId = t._id || `pending-${Date.now()}`;
-                const title = isDeposit ? `Nạp thẻ ${t.details?.cardType || ''}` : t.description || 'Mua hàng';
+                const title = isDeposit ? `Nạp thẻ ${t.details?.cardType || ''}`.trim() : t.description || 'Mua hàng';
                 const date = AccountUtils.formatDateTime(t.createdAt || new Date());
+                
+                const statusTextColor = t.status === 'failed' ? 'var(--danger-color)' : t.status === 'pending' ? 'var(--gray-color)' : config.color;
+                const statusTextHTML = `<div class="history-status" style="color: ${statusTextColor};">${config.text}</div>`;
 
-                return `<div class="history-item ${status}" id="transaction-${transactionId}">
-                            <div class="history-icon ${statusClass}"><i class="fas ${iconClass}"></i></div>
+                return `<div class="history-item ${config.class}" id="transaction-${transactionId}">
+                            <div class="history-icon ${config.class}"><i class="fas ${config.icon}"></i></div>
                             <div class="history-details">
                                 <div class="history-title">${title}</div>
                                 <div class="history-date">${date}</div>
-                                ${statusText}
+                                ${statusTextHTML}
                             </div>
-                            <div class="history-amount" style="color:${amountColor};">${amountPrefix}${AccountUtils.formatPrice(t.amount)}</div>
+                            <div class="history-amount" style="color:${config.color};">${amountPrefix}${AccountUtils.formatPrice(t.amount)}</div>
                         </div>`;
             },
             
@@ -2220,37 +2202,45 @@
                  const itemEl = document.getElementById(`transaction-${id}`);
                  if (itemEl) itemEl.outerHTML = this.createHistoryItemHTML(newTransactionData);
             },
+
+            handleApiError(error, context = 'thao tác') {
+                const message = error.message || `Lỗi không xác định khi ${context}.`;
+                const isAuthError = /log in|token|đăng nhập|hết hạn/i.test(message);
+
+                AccountUtils.showToast(message, 'error');
+
+                if (isAuthError) {
+                    this.logout(false);
+                }
+                return isAuthError;
+            },
             
             addEventListeners() {
-                // Tab switching
                 document.querySelectorAll('.menu-item').forEach(item => {
                     item.addEventListener('click', (e) => this.switchTab(e.currentTarget.dataset.tab));
                 });
-                // Modals
                 document.getElementById('depositBtn')?.addEventListener('click', () => ModalManager.showModal('depositModal'));
                 document.getElementById('changePasswordBtn')?.addEventListener('click', () => ModalManager.showModal('changePasswordModal'));
-                // Quick deposit
                 document.querySelectorAll('.quick-amount').forEach(btn => {
                     btn.addEventListener('click', e => {
-                        document.getElementById('cardAmount').value = e.currentTarget.dataset.amount;
+                        const amount = e.currentTarget.dataset.amount;
+                        const selectEl = document.getElementById('cardAmount');
+                        if (selectEl) selectEl.value = amount;
                         ModalManager.showModal('depositModal');
                     });
                 });
-                // Card type selection
                 document.querySelectorAll('.card-type').forEach(card => {
                     card.addEventListener('click', e => {
                         document.querySelector('.card-type.selected')?.classList.remove('selected');
                         e.currentTarget.classList.add('selected');
                     });
                 });
-                // Form submissions
                 document.getElementById('depositForm')?.addEventListener('submit', (e) => { e.preventDefault(); this.processDeposit(e.target); });
                 document.getElementById('changePasswordForm')?.addEventListener('submit', (e) => { e.preventDefault(); this.changePassword(e.target); });
             },
 
             async processDeposit(form) {
-                if (this.isProcessing) return;
-                if (!AccountUtils.validateCardForm(form)) return;
+                if (this.isProcessing || !AccountUtils.validateCardForm(form)) return;
                 
                 this.isProcessing = true;
                 const submitBtn = form.querySelector('.btn-submit');
@@ -2265,7 +2255,6 @@
                     amount: form.querySelector('#cardAmount').value
                 };
                 
-                // Optimistic UI: Add a temporary pending transaction
                 const pendingId = `pending-${Date.now()}`;
                 const pendingTransaction = {
                     _id: pendingId, type: 'deposit', status: 'pending',
@@ -2278,7 +2267,6 @@
                     const response = await ApiManager.call('/users/deposit/card', 'POST', data);
                     const finalTransaction = response.data.transaction;
                     
-                    // Update user balance and re-render
                     this.user.balance = finalTransaction.user.balance;
                     localStorage.setItem('user', JSON.stringify(this.user));
                     this.renderUI(true);
@@ -2286,11 +2274,12 @@
                     AccountUtils.showToast(response.message || 'Nạp thẻ thành công!', 'success');
                     this.updateTransactionInHistory(pendingId, finalTransaction);
                 } catch (error) {
-                    AccountUtils.showToast(error.message, 'error');
-                    // Update the pending item to failed
-                    this.updateTransactionInHistory(pendingId, { ...pendingTransaction, status: 'failed', description: error.message });
+                    if (!this.handleApiError(error, 'nạp thẻ')) {
+                        // If not an auth error, it's a card-specific failure. Update UI accordingly.
+                         this.updateTransactionInHistory(pendingId, { ...pendingTransaction, status: 'failed', description: error.message });
+                    }
                 } finally {
-                    this.isProcessing = false; // Reset lock
+                    this.isProcessing = false; 
                 }
             },
             
@@ -2327,7 +2316,10 @@
                     AccountUtils.showToast('Đổi mật khẩu thành công!', 'success');
                     ModalManager.closeModal('changePasswordModal');
                 } catch (error) {
-                     AccountUtils.showError(currentPass, error.message);
+                    if (!this.handleApiError(error, 'đổi mật khẩu')) {
+                        // Show specific form error if it wasn't a general auth failure
+                        AccountUtils.showError(currentPass, error.message);
+                    }
                 } finally {
                     this.isProcessing = false;
                     submitBtn.classList.remove('loading');
@@ -2343,14 +2335,24 @@
                 document.getElementById(`${tabId}Tab`)?.classList.add('active');
             },
 
-            logout(withRedirect = true) {
+            async logout(withRedirect = true) {
+                const token = localStorage.getItem('token');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 this.user = null;
                 this.renderUI(false);
+                
                 if (withRedirect) {
-                    AccountUtils.showToast('Đăng xuất thành công, đang chuyển hướng...', 'success');
+                    AccountUtils.showToast('Đăng xuất thành công, đang chuyển hướng...', 'info');
                     setTimeout(() => window.location.href = 'index.html', 1500);
+                }
+
+                if(token){
+                    try {
+                        await fetch(`${ApiManager.baseUrl}/users/logout`);
+                    } catch (error) {
+                        console.error('Server logout call failed but client-side logout is complete.', error);
+                    }
                 }
             }
         };
