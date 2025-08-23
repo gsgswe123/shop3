@@ -2049,7 +2049,7 @@
             baseUrl: 'https://shop3-t86z.onrender.com/api/v1',
             async call(endpoint, method = 'GET', body = null) {
                 const token = localStorage.getItem('token');
-                if (!token) {
+                if (!token && endpoint !== '/users/logout') {
                      throw new Error('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
                 }
 
@@ -2061,9 +2061,13 @@
                 
                 let data;
                 try {
-                     data = await response.json();
+                    // Logout may return no content
+                    if (response.status === 200 && response.headers.get('content-length') === '0') {
+                        return { status: 'success' };
+                    }
+                    data = await response.json();
                 } catch(e) {
-                     throw new Error('Lỗi từ máy chủ. Vui lòng thử lại sau.');
+                    throw new Error('Lỗi từ máy chủ. Vui lòng thử lại sau.');
                 }
                 
                 if (!response.ok) {
@@ -2210,7 +2214,8 @@
                 AccountUtils.showToast(message, 'error');
 
                 if (isAuthError) {
-                    this.logout(false);
+                    // Use a short delay to allow the user to read the toast message before redirecting
+                    setTimeout(() => this.logout(true), 1000); 
                 }
                 return isAuthError;
             },
@@ -2313,11 +2318,12 @@
                         password: newPass.value,
                         passwordConfirm: confirmPass.value
                     });
-                    AccountUtils.showToast('Đổi mật khẩu thành công!', 'success');
+                    AccountUtils.showToast('Đổi mật khẩu thành công! Phiên đăng nhập sẽ được làm mới.', 'success');
+                    // Force re-authentication after password change is good practice, but for better UX, we'll just show a message.
+                    // For higher security, you would call logout() here.
                     ModalManager.closeModal('changePasswordModal');
                 } catch (error) {
                     if (!this.handleApiError(error, 'đổi mật khẩu')) {
-                        // Show specific form error if it wasn't a general auth failure
                         AccountUtils.showError(currentPass, error.message);
                     }
                 } finally {
@@ -2336,6 +2342,7 @@
             },
 
             async logout(withRedirect = true) {
+                // Perform client-side cleanup immediately for responsive UI
                 const token = localStorage.getItem('token');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -2347,10 +2354,12 @@
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 }
 
+                // If a token existed, attempt to invalidate it on the server
                 if(token){
                     try {
-                        await fetch(`${ApiManager.baseUrl}/users/logout`);
+                        await ApiManager.call('/users/logout');
                     } catch (error) {
+                        // This error is not critical to the user, as they are already logged out on the client.
                         console.error('Server logout call failed but client-side logout is complete.', error);
                     }
                 }
