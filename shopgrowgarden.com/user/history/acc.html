@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài khoản - Shop Grow A Garden</title>
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVhbodvdmhdcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -2246,15 +2246,28 @@
 
             async processDeposit(form) {
                 if (this.isProcessing || !AccountUtils.validateCardForm(form)) return;
-                
+            
                 this.isProcessing = true;
                 const submitBtn = form.querySelector('.btn-submit');
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
-
-                const selectedTypeEl = form.querySelector('.card-type.selected');
+            
+                // ===== FIX START =====
+                // The original code was searching for the selected card type *inside* the form, but it's a sibling.
+                // We correct the selector to look inside the modal and add a check for robustness.
+                const selectedTypeEl = document.querySelector('#depositModal .card-type.selected');
+                
+                if (!selectedTypeEl) {
+                    AccountUtils.showToast('Vui lòng chọn một loại thẻ.', 'error');
+                    this.isProcessing = false;
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                    return; // Exit if no card type is selected
+                }
+                // ===== FIX END =====
+            
                 const data = {
-                    cardType: selectedTypeEl.dataset.type,
+                    cardType: selectedTypeEl.dataset.type, // This line is now safe
                     cardNumber: form.querySelector('#cardNumber').value,
                     cardSerial: form.querySelector('#cardSerial').value,
                     amount: form.querySelector('#cardAmount').value
@@ -2267,7 +2280,7 @@
                 };
                 this.addTransactionToHistory(pendingTransaction);
                 ModalManager.closeModal('depositModal');
-
+            
                 try {
                     const response = await ApiManager.call('/users/deposit/card', 'POST', data);
                     const finalTransaction = response.data.transaction;
@@ -2319,8 +2332,6 @@
                         passwordConfirm: confirmPass.value
                     });
                     AccountUtils.showToast('Đổi mật khẩu thành công! Phiên đăng nhập sẽ được làm mới.', 'success');
-                    // Force re-authentication after password change is good practice, but for better UX, we'll just show a message.
-                    // For higher security, you would call logout() here.
                     ModalManager.closeModal('changePasswordModal');
                 } catch (error) {
                     if (!this.handleApiError(error, 'đổi mật khẩu')) {
@@ -2342,7 +2353,6 @@
             },
 
             async logout(withRedirect = true) {
-                // Perform client-side cleanup immediately for responsive UI
                 const token = localStorage.getItem('token');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -2354,12 +2364,10 @@
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 }
 
-                // If a token existed, attempt to invalidate it on the server
                 if(token){
                     try {
                         await ApiManager.call('/users/logout');
                     } catch (error) {
-                        // This error is not critical to the user, as they are already logged out on the client.
                         console.error('Server logout call failed but client-side logout is complete.', error);
                     }
                 }
