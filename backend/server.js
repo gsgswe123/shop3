@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const nodemailer = require('nodemailer');
 const validator = require('validator');
+const useragent = require('useragent'); // **MỚI: Thư viện phân tích User-Agent**
 
 // Load environment variables
 dotenv.config({ path: './config.env' });
@@ -20,6 +21,8 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+app.set('trust proxy', true); // **MỚI: Cần thiết để lấy đúng IP khi deploy sau proxy/load balancer**
+
 
 // CORS configuration
 const allowedOrigins = [
@@ -56,6 +59,15 @@ const DB = process.env.DATABASE.replace(
 );
 
 // Mongoose Schemas
+// **NÂNG CẤP: Thêm `sessions` vào userSchema**
+const sessionSchema = new mongoose.Schema({
+  tokenIdentifier: { type: String, unique: true, required: true },
+  deviceInfo: String,
+  ipAddress: String,
+  createdAt: { type: Date, default: Date.now },
+  lastUsedAt: { type: Date, default: Date.now }
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -117,6 +129,7 @@ const userSchema = new mongoose.Schema({
       min: [1, 'Quantity must be at least 1']
     }
   }],
+  sessions: [sessionSchema], // **MỚI: Mảng lưu trữ các phiên đăng nhập**
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
@@ -134,9 +147,12 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+
 // User schema indexes
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ 'sessions.tokenIdentifier': 1 }); // **MỚI: Index cho session token**
+
 
 // User schema middleware
 userSchema.pre('save', async function(next) {
@@ -149,6 +165,8 @@ userSchema.pre('save', async function(next) {
 userSchema.pre('save', function(next) {
   if (!this.isModified('password') || this.isNew) return next();
   this.passwordChangedAt = Date.now() - 1000;
+  // **NÂNG CẤP: Xóa tất cả các phiên khi đổi mật khẩu**
+  this.sessions = [];
   next();
 });
 
@@ -388,46 +406,49 @@ const AppError = class extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 };
-
-const signToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '90d',
-  });
-};
-
-const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + (process.env.JWT_COOKIE_EXPIRES_IN || 90) * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+// **NÂNG CẤP: signToken giờ nhận cả sessionId**
+const signToken = (id, sessionId) => {
+    return jwt.sign({ id, sessionId }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '90d',
+    });
   };
-
-  res.cookie('jwt', token, cookieOptions);
-  user.password = undefined;
-
-  const userResponse = {
-    _id: user._id,
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    balance: user.balance || 0,
-    avatarText: user.avatarText,
-    createdAt: user.createdAt
+  
+  // **NÂNG CẤP: createSendToken giờ nhận cả sessionId**
+  const createSendToken = (user, sessionId, statusCode, res) => {
+    const token = signToken(user._id, sessionId);
+    const cookieOptions = {
+      expires: new Date(
+        Date.now() + (process.env.JWT_COOKIE_EXPIRES_IN || 90) * 24 * 60 * 60 * 1000
+      ),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    };
+  
+    res.cookie('jwt', token, cookieOptions);
+    user.password = undefined;
+    user.sessions = undefined; // Không gửi danh sách session về trong mọi response
+  
+    const userResponse = {
+      _id: user._id,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      balance: user.balance || 0,
+      avatarText: user.avatarText,
+      createdAt: user.createdAt
+    };
+  
+    res.status(statusCode).json({
+      status: 'success',
+      token,
+      sessionId, // Gửi sessionId về cho client để xác định phiên hiện tại
+      data: {
+        user: userResponse,
+      },
+    });
   };
-
-  res.status(statusCode).json({
-    status: 'success',
-    token,
-    data: {
-      user: userResponse,
-    },
-  });
-};
 
 // Error handling functions
 const handleCastErrorDB = (err) => {
@@ -516,40 +537,73 @@ const authController = {
       passwordConfirm,
       role: role === 'admin' ? 'user' : (role || 'user'),
     });
+     // **MỚI: Tạo phiên đăng nhập đầu tiên sau khi đăng ký**
+     const sessionId = crypto.randomBytes(16).toString('hex');
+     const newSession = {
+       tokenIdentifier: sessionId,
+       deviceInfo: req.headers['user-agent'] || 'Unknown Device',
+       ipAddress: req.ip,
+     };
+     newUser.sessions.push(newSession);
+     await newUser.save({ validateBeforeSave: false });
 
-    createSendToken(newUser, 201, res);
+    createSendToken(newUser, sessionId, 201, res);
   }),
-
-  login: catchAsync(async (req, res, next) => {
+// **NÂNG CẤP: Logic login giờ đây sẽ tạo phiên mới**
+login: catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-
+  
     if (!email || !password) {
       return next(new AppError('Please provide email and password', 400));
     }
-
+  
     const user = await User.findOne({
       email: email.toLowerCase().trim(),
       active: { $ne: false }
-    }).select('+password');
-
+    }).select('+password'); // Lấy cả sessions
+  
     if (!user || !(await user.correctPassword(password, user.password))) {
       return next(new AppError('Incorrect email or password', 401));
     }
-
-    createSendToken(user, 200, res);
+  
+    // Tạo session mới
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    const newSession = {
+      tokenIdentifier: sessionId,
+      deviceInfo: req.headers['user-agent'] || 'Unknown Device',
+      ipAddress: req.ip,
+      lastUsedAt: Date.now()
+    };
+  
+    // Giới hạn số lượng phiên để tránh lạm dụng
+    const MAX_SESSIONS = 10;
+    if (user.sessions.length >= MAX_SESSIONS) {
+      // Xóa phiên cũ nhất
+      user.sessions.sort((a, b) => a.lastUsedAt - b.lastUsedAt).shift();
+    }
+  
+    user.sessions.push(newSession);
+    await user.save({ validateBeforeSave: false });
+  
+    createSendToken(user, sessionId, 200, res);
   }),
+  
 
   logout: (req, res) => {
+    // Logic logout phía client đã đủ để xóa token. 
+    // Backend sẽ dựa vào việc client không gửi token nữa.
+    // Nếu muốn logout từ 1 thiết bị cụ thể, sẽ dùng API riêng.
     res.cookie('jwt', 'loggedout', {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
     });
     res.status(200).json({
       status: 'success',
-      message: 'Logged out successfully'
+      message: 'Logged out successfully. Please clear token on client-side.'
     });
   },
 
+  // **NÂNG CẤP: `protect` sẽ kiểm tra cả `sessionId`**
   protect: catchAsync(async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -563,17 +617,31 @@ const authController = {
     }
 
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
+    
+    // Tìm user và kiểm tra sự tồn tại của session
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
 
+    const currentSession = currentUser.sessions.find(session => session.tokenIdentifier === decoded.sessionId);
+    if (!currentSession) {
+        return next(new AppError('This session has been terminated. Please log in again.', 401));
+    }
+
     if (currentUser.changedPasswordAfter(decoded.iat)) {
       return next(new AppError('User recently changed password! Please log in again.', 401));
     }
+    
+    // Cập nhật lastUsedAt cho session (tùy chọn, tốt cho việc tracking)
+    // Để tối ưu, có thể không cần `await` ở đây nếu không quan trọng việc nó phải xong ngay lập tức
+    User.updateOne(
+        { _id: currentUser._id, 'sessions.tokenIdentifier': decoded.sessionId },
+        { $set: { 'sessions.$.lastUsedAt': Date.now() } }
+    ).exec();
 
     req.user = currentUser;
+    req.sessionId = decoded.sessionId; // Gắn sessionId vào request để sử dụng sau này
     res.locals.user = currentUser;
     next();
   }),
@@ -624,7 +692,17 @@ const authController = {
     user.passwordResetExpires = undefined;
     await user.save();
 
-    createSendToken(user, 200, res);
+     // Sau khi reset pass thành công, tạo 1 session mới
+     const sessionId = crypto.randomBytes(16).toString('hex');
+     const newSession = {
+       tokenIdentifier: sessionId,
+       deviceInfo: req.headers['user-agent'] || 'Unknown Device',
+       ipAddress: req.ip,
+     };
+     user.sessions = [newSession]; // Xóa các session cũ và tạo session mới
+     await user.save({ validateBeforeSave: false });
+
+    createSendToken(user, sessionId, 200, res);
   }),
 
   updatePassword: catchAsync(async (req, res, next) => {
@@ -636,9 +714,14 @@ const authController = {
 
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
+    
+    // Giữ lại session hiện tại, xóa tất cả session khác
+    const currentSession = user.sessions.find(s => s.tokenIdentifier === req.sessionId);
+    user.sessions = currentSession ? [currentSession] : [];
     await user.save();
-
-    createSendToken(user, 200, res);
+    
+    // Gửi lại token với session hiện tại
+    createSendToken(user, req.sessionId, 200, res);
   }),
 };
 
@@ -794,6 +877,63 @@ const userController = {
       data: {
         user: userResponse,
       },
+    });
+  }),
+// **MỚI: Các hàm quản lý session**
+getSessions: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+  
+    // Sắp xếp để phiên hiện tại luôn ở trên cùng
+    const sessions = user.sessions.sort((a, b) => {
+      if (a.tokenIdentifier === req.sessionId) return -1;
+      if (b.tokenIdentifier === req.sessionId) return 1;
+      return new Date(b.lastUsedAt) - new Date(a.lastUsedAt);
+    });
+  
+    res.status(200).json({
+      status: 'success',
+      data: {
+        sessions: sessions.map(s => ({
+          id: s.tokenIdentifier,
+          deviceInfo: s.deviceInfo,
+          ipAddress: s.ipAddress,
+          createdAt: s.createdAt,
+          lastUsedAt: s.lastUsedAt,
+          isCurrent: s.tokenIdentifier === req.sessionId
+        }))
+      }
+    });
+  }),
+  
+  logoutSession: catchAsync(async (req, res, next) => {
+    const { sessionId } = req.params;
+    
+    // Người dùng không thể tự đăng xuất phiên hiện tại qua API này, phải dùng logout thông thường.
+    if (sessionId === req.sessionId) {
+      return next(new AppError('You cannot log out your current session via this endpoint.', 400));
+    }
+    
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { sessions: { tokenIdentifier: sessionId } }
+    });
+  
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  }),
+  
+  logoutAllOtherSessions: catchAsync(async (req, res, next) => {
+    const user = req.user;
+    
+    // Lọc ra chỉ giữ lại phiên hiện tại
+    user.sessions = user.sessions.filter(s => s.tokenIdentifier === req.sessionId);
+    
+    await user.save({ validateBeforeSave: false });
+  
+    res.status(200).json({
+      status: 'success',
+      message: 'All other sessions have been logged out.'
     });
   }),
 
@@ -1529,6 +1669,11 @@ app.get('/api/v1/users/me', userController.getMe);
 app.patch('/api/v1/users/updateMe', userController.updateMe);
 app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
 app.delete('/api/v1/users/deleteMe', userController.deleteMe);
+// **MỚI: ROUTES QUẢN LÝ PHIÊN ĐĂNG NHẬP**
+app.get('/api/v1/users/sessions', userController.getSessions);
+app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
+app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
+
 
 // **UPDATED: DEPOSIT & TRANSACTION ROUTES**
 app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
