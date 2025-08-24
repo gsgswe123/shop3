@@ -1188,7 +1188,6 @@
             color: white;
         }
         
-        /* ===== START: UPGRADED PASSWORD STYLES ===== */
         .password-strength-container {
             margin-top: 15px;
         }
@@ -1237,7 +1236,6 @@
             width: 16px;
             text-align: center;
         }
-        /* ===== END: UPGRADED PASSWORD STYLES ===== */
 
 
         .btn-submit {
@@ -1912,7 +1910,7 @@
         </div>
     </div>
 
-    <!-- ===== START: UPGRADED CHANGE PASSWORD MODAL ===== -->
+    <!-- Change Password Modal -->
     <div class="modal" id="changePasswordModal">
         <div class="modal-content">
             <button class="modal-close" onclick="ModalManager.closeModal('changePasswordModal')">&times;</button>
@@ -1965,9 +1963,8 @@
             </form>
         </div>
     </div>
-    <!-- ===== END: UPGRADED CHANGE PASSWORD MODAL ===== -->
 
-    <!-- ===== FIXED AND UPGRADED SCRIPT ===== -->
+    <!-- SCRIPT -->
     <script>
         // ===== UTILITY FUNCTIONS =====
         const AccountUtils = {
@@ -2072,7 +2069,6 @@
                 icon.classList.toggle('fa-eye-slash', isPassword);
             },
             
-            // ===== START: NEW PASSWORD STRENGTH FUNCTION =====
             checkPasswordStrength: (password) => {
                 let score = 0;
                 const criteria = {
@@ -2096,7 +2092,6 @@
 
                 return { score, criteria, strength };
             }
-            // ===== END: NEW PASSWORD STRENGTH FUNCTION =====
         };
 
         // ===== MODAL MANAGER =====
@@ -2128,8 +2123,7 @@
                                 submitBtn.disabled = false;
                             }
                         }
-                         // Reset password strength UI on close
-                        if (modalId === 'changePasswordModal') {
+                         if (modalId === 'changePasswordModal') {
                              const strengthBar = document.getElementById('passwordStrengthBar');
                              if(strengthBar) {
                                 strengthBar.style.width = '0%';
@@ -2150,11 +2144,17 @@
             baseUrl: 'https://shop3-t86z.onrender.com/api/v1',
             async call(endpoint, method = 'GET', body = null) {
                 const token = localStorage.getItem('token');
+
+                // FIX: Allow logout endpoint to be called without a token.
                 if (!token && endpoint !== '/users/logout') {
                      throw new Error('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
                 }
 
-                const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
                 const options = { method, headers };
                 if (body) options.body = JSON.stringify(body);
                 
@@ -2162,13 +2162,12 @@
                 
                 let data;
                 try {
-                    // Logout may return no content
-                    if (response.status === 200 && response.headers.get('content-length') === '0') {
+                    if (response.status === 204 || (response.status === 200 && response.headers.get('content-length') === '0')) {
                         return { status: 'success' };
                     }
                     data = await response.json();
                 } catch(e) {
-                    throw new Error('Lỗi từ máy chủ. Vui lòng thử lại sau.');
+                    throw new Error('Lỗi phản hồi từ máy chủ. Vui lòng thử lại sau.');
                 }
                 
                 if (!response.ok) {
@@ -2315,7 +2314,7 @@
                 AccountUtils.showToast(message, 'error');
 
                 if (isAuthError) {
-                    setTimeout(() => this.logout(true), 1000); 
+                    this.logout(true, false); // Log out client-side without calling server again
                 }
                 return isAuthError;
             },
@@ -2343,12 +2342,9 @@
                 document.getElementById('depositForm')?.addEventListener('submit', (e) => { e.preventDefault(); this.processDeposit(e.target); });
                 document.getElementById('changePasswordForm')?.addEventListener('submit', (e) => { e.preventDefault(); this.changePassword(e.target); });
 
-                // ===== START: PASSWORD STRENGTH LISTENER =====
                 document.getElementById('newPassword')?.addEventListener('input', this.updatePasswordStrengthUI);
-                // ===== END: PASSWORD STRENGTH LISTENER =====
             },
 
-            // ===== START: NEW UI UPDATE FUNCTION FOR PASSWORD STRENGTH =====
             updatePasswordStrengthUI() {
                 const password = this.value;
                 const { criteria, strength } = AccountUtils.checkPasswordStrength(password);
@@ -2371,9 +2367,9 @@
                     }
                 }
             },
-            // ===== END: NEW UI UPDATE FUNCTION FOR PASSWORD STRENGTH =====
 
             async processDeposit(form) {
+                // CORE FIX: Ensure validation is checked before proceeding
                 if (this.isProcessing || !AccountUtils.validateCardForm(form)) return;
                 
                 this.isProcessing = true;
@@ -2383,6 +2379,7 @@
 
                 const selectedTypeEl = document.querySelector('#depositModal .card-type.selected');
                 
+                // This check is redundant due to validateCardForm, but serves as a safeguard
                 if (!selectedTypeEl) {
                     AccountUtils.showToast('Vui lòng chọn một loại thẻ.', 'error');
                     this.isProcessing = false;
@@ -2435,9 +2432,8 @@
                 
                 let isValid = true;
                 
-                // ===== START: UPGRADED VALIDATION LOGIC =====
                 const strengthCheck = AccountUtils.checkPasswordStrength(newPass.value);
-                if (strengthCheck.score < 3) { // Require at least 'strong'
+                if (strengthCheck.score < 3) {
                     AccountUtils.showError(newPass, 'Mật khẩu của bạn chưa đủ mạnh. Vui lòng đáp ứng các tiêu chí.');
                     isValid = false;
                 }
@@ -2447,7 +2443,6 @@
                      isValid = false;
                 }
                 if (!isValid) return;
-                // ===== END: UPGRADED VALIDATION LOGIC =====
 
                 this.isProcessing = true;
                 const submitBtn = form.querySelector('.btn-submit');
@@ -2460,9 +2455,7 @@
                         password: newPass.value,
                         passwordConfirm: confirmPass.value
                     });
-                    // ===== START: UPGRADED SUCCESS MESSAGE =====
                     AccountUtils.showToast('Đổi mật khẩu thành công! Các phiên đăng nhập khác đã được đăng xuất.', 'success');
-                    // ===== END: UPGRADED SUCCESS MESSAGE =====
                     ModalManager.closeModal('changePasswordModal');
                 } catch (error) {
                     if (!this.handleApiError(error, 'đổi mật khẩu')) {
@@ -2483,8 +2476,17 @@
                 document.getElementById(`${tabId}Tab`)?.classList.add('active');
             },
 
-            async logout(withRedirect = true) {
+            async logout(withRedirect = true, callServer = true) {
                 const token = localStorage.getItem('token');
+                
+                if (callServer && token) {
+                    try {
+                        await ApiManager.call('/users/logout');
+                    } catch (error) {
+                        console.error('Server logout call failed, but proceeding with client-side logout.', error.message);
+                    }
+                }
+
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 this.user = null;
@@ -2493,14 +2495,6 @@
                 if (withRedirect) {
                     AccountUtils.showToast('Đăng xuất thành công, đang chuyển hướng...', 'info');
                     setTimeout(() => window.location.href = 'index.html', 1500);
-                }
-
-                if(token){
-                    try {
-                        await ApiManager.call('/users/logout');
-                    } catch (error) {
-                        console.error('Server logout call failed but client-side logout is complete.', error);
-                    }
                 }
             }
         };
