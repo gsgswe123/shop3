@@ -10,29 +10,26 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const nodemailer = require('nodemailer');
 const validator = require('validator');
-const useragent = require('useragent'); // **MỚI: Thư viện phân tích User-Agent**
 
 // Load environment variables
 dotenv.config({ path: './config.env' });
 
 const app = express();
 
-// Body parser middleware
+// Middleware configuration
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-app.set('trust proxy', true); // **MỚI: Cần thiết để lấy đúng IP khi deploy sau proxy/load balancer**
-
+app.set('trust proxy', true);
 
 // CORS configuration
-const allowedOrigins = [
-  'https://gsgswe123.github.io',
-  'https://gsgswe123.github.io/shop3/',
-  'http://127.0.0.1:5500'
-];
-
 const corsOptions = {
   origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://gsgswe123.github.io',
+      'https://gsgswe123.github.io/shop3/',
+      'http://127.0.0.1:5500'
+    ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -53,20 +50,16 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Database configuration
-const DB = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
-);
+const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
 
-// Mongoose Schemas
-// **NÂNG CẤP: Thêm `sessions` vào userSchema**
+// Schemas
 const sessionSchema = new mongoose.Schema({
   tokenIdentifier: { type: String, unique: true, required: true },
   deviceInfo: String,
   ipAddress: String,
   createdAt: { type: Date, default: Date.now },
   lastUsedAt: { type: Date, default: Date.now }
-});
+}, { _id: false });
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -129,32 +122,26 @@ const userSchema = new mongoose.Schema({
       min: [1, 'Quantity must be at least 1']
     }
   }],
-  sessions: [sessionSchema], // **MỚI: Mảng lưu trữ các phiên đăng nhập**
+  sessions: [sessionSchema],
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
   active: {
     type: Boolean,
     default: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-
-// User schema indexes
+// Indexes
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
-userSchema.index({ 'sessions.tokenIdentifier': 1 }); // **MỚI: Index cho session token**
+userSchema.index({ 'sessions.tokenIdentifier': 1 });
 
-
-// User schema middleware
+// User middleware
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
@@ -165,12 +152,11 @@ userSchema.pre('save', async function(next) {
 userSchema.pre('save', function(next) {
   if (!this.isModified('password') || this.isNew) return next();
   this.passwordChangedAt = Date.now() - 1000;
-  // **NÂNG CẤP: Xóa tất cả các phiên khi đổi mật khẩu**
   this.sessions = [];
   next();
 });
 
-// User schema methods
+// User methods
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -186,7 +172,7 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
 
@@ -280,14 +266,14 @@ const productSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Product schema indexes
+// Product indexes
 productSchema.index({ createdAt: -1 });
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ createdBy: 1 });
 productSchema.index({ active: 1 });
 
-// Product virtual fields
+// Product virtual
 productSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'product',
@@ -349,8 +335,7 @@ reviewSchema.pre(/^find/, function(next) {
 
 const Review = mongoose.model('Review', reviewSchema);
 
-// **UPGRADE: Modified Transaction Schema**
-// This schema is well-designed to capture all necessary states of a transaction.
+// Transaction Schema
 const transactionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
@@ -377,8 +362,8 @@ const transactionSchema = new mongoose.Schema({
     default: 'pending',
   },
   description: String,
-  gatewayTransactionId: String, // To store ID from payment gateway
-  failureReason: String,      // To store reason for failure
+  gatewayTransactionId: String,
+  failureReason: String,
   details: {
     cardType: String,
     cardSerial: String,
@@ -397,7 +382,7 @@ const catchAsync = (fn) => {
   };
 };
 
-const AppError = class extends Error {
+class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
     this.statusCode = statusCode;
@@ -405,52 +390,49 @@ const AppError = class extends Error {
     this.isOperational = true;
     Error.captureStackTrace(this, this.constructor);
   }
-};
-// **NÂNG CẤP: signToken giờ nhận cả sessionId**
+}
+
+// JWT functions
 const signToken = (id, sessionId) => {
-    return jwt.sign({ id, sessionId }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '90d',
-    });
-  };
-  
-  // **NÂNG CẤP: createSendToken giờ nhận cả sessionId**
-  const createSendToken = (user, sessionId, statusCode, res) => {
-    const token = signToken(user._id, sessionId);
-    const cookieOptions = {
-      expires: new Date(
-        Date.now() + (process.env.JWT_COOKIE_EXPIRES_IN || 90) * 24 * 60 * 60 * 1000
-      ),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-    };
-  
-    res.cookie('jwt', token, cookieOptions);
-    user.password = undefined;
-    user.sessions = undefined; // Không gửi danh sách session về trong mọi response
-  
-    const userResponse = {
-      _id: user._id,
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      balance: user.balance || 0,
-      avatarText: user.avatarText,
-      createdAt: user.createdAt
-    };
-  
-    res.status(statusCode).json({
-      status: 'success',
-      token,
-      sessionId, // Gửi sessionId về cho client để xác định phiên hiện tại
-      data: {
-        user: userResponse,
-      },
-    });
+  return jwt.sign({ id, sessionId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '90d',
+  });
+};
+
+const createSendToken = (user, sessionId, statusCode, res) => {
+  const token = signToken(user._id, sessionId);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + (process.env.JWT_COOKIE_EXPIRES_IN || 90) * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   };
 
-// Error handling functions
+  res.cookie('jwt', token, cookieOptions);
+  
+  // Clean response data
+  const userResponse = {
+    _id: user._id,
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    balance: user.balance || 0,
+    avatarText: user.avatarText,
+    createdAt: user.createdAt
+  };
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    sessionId,
+    data: { user: userResponse },
+  });
+};
+
+// Error handling
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`;
   return new AppError(message, 400);
@@ -516,7 +498,42 @@ const globalErrorHandler = (err, req, res, next) => {
   }
 };
 
-// Authentication Controller
+// Payment Gateway Service
+const paymentGatewayService = {
+  processCard: (cardInfo) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const random = Math.random();
+        const gatewayId = `GATEWAY_${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+        const amount = Number(cardInfo.amount).toLocaleString('vi-VN');
+
+        if (random < 0.75) {
+          resolve({
+            success: true,
+            message: `Giao dịch thành công. Cộng ${amount}đ.`,
+            transactionId: gatewayId,
+          });
+        } else if (random < 0.9) {
+          resolve({
+            success: false,
+            message: 'Mã thẻ hoặc số serial không đúng.',
+            failureReason: 'INVALID_CARD',
+            transactionId: gatewayId,
+          });
+        } else {
+          resolve({
+            success: false,
+            message: 'Thẻ đã được sử dụng hoặc hết hạn.',
+            failureReason: 'CARD_ALREADY_USED',
+            transactionId: gatewayId,
+          });
+        }
+      }, 1500);
+    });
+  }
+};
+
+// Controllers
 const authController = {
   signup: catchAsync(async (req, res, next) => {
     const { name, email, password, passwordConfirm, role } = req.body;
@@ -537,36 +554,35 @@ const authController = {
       passwordConfirm,
       role: role === 'admin' ? 'user' : (role || 'user'),
     });
-     // **MỚI: Tạo phiên đăng nhập đầu tiên sau khi đăng ký**
-     const sessionId = crypto.randomBytes(16).toString('hex');
-     const newSession = {
-       tokenIdentifier: sessionId,
-       deviceInfo: req.headers['user-agent'] || 'Unknown Device',
-       ipAddress: req.ip,
-     };
-     newUser.sessions.push(newSession);
-     await newUser.save({ validateBeforeSave: false });
+
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    const newSession = {
+      tokenIdentifier: sessionId,
+      deviceInfo: req.headers['user-agent'] || 'Unknown Device',
+      ipAddress: req.ip,
+    };
+    newUser.sessions.push(newSession);
+    await newUser.save({ validateBeforeSave: false });
 
     createSendToken(newUser, sessionId, 201, res);
   }),
-// **NÂNG CẤP: Logic login giờ đây sẽ tạo phiên mới**
-login: catchAsync(async (req, res, next) => {
+
+  login: catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-  
+
     if (!email || !password) {
       return next(new AppError('Please provide email and password', 400));
     }
-  
+
     const user = await User.findOne({
       email: email.toLowerCase().trim(),
       active: { $ne: false }
-    }).select('+password'); // Lấy cả sessions
-  
+    }).select('+password');
+
     if (!user || !(await user.correctPassword(password, user.password))) {
       return next(new AppError('Incorrect email or password', 401));
     }
-  
-    // Tạo session mới
+
     const sessionId = crypto.randomBytes(16).toString('hex');
     const newSession = {
       tokenIdentifier: sessionId,
@@ -574,25 +590,19 @@ login: catchAsync(async (req, res, next) => {
       ipAddress: req.ip,
       lastUsedAt: Date.now()
     };
-  
-    // Giới hạn số lượng phiên để tránh lạm dụng
+
     const MAX_SESSIONS = 10;
     if (user.sessions.length >= MAX_SESSIONS) {
-      // Xóa phiên cũ nhất
       user.sessions.sort((a, b) => a.lastUsedAt - b.lastUsedAt).shift();
     }
-  
+
     user.sessions.push(newSession);
     await user.save({ validateBeforeSave: false });
-  
+
     createSendToken(user, sessionId, 200, res);
   }),
-  
 
   logout: (req, res) => {
-    // Logic logout phía client đã đủ để xóa token. 
-    // Backend sẽ dựa vào việc client không gửi token nữa.
-    // Nếu muốn logout từ 1 thiết bị cụ thể, sẽ dùng API riêng.
     res.cookie('jwt', 'loggedout', {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
@@ -603,7 +613,6 @@ login: catchAsync(async (req, res, next) => {
     });
   },
 
-  // **NÂNG CẤP: `protect` sẽ kiểm tra cả `sessionId`**
   protect: catchAsync(async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -618,7 +627,6 @@ login: catchAsync(async (req, res, next) => {
 
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
     
-    // Tìm user và kiểm tra sự tồn tại của session
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return next(new AppError('The user belonging to this token no longer exists.', 401));
@@ -626,22 +634,21 @@ login: catchAsync(async (req, res, next) => {
 
     const currentSession = currentUser.sessions.find(session => session.tokenIdentifier === decoded.sessionId);
     if (!currentSession) {
-        return next(new AppError('This session has been terminated. Please log in again.', 401));
+      return next(new AppError('This session has been terminated. Please log in again.', 401));
     }
 
     if (currentUser.changedPasswordAfter(decoded.iat)) {
       return next(new AppError('User recently changed password! Please log in again.', 401));
     }
     
-    // Cập nhật lastUsedAt cho session (tùy chọn, tốt cho việc tracking)
-    // Để tối ưu, có thể không cần `await` ở đây nếu không quan trọng việc nó phải xong ngay lập tức
+    // Update session last used (async to avoid blocking)
     User.updateOne(
-        { _id: currentUser._id, 'sessions.tokenIdentifier': decoded.sessionId },
-        { $set: { 'sessions.$.lastUsedAt': Date.now() } }
+      { _id: currentUser._id, 'sessions.tokenIdentifier': decoded.sessionId },
+      { $set: { 'sessions.$.lastUsedAt': Date.now() } }
     ).exec();
 
     req.user = currentUser;
-    req.sessionId = decoded.sessionId; // Gắn sessionId vào request để sử dụng sau này
+    req.sessionId = decoded.sessionId;
     res.locals.user = currentUser;
     next();
   }),
@@ -692,15 +699,14 @@ login: catchAsync(async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save();
 
-     // Sau khi reset pass thành công, tạo 1 session mới
-     const sessionId = crypto.randomBytes(16).toString('hex');
-     const newSession = {
-       tokenIdentifier: sessionId,
-       deviceInfo: req.headers['user-agent'] || 'Unknown Device',
-       ipAddress: req.ip,
-     };
-     user.sessions = [newSession]; // Xóa các session cũ và tạo session mới
-     await user.save({ validateBeforeSave: false });
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    const newSession = {
+      tokenIdentifier: sessionId,
+      deviceInfo: req.headers['user-agent'] || 'Unknown Device',
+      ipAddress: req.ip,
+    };
+    user.sessions = [newSession];
+    await user.save({ validateBeforeSave: false });
 
     createSendToken(user, sessionId, 200, res);
   }),
@@ -715,63 +721,19 @@ login: catchAsync(async (req, res, next) => {
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
     
-    // Giữ lại session hiện tại, xóa tất cả session khác
     const currentSession = user.sessions.find(s => s.tokenIdentifier === req.sessionId);
     user.sessions = currentSession ? [currentSession] : [];
     await user.save();
     
-    // Gửi lại token với session hiện tại
     createSendToken(user, req.sessionId, 200, res);
   }),
 };
 
-
-// --- UPGRADE: Abstracted simulated payment gateway into its own service ---
-// This separation of concerns is a good practice, keeping gateway logic isolated.
-const paymentGatewayService = {
-  processCard: (cardInfo) => {
-    return new Promise(resolve => {
-      // Simulate network delay
-      setTimeout(() => {
-        const random = Math.random();
-        const gatewayId = `GATEWAY_${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
-        const amount = Number(cardInfo.amount).toLocaleString('vi-VN');
-
-        if (random < 0.75) { // 75% success
-          resolve({
-            success: true,
-            message: `Giao dịch thành công. Cộng ${amount}đ.`,
-            transactionId: gatewayId,
-          });
-        } else if (random < 0.9) { // 15% invalid card
-          resolve({
-            success: false,
-            message: 'Mã thẻ hoặc số serial không đúng.',
-            failureReason: 'INVALID_CARD',
-            transactionId: gatewayId,
-          });
-        } else { // 10% used card
-          resolve({
-            success: false,
-            message: 'Thẻ đã được sử dụng hoặc hết hạn.',
-            failureReason: 'CARD_ALREADY_USED',
-            transactionId: gatewayId,
-          });
-        }
-      }, 1500); // 1.5 second delay
-    });
-  }
-};
-
-// --- UPGRADE: Heavily refactored controller ---
-// This controller follows a robust, multi-step process for handling transactions,
-// which is great for reliability and tracking.
 const transactionController = {
   depositWithCard: catchAsync(async (req, res, next) => {
     const { cardType, cardNumber, cardSerial, amount } = req.body;
     const userId = req.user.id;
 
-    // Basic validation
     if (!cardType || !cardNumber || !cardSerial || !amount) {
       return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào.', 400));
     }
@@ -781,7 +743,6 @@ const transactionController = {
       return next(new AppError('Mệnh giá thẻ không hợp lệ.', 400));
     }
 
-    // Step 1: Create an initial 'pending' transaction log. This is crucial for tracking every attempt.
     const pendingTransaction = await Transaction.create({
       user: userId,
       type: 'deposit',
@@ -792,47 +753,35 @@ const transactionController = {
       details: { cardType, cardNumber, cardSerial }
     });
     
-    // Step 2: Call the external payment gateway service.
     const gatewayResponse = await paymentGatewayService.processCard(req.body);
 
-    // Step 3: Handle the gateway response and finalize the transaction.
     if (gatewayResponse.success) {
-      // SUCCESS CASE:
-      // A) Update the user's balance. Using $inc is atomic and safe.
       await User.findByIdAndUpdate(userId, 
         { $inc: { balance: parsedAmount } }, 
         { new: true, runValidators: true }
       );
       
-      // B) Update the transaction log to 'success' with gateway details.
       pendingTransaction.status = 'success';
       pendingTransaction.description = gatewayResponse.message;
       pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
       await pendingTransaction.save();
 
-      // C) Fetch the final, populated transaction to send back to the client.
       const finalTransaction = await Transaction.findById(pendingTransaction._id).populate({
-         path: 'user', select: 'name balance'
+        path: 'user', select: 'name balance'
       });
       
       res.status(200).json({
         status: 'success',
         message: 'Nạp thẻ thành công!',
-        data: {
-          transaction: finalTransaction,
-        },
+        data: { transaction: finalTransaction },
       });
-
     } else {
-      // FAILURE CASE:
-      // A) Update the transaction log to 'failed' with the reason from the gateway.
       pendingTransaction.status = 'failed';
       pendingTransaction.description = gatewayResponse.message;
       pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
       pendingTransaction.failureReason = gatewayResponse.failureReason;
       await pendingTransaction.save();
       
-      // B) Return a client-friendly error. The user's balance is not touched.
       return next(new AppError(gatewayResponse.message, 400));
     }
   }),
@@ -840,20 +789,16 @@ const transactionController = {
   getMyTransactions: catchAsync(async (req, res, next) => {
     const transactions = await Transaction.find({ user: req.user.id })
       .sort('-createdAt')
-      .limit(50); // Add a limit for performance
+      .limit(50);
 
     res.status(200).json({
       status: 'success',
       results: transactions.length,
-      data: {
-        transactions
-      }
+      data: { transactions }
     });
   })
 };
 
-
-// User Controller
 const userController = {
   getMe: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id);
@@ -874,22 +819,19 @@ const userController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        user: userResponse,
-      },
+      data: { user: userResponse },
     });
   }),
-// **MỚI: Các hàm quản lý session**
-getSessions: catchAsync(async (req, res, next) => {
+
+  getSessions: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id);
-  
-    // Sắp xếp để phiên hiện tại luôn ở trên cùng
+
     const sessions = user.sessions.sort((a, b) => {
       if (a.tokenIdentifier === req.sessionId) return -1;
       if (b.tokenIdentifier === req.sessionId) return 1;
       return new Date(b.lastUsedAt) - new Date(a.lastUsedAt);
     });
-  
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -904,11 +846,10 @@ getSessions: catchAsync(async (req, res, next) => {
       }
     });
   }),
-  
+
   logoutSession: catchAsync(async (req, res, next) => {
     const { sessionId } = req.params;
     
-    // Người dùng không thể tự đăng xuất phiên hiện tại qua API này, phải dùng logout thông thường.
     if (sessionId === req.sessionId) {
       return next(new AppError('You cannot log out your current session via this endpoint.', 400));
     }
@@ -916,21 +857,20 @@ getSessions: catchAsync(async (req, res, next) => {
     await User.findByIdAndUpdate(req.user.id, {
       $pull: { sessions: { tokenIdentifier: sessionId } }
     });
-  
+
     res.status(204).json({
       status: 'success',
       data: null
     });
   }),
-  
+
   logoutAllOtherSessions: catchAsync(async (req, res, next) => {
     const user = req.user;
     
-    // Lọc ra chỉ giữ lại phiên hiện tại
     user.sessions = user.sessions.filter(s => s.tokenIdentifier === req.sessionId);
     
     await user.save({ validateBeforeSave: false });
-  
+
     res.status(200).json({
       status: 'success',
       message: 'All other sessions have been logged out.'
@@ -938,7 +878,6 @@ getSessions: catchAsync(async (req, res, next) => {
   }),
 
   updateMe: catchAsync(async (req, res, next) => {
-    // Create error if user POSTs password data
     if (req.body.password || req.body.passwordConfirm) {
       return next(new AppError('This route is not for password updates. Please use /updateMyPassword.', 400));
     }
@@ -948,7 +887,6 @@ getSessions: catchAsync(async (req, res, next) => {
       return next(new AppError('Please provide a valid name', 400));
     }
 
-    // Update user document
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
       {
@@ -991,9 +929,7 @@ getSessions: catchAsync(async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       results: users.length,
-      data: {
-        users,
-      },
+      data: { users },
     });
   }),
 
@@ -1006,9 +942,7 @@ getSessions: catchAsync(async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        user,
-      },
+      data: { user },
     });
   }),
 
@@ -1028,9 +962,7 @@ getSessions: catchAsync(async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        user,
-      },
+      data: { user },
     });
   }),
 
@@ -1077,7 +1009,6 @@ getSessions: catchAsync(async (req, res, next) => {
   }),
 };
 
-// Product Controller
 const productController = {
   getAllProducts: catchAsync(async (req, res, next) => {
     const queryObj = { ...req.query };
@@ -1087,7 +1018,7 @@ const productController = {
     queryObj.active = { $ne: false };
 
     let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `${match}`);
 
     let query = Product.find(JSON.parse(queryStr));
 
@@ -1119,9 +1050,7 @@ const productController = {
     res.status(200).json({
       status: 'success',
       results: products.length,
-      data: {
-        products,
-      },
+      data: { products },
     });
   }),
 
@@ -1140,9 +1069,7 @@ const productController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        product,
-      },
+      data: { product },
     });
   }),
 
@@ -1183,9 +1110,7 @@ const productController = {
 
     res.status(201).json({
       status: 'success',
-      data: {
-        product: newProduct,
-      },
+      data: { product: newProduct },
     });
   }),
 
@@ -1220,9 +1145,7 @@ const productController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        product: updatedProduct,
-      },
+      data: { product: updatedProduct },
     });
   }),
 
@@ -1267,14 +1190,11 @@ const productController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        stats,
-      },
+      data: { stats },
     });
   }),
 };
 
-// Cart and Favorites Controller
 const cartFavoriteController = {
   addToCart: catchAsync(async (req, res, next) => {
     const { productId, quantity = 1 } = req.body;
@@ -1311,9 +1231,7 @@ const cartFavoriteController = {
     res.status(200).json({
       status: 'success',
       message: 'Product added to cart',
-      data: {
-        cart: user.cart
-      }
+      data: { cart: user.cart }
     });
   }),
 
@@ -1325,9 +1243,7 @@ const cartFavoriteController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        cart: user.cart
-      }
+      data: { cart: user.cart }
     });
   }),
 
@@ -1354,9 +1270,7 @@ const cartFavoriteController = {
     res.status(200).json({
       status: 'success',
       message: 'Cart updated successfully',
-      data: {
-        cart: user.cart
-      }
+      data: { cart: user.cart }
     });
   }),
 
@@ -1379,9 +1293,7 @@ const cartFavoriteController = {
     res.status(200).json({
       status: 'success',
       message: 'Product removed from cart',
-      data: {
-        cart: user.cart
-      }
+      data: { cart: user.cart }
     });
   }),
 
@@ -1395,9 +1307,7 @@ const cartFavoriteController = {
     res.status(200).json({
       status: 'success',
       message: 'Cart cleared successfully',
-      data: {
-        cart: user.cart
-      }
+      data: { cart: user.cart }
     });
   }),
 
@@ -1427,9 +1337,7 @@ const cartFavoriteController = {
     res.status(200).json({
       status: 'success',
       message: 'Product added to favorites',
-      data: {
-        favorites: user.favorites
-      }
+      data: { favorites: user.favorites }
     });
   }),
 
@@ -1442,9 +1350,7 @@ const cartFavoriteController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        favorites: user.favorites
-      }
+      data: { favorites: user.favorites }
     });
   }),
 
@@ -1467,9 +1373,7 @@ const cartFavoriteController = {
     res.status(200).json({
       status: 'success',
       message: 'Product removed from favorites',
-      data: {
-        favorites: user.favorites
-      }
+      data: { favorites: user.favorites }
     });
   }),
 
@@ -1483,14 +1387,11 @@ const cartFavoriteController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        isFavorite
-      }
+      data: { isFavorite }
     });
   }),
 };
 
-// Review Controller
 const reviewController = {
   getAllReviews: catchAsync(async (req, res, next) => {
     let filter = {};
@@ -1501,9 +1402,7 @@ const reviewController = {
     res.status(200).json({
       status: 'success',
       results: reviews.length,
-      data: {
-        reviews,
-      },
+      data: { reviews },
     });
   }),
 
@@ -1524,9 +1423,7 @@ const reviewController = {
 
     res.status(201).json({
       status: 'success',
-      data: {
-        review: newReview,
-      },
+      data: { review: newReview },
     });
   }),
 
@@ -1539,9 +1436,7 @@ const reviewController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        review,
-      },
+      data: { review },
     });
   }),
 
@@ -1563,9 +1458,7 @@ const reviewController = {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        review: updatedReview,
-      },
+      data: { review: updatedReview },
     });
   }),
 
@@ -1650,35 +1543,41 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
+// Auth routes
 app.post('/api/v1/users/signup', authController.signup);
 app.post('/api/v1/users/login', authController.login);
 app.get('/api/v1/users/logout', authController.logout);
 app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
 app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
 
+// Public product routes
 app.get('/api/v1/products', productController.getAllProducts);
 app.get('/api/v1/products/stats', productController.getProductStats);
 app.get('/api/v1/products/:id', productController.getProduct);
 
+// Public review routes
 app.get('/api/v1/reviews', reviewController.getAllReviews);
 app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
+// Protected routes
 app.use(authController.protect);
 
+// User routes
 app.get('/api/v1/users/me', userController.getMe);
 app.patch('/api/v1/users/updateMe', userController.updateMe);
 app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
 app.delete('/api/v1/users/deleteMe', userController.deleteMe);
-// **MỚI: ROUTES QUẢN LÝ PHIÊN ĐĂNG NHẬP**
+
+// Session management routes
 app.get('/api/v1/users/sessions', userController.getSessions);
 app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
 app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
 
-
-// **UPDATED: DEPOSIT & TRANSACTION ROUTES**
+// Transaction routes
 app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
 app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
 
+// Cart routes
 app.route('/api/v1/cart')
   .get(cartFavoriteController.getCart)
   .post(cartFavoriteController.addToCart)
@@ -1688,6 +1587,7 @@ app.route('/api/v1/cart/:productId')
   .patch(cartFavoriteController.updateCartItem)
   .delete(cartFavoriteController.removeFromCart);
 
+// Favorite routes
 app.route('/api/v1/favorites')
   .get(cartFavoriteController.getFavorites)
   .post(cartFavoriteController.addToFavorites);
@@ -1697,6 +1597,7 @@ app.route('/api/v1/favorites/:productId')
 
 app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
 
+// Review routes (protected)
 app.post('/api/v1/reviews', reviewController.createReview);
 app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
 
@@ -1705,10 +1606,12 @@ app.route('/api/v1/reviews/:id')
   .patch(reviewController.updateReview)
   .delete(reviewController.deleteReview);
 
+// User product routes
 app.post('/api/v1/my-products', productController.createProduct);
 app.patch('/api/v1/my-products/:id', productController.updateProduct);
 app.delete('/api/v1/my-products/:id', productController.deleteProduct);
 
+// Admin routes
 app.use('/api/v1/admin', authController.restrictTo('admin'));
 
 app.route('/api/v1/admin/users')
@@ -1728,18 +1631,22 @@ app.route('/api/v1/admin/products/:id')
   .patch(productController.updateProduct)
   .delete(productController.deleteProduct);
 
+// 404 handler
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
+// Global error handler
 app.use(globalErrorHandler);
 
+// Server startup
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
+// Process handlers
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.log(err.name, err.message);
