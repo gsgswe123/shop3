@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài khoản - Shop Grow A Garden</title>
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -1061,7 +1061,7 @@
             backdrop-filter: blur(25px);
             border-radius: var(--border-radius);
             padding: 40px;
-            max-width: 650px; /* ** MỚI ** */
+            max-width: 650px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -1070,8 +1070,8 @@
             transition: transform 0.3s ease;
             border: 1px solid var(--glass-border);
             box-shadow: var(--shadow-xl);
-            display: flex; /* ** MỚI ** */
-            flex-direction: column; /* ** MỚI ** */
+            display: flex;
+            flex-direction: column;
         }
 
         .modal.show .modal-content {
@@ -1111,12 +1111,12 @@
         }
         
         .modal-header, .modal-footer {
-             flex-shrink: 0; /* ** MỚI ** */
+             flex-shrink: 0;
         }
         .modal-body {
-            flex-grow: 1; /* ** MỚI ** */
-            overflow-y: auto; /* ** MỚI ** */
-            margin-bottom: 20px; /* ** MỚI ** */
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
         }
 
         /* Form Styles */
@@ -1280,13 +1280,11 @@
             animation: spin 1s linear infinite;
         }
 
-        .btn-submit.loading > .spinner {
+        .btn.loading > .spinner {
             display: inline-block;
         }
-        
-        .btn-submit.loading > span {
-            vertical-align: middle;
-            margin-right: 10px;
+        .btn.loading > span, .btn.loading > i {
+             display: none;
         }
 
         @keyframes spin {
@@ -1432,18 +1430,32 @@
             border: 1px solid rgba(245, 158, 11, 0.3);
         }
 
-        /* ** MỚI: CSS cho danh sách thiết bị trong modal ** */
+        /* ** NÂNG CẤP: CSS cho danh sách thiết bị và trạng thái loading ** */
         .device-list {
             list-style: none;
             padding: 0;
             margin: 0;
+        }
+        .device-list-container { /* Thêm container để chứa spinner */
+            position: relative;
+            min-height: 150px;
+        }
+        .loading-spinner-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: var(--border-radius);
+            z-index: 2;
         }
         .device-item {
             display: flex;
             align-items: center;
             padding: 18px 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background-color 0.3s;
+            transition: var(--transition);
         }
         .device-item:last-child {
             border-bottom: none;
@@ -1452,6 +1464,7 @@
             background: rgba(42, 157, 143, 0.15);
             border-left: 4px solid var(--success-color);
             padding-left: 11px;
+            border-radius: 8px;
         }
         .device-icon {
             font-size: 32px;
@@ -1473,12 +1486,20 @@
             color: rgba(255, 255, 255, 0.7);
         }
         .device-meta .current-tag {
-            color: var(--success-color);
+            background-color: var(--success-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
             font-weight: bold;
+            font-size: 11px;
+            vertical-align: middle;
+            margin-left: 8px;
         }
         .device-logout-btn {
             padding: 8px 16px;
             font-size: 13px;
+            flex-shrink: 0;
+            min-width: 120px;
         }
         .modal-footer {
             margin-top: 20px;
@@ -1486,6 +1507,7 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
         }
+
 
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -1602,9 +1624,12 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
+                padding: 20px 15px;
             }
+            .device-icon { margin: 0 0 10px; }
             .device-logout-btn {
                 align-self: flex-end;
+                margin-top: 10px;
             }
         }
 
@@ -1838,10 +1863,9 @@
                                     Bật (Sớm ra mắt)
                                 </button>
                             </div>
-                             <!-- ** NÂNG CẤP: Giao diện động cho thiết bị đã đăng nhập ** -->
                             <div class="security-item">
                                 <div class="security-info">
-                                    <i class="fas fa-laptop"></i>
+                                    <i class="fas fa-laptop-house"></i>
                                     <div>
                                         <h4>Thiết bị đã đăng nhập</h4>
                                         <p style="color: rgba(255,255,255,0.7);" id="device-count">Đang tải...</p>
@@ -2035,7 +2059,7 @@
                     <div class="error-message"></div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-submit">
+                <button type="submit" class="btn btn-primary btn-submit" id="changePasswordSubmitBtn">
                     <span>
                         <i class="fas fa-key"></i> Đổi mật khẩu
                     </span>
@@ -2045,7 +2069,7 @@
         </div>
     </div>
     
-    <!-- ** MỚI: Modal quản lý thiết bị ** -->
+    <!-- ** NÂNG CẤP: Modal quản lý thiết bị ** -->
     <div class="modal" id="manageDevicesModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2053,14 +2077,19 @@
                 <h2 class="modal-title">Thiết bị đã đăng nhập</h2>
             </div>
             <div class="modal-body">
-                <ul class="device-list" id="deviceList">
-                    <!-- Devices will be rendered here by JS -->
-                </ul>
+                <div class="device-list-container" id="deviceListContainer">
+                     <ul class="device-list" id="deviceList">
+                        <!-- Devices will be rendered here by JS -->
+                    </ul>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-danger" id="logoutAllOthersBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Đăng xuất tất cả thiết bị khác</span>
+                    <div class="spinner"></div>
+                    <span>
+                        <i class="fas fa-sign-out-alt"></i>
+                        Đăng xuất tất cả thiết bị khác
+                    </span>
                 </button>
             </div>
         </div>
@@ -2091,41 +2120,48 @@
                 });
             },
             
-             // **MỚI: Định dạng thời gian tương đối (ví dụ: "5 phút trước")**
+             // **NÂNG CẤP: Định dạng thời gian tương đối chi tiết hơn**
             formatRelativeTime: (dateString) => {
                 if (!dateString) return 'Không xác định';
                 const date = new Date(dateString);
                 const now = new Date();
                 const seconds = Math.round((now - date) / 1000);
-                const minutes = Math.round(seconds / 60);
-                const hours = Math.round(minutes / 60);
-                const days = Math.round(hours / 24);
+                
+                if (seconds < 5) return "vừa xong";
+                if (seconds < 60) return `${seconds} giây trước`;
 
-                if (seconds < 60) return "vừa xong";
+                const minutes = Math.round(seconds / 60);
                 if (minutes < 60) return `${minutes} phút trước`;
+                
+                const hours = Math.round(minutes / 60);
                 if (hours < 24) return `${hours} giờ trước`;
+                
+                const days = Math.round(hours / 24);
                 if (days < 7) return `${days} ngày trước`;
+
                 return AccountUtils.formatDateTime(dateString);
             },
-             // **MỚI: Phân tích User-Agent để lấy thông tin trình duyệt và HĐH**
+            // **NÂNG CẤP: Phân tích User-Agent chi tiết và chính xác hơn**
             parseUserAgent(userAgentString) {
-                const defaultResult = { browser: 'Unknown', os: 'Unknown', icon: 'fa-question-circle' };
+                const defaultResult = { browser: 'Không xác định', os: 'Không xác định', icon: 'fas fa-question-circle' };
                 if (!userAgentString) return defaultResult;
                 
-                let browser = 'Unknown', os = 'Unknown', icon = 'fa-laptop';
-
+                const ua = userAgentString.toLowerCase();
+                let browser = 'Unknown', os = 'Unknown', icon = 'fas fa-laptop';
+            
                 // OS detection
-                if (userAgentString.includes('Windows')) { os = 'Windows'; icon = 'fab fa-windows'; }
-                else if (userAgentString.includes('Macintosh') || userAgentString.includes('Mac OS')) { os = 'macOS'; icon = 'fab fa-apple'; }
-                else if (userAgentString.includes('Android')) { os = 'Android'; icon = 'fab fa-android'; }
-                else if (userAgentString.includes('iPhone') || userAgentString.includes('iPad')) { os = 'iOS'; icon = 'fab fa-apple'; }
-                else if (userAgentString.includes('Linux')) { os = 'Linux'; icon = 'fab fa-linux'; }
+                if (ua.includes('windows')) { os = 'Windows'; icon = 'fab fa-windows'; } 
+                else if (ua.includes('macintosh') || ua.includes('mac os')) { os = 'macOS'; icon = 'fab fa-apple'; }
+                else if (ua.includes('android')) { os = 'Android'; icon = 'fab fa-android'; }
+                else if (ua.includes('iphone') || ua.includes('ipad')) { os = 'iOS'; icon = 'fab fa-apple'; }
+                else if (ua.includes('linux')) { os = 'Linux'; icon = 'fab fa-linux'; }
 
                 // Browser detection
-                if (userAgentString.includes('Edg/')) { browser = 'Edge'; icon = 'fab fa-edge'; }
-                else if (userAgentString.includes('Chrome/')) { browser = 'Chrome'; icon = 'fab fa-chrome'; }
-                else if (userAgentString.includes('Firefox/')) { browser = 'Firefox'; icon = 'fab fa-firefox-browser'; }
-                else if (userAgentString.includes('Safari/')) { browser = 'Safari'; icon = 'fab fa-safari'; }
+                if (ua.includes("edg/")) { browser = "Edge"; icon = 'fab fa-edge-legacy'; }
+                else if (ua.includes("firefox/")) { browser = "Firefox"; icon = 'fab fa-firefox-browser'; }
+                else if (ua.includes("opr/")) { browser = "Opera"; icon = 'fab fa-opera'; }
+                else if (ua.includes("chrome/") && !ua.includes("chromium")) { browser = "Chrome"; icon = 'fab fa-chrome'; }
+                else if (ua.includes("safari/") && !ua.includes("chrome") && !ua.includes("chromium")) { browser = "Safari"; icon = 'fab fa-safari';}
 
                 return { browser, os, icon };
             },
@@ -2301,7 +2337,6 @@
                 
                 const response = await fetch(`${this.baseUrl}${endpoint}`, options);
                 
-                // ** SỬA: Xử lý response không có content (vd: DELETE 204) **
                 if (response.status === 204) {
                      return { status: 'success', data: null };
                 }
@@ -2325,7 +2360,6 @@
         // ===== ACCOUNT MANAGER =====
         const AccountManager = {
             user: null,
-            isProcessing: false,
 
             init() {
                 this.checkLoginStatus();
@@ -2339,13 +2373,12 @@
                     try {
                         this.user = JSON.parse(userString);
                         this.renderUI(true); 
-                        // ** NÂNG CẤP: Lấy dữ liệu mới nhất và tải lịch sử & thiết bị **
                         const response = await ApiManager.call('/users/me'); 
                         this.user = response.data.user;
                         localStorage.setItem('user', JSON.stringify(this.user));
                         this.renderUI(true);
                         this.loadTransactionHistory();
-                        this.loadDeviceSummary(); // ** MỚI **
+                        this.loadDeviceSummary();
                     } catch (error) {
                         this.handleApiError(error, 'Kiểm tra đăng nhập');
                     }
@@ -2397,7 +2430,6 @@
                 }
             },
             
-             // ** MỚI: Tải thông tin tóm tắt về thiết bị **
             async loadDeviceSummary() {
                  try {
                     const response = await ApiManager.call('/users/sessions');
@@ -2416,14 +2448,21 @@
                     this.handleApiError(error, 'tải thông tin thiết bị');
                 }
             },
-            // ** MỚI: Tải và hiển thị danh sách thiết bị trong modal **
+
             async renderDeviceList() {
-                const listEl = document.getElementById('deviceList');
-                if(!listEl) return;
-                listEl.innerHTML = '<p style="color:white; text-align:center;">Đang tải danh sách...</p>';
+                const listContainer = document.getElementById('deviceListContainer');
+                if(!listContainer) return;
+
+                const loadingHTML = `
+                    <div class="loading-spinner-container">
+                        <div class="spinner" style="display:block; width: 40px; height: 40px; border-width: 4px;"></div>
+                    </div>`;
+                listContainer.innerHTML = loadingHTML;
                  try {
                     const response = await ApiManager.call('/users/sessions');
                     const devices = response.data?.sessions || [];
+                    const listEl = document.createElement('ul');
+                    listEl.className = 'device-list';
                     
                     if(devices.length > 0){
                        listEl.innerHTML = devices.map(this.createDeviceItemHTML).join('');
@@ -2431,21 +2470,23 @@
                        listEl.querySelectorAll('.device-logout-btn').forEach(btn => {
                            btn.addEventListener('click', (e) => {
                                const sessionId = e.currentTarget.dataset.sessionId;
-                               this.logoutDevice(sessionId);
+                               this.logoutDevice(sessionId, e.currentTarget);
                            });
                        });
                     } else {
                         listEl.innerHTML = `<li class="device-item"><p style="color:white;">Không tìm thấy thiết bị nào.</p></li>`;
                     }
+                    listContainer.innerHTML = '';
+                    listContainer.appendChild(listEl);
                 } catch (error) {
                      this.handleApiError(error, 'tải danh sách thiết bị');
-                     listEl.innerHTML = `<li class="device-item"><p style="color:var(--danger-color);">Lỗi khi tải danh sách thiết bị.</p></li>`;
+                     listContainer.innerHTML = `<ul class="device-list"><li class="device-item"><p style="color:var(--danger-color);">Lỗi khi tải danh sách thiết bị.</p></li></ul>`;
                 }
             },
-            // ** MỚI: Tạo HTML cho một item thiết bị **
+           
             createDeviceItemHTML(device) {
                 const { browser, os, icon } = AccountUtils.parseUserAgent(device.deviceInfo);
-                const currentTag = device.isCurrent ? '<span class="current-tag">(Thiết bị này)</span>' : '';
+                const currentTag = device.isCurrent ? '<span class="current-tag">HIỆN TẠI</span>' : '';
                 const btnDisabled = device.isCurrent ? 'disabled' : '';
                 
                 return `<li class="device-item ${device.isCurrent ? 'current-device' : ''}" id="device-${device.id}">
@@ -2458,36 +2499,53 @@
                                 </div>
                             </div>
                             <button class="btn btn-outline device-logout-btn" data-session-id="${device.id}" ${btnDisabled}>
-                                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                <div class="spinner"></div>
+                                <i class="fas fa-sign-out-alt"></i> 
+                                <span>Đăng xuất</span>
                             </button>
                         </li>`;
             },
-             // ** MỚI: Xử lý đăng xuất 1 thiết bị **
-            async logoutDevice(sessionId) {
+           
+            async logoutDevice(sessionId, button) {
                 if(!confirm('Bạn có chắc chắn muốn đăng xuất khỏi thiết bị này không?')) return;
                 
+                button.classList.add('loading');
+                button.disabled = true;
+
                 try {
                     await ApiManager.call(`/users/sessions/${sessionId}`, 'DELETE');
                     AccountUtils.showToast('Đăng xuất thiết bị thành công.', 'success');
-                    // Xóa item khỏi UI
+                    
                     const deviceItem = document.getElementById(`device-${sessionId}`);
-                    if(deviceItem) deviceItem.remove();
-                    this.loadDeviceSummary(); // Cập nhật lại summary
+                    if(deviceItem) {
+                         deviceItem.style.transition = 'opacity 0.5s, transform 0.5s';
+                         deviceItem.style.opacity = '0';
+                         deviceItem.style.transform = 'translateX(-20px)';
+                         setTimeout(() => deviceItem.remove(), 500);
+                    }
+                    this.loadDeviceSummary();
                 } catch(error) {
                      this.handleApiError(error, 'đăng xuất thiết bị');
+                     button.classList.remove('loading');
+                     button.disabled = false;
                 }
             },
-            // ** MỚI: Xử lý đăng xuất các thiết bị khác **
+            
              async logoutAllOtherDevices() {
-                if(!confirm('Bạn có chắc chắn muốn đăng xuất khỏi tất cả các thiết bị khác không?')) return;
+                if(!confirm('Bạn có chắc chắn muốn đăng xuất khỏi tất cả các thiết bị khác không? Thao tác này sẽ giữ lại phiên đăng nhập trên thiết bị hiện tại.')) return;
+                 const button = document.getElementById('logoutAllOthersBtn');
+                 button.classList.add('loading');
+                 button.disabled = true;
                  try {
                     await ApiManager.call('/users/sessions/all-but-current', 'DELETE');
                     AccountUtils.showToast('Đã đăng xuất tất cả thiết bị khác.', 'success');
-                    // Tải lại danh sách, chỉ còn thiết bị hiện tại
                     this.renderDeviceList();
-                    this.loadDeviceSummary(); // Cập nhật lại summary
+                    this.loadDeviceSummary();
                 } catch(error) {
                      this.handleApiError(error, 'đăng xuất các thiết bị khác');
+                } finally {
+                     button.classList.remove('loading');
+                     button.disabled = false;
                 }
             },
 
@@ -2550,8 +2608,7 @@
 
             handleApiError(error, context = 'thao tác') {
                 const message = error.message || `Lỗi không xác định khi ${context}.`;
-                // **Sửa:** Logout khi có lỗi 401
-                 if (error.message.includes('hết hạn') || error.message.includes('terminated')) {
+                 if (error.message.includes('hết hạn') || error.message.includes('terminated') || error.message.includes('no longer exists')) {
                      AccountUtils.showToast(message, 'error');
                      this.logout(true, false);
                      return true;
@@ -2567,7 +2624,6 @@
                 document.getElementById('depositBtn')?.addEventListener('click', () => ModalManager.showModal('depositModal'));
                 document.getElementById('changePasswordBtn')?.addEventListener('click', () => ModalManager.showModal('changePasswordModal'));
                 
-                // ** MỚI: Listener cho nút quản lý thiết bị và modal **
                  document.getElementById('manageDevicesBtn')?.addEventListener('click', () => {
                     ModalManager.showModal('manageDevicesModal');
                     this.renderDeviceList();
@@ -2620,11 +2676,10 @@
             },
 
             async processDeposit(form) {
-                // CORE FIX: Ensure validation is checked before proceeding
-                if (this.isProcessing || !AccountUtils.validateCardForm(form)) return;
+                if (form.classList.contains('processing') || !AccountUtils.validateCardForm(form)) return;
                 
-                this.isProcessing = true;
-                const submitBtn = form.querySelector('.btn-submit');
+                form.classList.add('processing');
+                const submitBtn = form.querySelector('#depositSubmitBtn');
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
 
@@ -2632,7 +2687,7 @@
                 
                 if (!selectedTypeEl) {
                     AccountUtils.showToast('Vui lòng chọn một loại thẻ.', 'error');
-                    this.isProcessing = false;
+                    form.classList.remove('processing');
                     submitBtn.classList.remove('loading');
                     submitBtn.disabled = false;
                     return;
@@ -2668,12 +2723,12 @@
                          this.updateTransactionInHistory(pendingId, { ...pendingTransaction, status: 'failed', description: error.message });
                     }
                 } finally {
-                    this.isProcessing = false; 
+                    form.classList.remove('processing'); 
                 }
             },
             
             async changePassword(form) {
-                if (this.isProcessing) return;
+                if (form.classList.contains('processing')) return;
                 
                 const currentPass = form.querySelector('#currentPassword');
                 const newPass = form.querySelector('#newPassword');
@@ -2694,29 +2749,27 @@
                 }
                 if (!isValid) return;
 
-                this.isProcessing = true;
-                const submitBtn = form.querySelector('.btn-submit');
+                form.classList.add('processing');
+                const submitBtn = form.querySelector('#changePasswordSubmitBtn');
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
                 
                 try {
-                    // **Sửa**: Khi đổi pass thành công, backend sẽ trả về token và sessionId mới
                     const response = await ApiManager.call('/users/updateMyPassword', 'PATCH', {
                         passwordCurrent: currentPass.value,
                         password: newPass.value,
                         passwordConfirm: confirmPass.value
                     });
-                     // Lưu lại token và session mới
+
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('sessionId', response.sessionId);
                     
                     AccountUtils.showToast('Đổi mật khẩu thành công! Các phiên đăng nhập khác đã được đăng xuất.', 'success');
                     ModalManager.closeModal('changePasswordModal');
-                    this.loadDeviceSummary(); // Cập nhật lại summary thiết bị
+                    this.loadDeviceSummary();
                 } catch (error) {
                     if (!this.handleApiError(error, 'đổi mật khẩu')) {
                          const message = error.message;
-                        // Phân tích lỗi cụ thể hơn
                         if(/incorrect password/i.test(message)){
                            AccountUtils.showError(currentPass, 'Mật khẩu hiện tại không chính xác.');
                         } else {
@@ -2724,7 +2777,7 @@
                         }
                     }
                 } finally {
-                    this.isProcessing = false;
+                    form.classList.remove('processing');
                     submitBtn.classList.remove('loading');
                     submitBtn.disabled = false;
                 }
@@ -2738,11 +2791,10 @@
                 document.getElementById(`${tabId}Tab`)?.classList.add('active');
             },
 
-            async logout(withRedirect = true, callServer = false) {
-                 // **SỬA:** Không cần gọi server khi logout nữa, chỉ cần xóa thông tin phía client.
+            async logout(withRedirect = true) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                localStorage.removeItem('sessionId'); // **MỚI**
+                localStorage.removeItem('sessionId');
                 this.user = null;
                 this.renderUI(false);
                 
