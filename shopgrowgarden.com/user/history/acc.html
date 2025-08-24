@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài khoản - Shop Grow A Garden</title>
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVhbodvdmhdcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVFiFtZc9aBRBFMd/M7ubTWI0GoM2NmIhFlYWYmVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVhYWVh">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -1187,6 +1187,58 @@
         .password-toggle:hover {
             color: white;
         }
+        
+        /* ===== START: UPGRADED PASSWORD STYLES ===== */
+        .password-strength-container {
+            margin-top: 15px;
+        }
+        
+        #passwordStrengthMeter {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        #passwordStrengthBar {
+            height: 100%;
+            width: 0;
+            border-radius: 4px;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+        
+        #passwordStrengthBar.weak { background-color: var(--danger-color); }
+        #passwordStrengthBar.medium { background-color: var(--warning-color); }
+        #passwordStrengthBar.strong { background-color: var(--success-color); }
+        #passwordStrengthBar.very-strong { background-color: #2a7f9d; } /* Custom strong color */
+
+        #passwordCriteria {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        #passwordCriteria li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+
+        #passwordCriteria li.valid {
+            color: var(--success-color);
+        }
+
+        #passwordCriteria li i {
+            width: 16px;
+            text-align: center;
+        }
+        /* ===== END: UPGRADED PASSWORD STYLES ===== */
+
 
         .btn-submit {
             width: 100%;
@@ -1860,7 +1912,7 @@
         </div>
     </div>
 
-    <!-- Change Password Modal -->
+    <!-- ===== START: UPGRADED CHANGE PASSWORD MODAL ===== -->
     <div class="modal" id="changePasswordModal">
         <div class="modal-content">
             <button class="modal-close" onclick="ModalManager.closeModal('changePasswordModal')">&times;</button>
@@ -1878,10 +1930,20 @@
                 
                 <div class="form-group password-group">
                     <label for="newPassword">Mật khẩu mới</label>
-                    <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)" required minlength="6">
-                    <span class="password-toggle" onclick="AccountUtils.togglePassword('newPassword')">
+                    <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới" required>
+                     <span class="password-toggle" onclick="AccountUtils.togglePassword('newPassword')">
                         <i class="fas fa-eye"></i>
                     </span>
+                    <!-- Password Strength Meter & Criteria -->
+                    <div class="password-strength-container">
+                        <div id="passwordStrengthMeter"><div id="passwordStrengthBar"></div></div>
+                        <ul id="passwordCriteria">
+                            <li data-criterion="length"><i class="fas fa-times-circle"></i> Ít nhất 8 ký tự</li>
+                            <li data-criterion="uppercase"><i class="fas fa-times-circle"></i> Có ít nhất 1 chữ hoa</li>
+                            <li data-criterion="number"><i class="fas fa-times-circle"></i> Có ít nhất 1 chữ số</li>
+                            <li data-criterion="special"><i class="fas fa-times-circle"></i> Có ít nhất 1 ký tự đặc biệt</li>
+                        </ul>
+                    </div>
                     <div class="error-message"></div>
                 </div>
                 
@@ -1903,6 +1965,7 @@
             </form>
         </div>
     </div>
+    <!-- ===== END: UPGRADED CHANGE PASSWORD MODAL ===== -->
 
     <!-- ===== FIXED AND UPGRADED SCRIPT ===== -->
     <script>
@@ -2007,7 +2070,33 @@
                 input.type = isPassword ? 'text' : 'password';
                 icon.classList.toggle('fa-eye', !isPassword);
                 icon.classList.toggle('fa-eye-slash', isPassword);
+            },
+            
+            // ===== START: NEW PASSWORD STRENGTH FUNCTION =====
+            checkPasswordStrength: (password) => {
+                let score = 0;
+                const criteria = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[^A-Za-z0-9]/.test(password),
+                };
+
+                if (criteria.length) score++;
+                if (criteria.uppercase) score++;
+                if (criteria.number) score++;
+                if (criteria.special) score++;
+                if (password.length >= 12) score++;
+
+                let strength = '';
+                if (score <= 1) strength = 'weak';
+                else if (score === 2) strength = 'medium';
+                else if (score <= 4) strength = 'strong';
+                else strength = 'very-strong';
+
+                return { score, criteria, strength };
             }
+            // ===== END: NEW PASSWORD STRENGTH FUNCTION =====
         };
 
         // ===== MODAL MANAGER =====
@@ -2038,6 +2127,18 @@
                                 submitBtn.classList.remove('loading');
                                 submitBtn.disabled = false;
                             }
+                        }
+                         // Reset password strength UI on close
+                        if (modalId === 'changePasswordModal') {
+                             const strengthBar = document.getElementById('passwordStrengthBar');
+                             if(strengthBar) {
+                                strengthBar.style.width = '0%';
+                                strengthBar.className = '';
+                             }
+                             document.querySelectorAll('#passwordCriteria li').forEach(li => {
+                                li.classList.remove('valid');
+                                li.querySelector('i').className = 'fas fa-times-circle';
+                            });
                         }
                     }, 300);
                 }
@@ -2214,7 +2315,6 @@
                 AccountUtils.showToast(message, 'error');
 
                 if (isAuthError) {
-                    // Use a short delay to allow the user to read the toast message before redirecting
                     setTimeout(() => this.logout(true), 1000); 
                 }
                 return isAuthError;
@@ -2242,19 +2342,45 @@
                 });
                 document.getElementById('depositForm')?.addEventListener('submit', (e) => { e.preventDefault(); this.processDeposit(e.target); });
                 document.getElementById('changePasswordForm')?.addEventListener('submit', (e) => { e.preventDefault(); this.changePassword(e.target); });
+
+                // ===== START: PASSWORD STRENGTH LISTENER =====
+                document.getElementById('newPassword')?.addEventListener('input', this.updatePasswordStrengthUI);
+                // ===== END: PASSWORD STRENGTH LISTENER =====
             },
+
+            // ===== START: NEW UI UPDATE FUNCTION FOR PASSWORD STRENGTH =====
+            updatePasswordStrengthUI() {
+                const password = this.value;
+                const { criteria, strength } = AccountUtils.checkPasswordStrength(password);
+                
+                const strengthBar = document.getElementById('passwordStrengthBar');
+                const strengthLevels = { weak: '25%', medium: '50%', strong: '75%', 'very-strong': '100%' };
+
+                strengthBar.style.width = strengthLevels[strength] || '0%';
+                strengthBar.className = strength;
+
+                for (const key in criteria) {
+                    const li = document.querySelector(`#passwordCriteria [data-criterion="${key}"]`);
+                    const icon = li.querySelector('i');
+                    if (criteria[key]) {
+                        li.classList.add('valid');
+                        icon.className = 'fas fa-check-circle';
+                    } else {
+                        li.classList.remove('valid');
+                        icon.className = 'fas fa-times-circle';
+                    }
+                }
+            },
+            // ===== END: NEW UI UPDATE FUNCTION FOR PASSWORD STRENGTH =====
 
             async processDeposit(form) {
                 if (this.isProcessing || !AccountUtils.validateCardForm(form)) return;
-            
+                
                 this.isProcessing = true;
                 const submitBtn = form.querySelector('.btn-submit');
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
-            
-                // ===== FIX START =====
-                // The original code was searching for the selected card type *inside* the form, but it's a sibling.
-                // We correct the selector to look inside the modal and add a check for robustness.
+
                 const selectedTypeEl = document.querySelector('#depositModal .card-type.selected');
                 
                 if (!selectedTypeEl) {
@@ -2262,12 +2388,11 @@
                     this.isProcessing = false;
                     submitBtn.classList.remove('loading');
                     submitBtn.disabled = false;
-                    return; // Exit if no card type is selected
+                    return;
                 }
-                // ===== FIX END =====
             
                 const data = {
-                    cardType: selectedTypeEl.dataset.type, // This line is now safe
+                    cardType: selectedTypeEl.dataset.type,
                     cardNumber: form.querySelector('#cardNumber').value,
                     cardSerial: form.querySelector('#cardSerial').value,
                     amount: form.querySelector('#cardAmount').value
@@ -2280,7 +2405,7 @@
                 };
                 this.addTransactionToHistory(pendingTransaction);
                 ModalManager.closeModal('depositModal');
-            
+
                 try {
                     const response = await ApiManager.call('/users/deposit/card', 'POST', data);
                     const finalTransaction = response.data.transaction;
@@ -2293,7 +2418,6 @@
                     this.updateTransactionInHistory(pendingId, finalTransaction);
                 } catch (error) {
                     if (!this.handleApiError(error, 'nạp thẻ')) {
-                        // If not an auth error, it's a card-specific failure. Update UI accordingly.
                          this.updateTransactionInHistory(pendingId, { ...pendingTransaction, status: 'failed', description: error.message });
                     }
                 } finally {
@@ -2310,15 +2434,20 @@
                 [currentPass, newPass, confirmPass].forEach(AccountUtils.clearError);
                 
                 let isValid = true;
-                if (newPass.value.length < 6) {
-                    AccountUtils.showError(newPass, 'Mật khẩu mới phải có ít nhất 6 ký tự.');
+                
+                // ===== START: UPGRADED VALIDATION LOGIC =====
+                const strengthCheck = AccountUtils.checkPasswordStrength(newPass.value);
+                if (strengthCheck.score < 3) { // Require at least 'strong'
+                    AccountUtils.showError(newPass, 'Mật khẩu của bạn chưa đủ mạnh. Vui lòng đáp ứng các tiêu chí.');
                     isValid = false;
                 }
+
                 if (newPass.value !== confirmPass.value) {
                      AccountUtils.showError(confirmPass, 'Mật khẩu mới không khớp.');
                      isValid = false;
                 }
                 if (!isValid) return;
+                // ===== END: UPGRADED VALIDATION LOGIC =====
 
                 this.isProcessing = true;
                 const submitBtn = form.querySelector('.btn-submit');
@@ -2331,7 +2460,9 @@
                         password: newPass.value,
                         passwordConfirm: confirmPass.value
                     });
-                    AccountUtils.showToast('Đổi mật khẩu thành công! Phiên đăng nhập sẽ được làm mới.', 'success');
+                    // ===== START: UPGRADED SUCCESS MESSAGE =====
+                    AccountUtils.showToast('Đổi mật khẩu thành công! Các phiên đăng nhập khác đã được đăng xuất.', 'success');
+                    // ===== END: UPGRADED SUCCESS MESSAGE =====
                     ModalManager.closeModal('changePasswordModal');
                 } catch (error) {
                     if (!this.handleApiError(error, 'đổi mật khẩu')) {
