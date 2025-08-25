@@ -1606,4 +1606,515 @@ const cartFavoriteController = {
 
     const product = await Product.findOne({
       _id: productId,
-      active: { $ne: false
+      active: { $ne: false }
+    });
+
+    if (!product) {
+      return next(new AppError('Product not found', 404));
+    }
+
+    const user = await User.findById(req.user.id);
+    const existingItemIndex = user.cart.findIndex(item =>
+      item.product.toString() === productId
+    );
+
+    if (existingItemIndex !== -1) {
+      user.cart[existingItemIndex].quantity += parseInt(quantity, 10);
+    } else {
+      user.cart.push({
+        product: productId,
+        quantity: parseInt(quantity, 10)
+      });
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product added to cart',
+      data: { cart: user.cart }
+    });
+  }),
+
+  getCart: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id).populate({
+      path: 'cart.product',
+      select: 'title price images link category badge'
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { cart: user.cart }
+    });
+  }),
+
+  updateCartItem: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return next(new AppError('Quantity must be at least 1', 400));
+    }
+
+    const user = await User.findById(req.user.id);
+    const cartItemIndex = user.cart.findIndex(item =>
+      item.product.toString() === productId
+    );
+
+    if (cartItemIndex === -1) {
+      return next(new AppError('Product not found in cart', 404));
+    }
+
+    user.cart[cartItemIndex].quantity = parseInt(quantity, 10);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cart updated successfully',
+      data: { cart: user.cart }
+    });
+  }),
+
+  removeFromCart: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    const initialCartLength = user.cart.length;
+
+    user.cart = user.cart.filter(item =>
+      item.product.toString() !== productId
+    );
+
+    if (user.cart.length === initialCartLength) {
+      return next(new AppError('Product not found in cart', 404));
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product removed from cart',
+      data: { cart: user.cart }
+    });
+  }),
+
+  clearCart: catchAsync(async (req, res, next) => {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { cart: [] },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cart cleared successfully',
+      data: { cart: user.cart }
+    });
+  }),
+
+  addToFavorites: catchAsync(async (req, res, next) => {
+    const { productId } = req.body;
+
+    if (!productId) {
+      return next(new AppError('Please provide a product ID', 400));
+    }
+
+    const product = await Product.findOne({
+      _id: productId,
+      active: { $ne: false }
+    });
+
+    if (!product) {
+      return next(new AppError('Product not found', 404));
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user.favorites.includes(productId)) {
+      user.favorites.push(productId);
+      await user.save({ validateBeforeSave: false });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product added to favorites',
+      data: { favorites: user.favorites }
+    });
+  }),
+
+  getFavorites: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id).populate({
+      path: 'favorites',
+      select: 'title price images link category badge sales',
+      match: { active: { $ne: false } }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { favorites: user.favorites }
+    });
+  }),
+
+  removeFromFavorites: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    const initialFavoritesLength = user.favorites.length;
+
+    user.favorites = user.favorites.filter(id =>
+      id.toString() !== productId
+    );
+
+    if (user.favorites.length === initialFavoritesLength) {
+      return next(new AppError('Product not found in favorites', 404));
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product removed from favorites',
+      data: { favorites: user.favorites }
+    });
+  }),
+
+  checkFavorite: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    const isFavorite = user.favorites.some(id =>
+      id.toString() === productId
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: { isFavorite }
+    });
+  }),
+};
+
+const reviewController = {
+  getAllReviews: catchAsync(async (req, res, next) => {
+    let filter = {};
+    if (req.params.productId) filter = { product: req.params.productId };
+
+    const reviews = await Review.find(filter);
+
+    res.status(200).json({
+      status: 'success',
+      results: reviews.length,
+      data: { reviews },
+    });
+  }),
+
+  createReview: catchAsync(async (req, res, next) => {
+    if (!req.body.product) req.body.product = req.params.productId;
+    if (!req.body.user) req.body.user = req.user.id;
+
+    const product = await Product.findOne({
+      _id: req.body.product,
+      active: { $ne: false }
+    });
+
+    if (!product) {
+      return next(new AppError('Product not found', 404));
+    }
+
+    const newReview = await Review.create(req.body);
+
+    res.status(201).json({
+      status: 'success',
+      data: { review: newReview },
+    });
+  }),
+
+  getReview: catchAsync(async (req, res, next) => {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return next(new AppError('No review found with that ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { review },
+    });
+  }),
+
+  updateReview: catchAsync(async (req, res, next) => {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return next(new AppError('No review found with that ID', 404));
+    }
+
+    if (review.user._id.toString() !== req.user._id.toString()) {
+      return next(new AppError('You do not have permission to update this review', 403));
+    }
+
+    const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { review: updatedReview },
+    });
+  }),
+
+  deleteReview: catchAsync(async (req, res, next) => {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return next(new AppError('No review found with that ID', 404));
+    }
+
+    if (review.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return next(new AppError('You do not have permission to delete this review', 403));
+    }
+
+    await Review.findByIdAndDelete(req.params.id);
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  })
+};;
+
+// Database connection
+const connectDB = async () => {
+  try {
+    const connectionOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferMaxEntries: 0 // Disable mongoose buffering
+    };
+
+    await mongoose.connect(DB, connectionOptions);
+    console.log('✅ DB connection successful!');
+    await createDefaultAdmin();
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  }
+};
+
+const createDefaultAdmin = async () => {
+  try {
+    const adminEmails = [
+      'chinhan20917976549a@gmail.com',
+      'ryantran149@gmail.com'
+    ];
+
+    for (const email of adminEmails) {
+      let user = await User.findOne({ email: email.toLowerCase() });
+
+      if (user) {
+        if (user.role !== 'admin') {
+          user.role = 'admin';
+          await user.save({ validateBeforeSave: false });
+          console.log(`✅ Updated ${email} to admin role`);
+        }
+      } else {
+        const adminData = {
+          name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
+          email: email.toLowerCase(),
+          password: 'admin123456',
+          passwordConfirm: 'admin123456',
+          role: 'admin'
+        };
+
+        user = await User.create(adminData);
+        console.log(`✅ Created admin user: ${email}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error creating default admin:', error);
+  }
+};
+
+// Start database connection
+connectDB();
+
+// -----------------------------------------------------------------------------
+// --- ROUTES CONFIGURATION - CẢI TIẾN VÀ TỔ CHỨC LẠI ---
+// -----------------------------------------------------------------------------
+
+// Health check endpoint
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0'
+  });
+});
+
+// --- SPECIAL CALLBACK ROUTES (MUST BE BEFORE OTHER MIDDLEWARE) ---
+// Callback từ doithe1s.vn - CỰC KỲ QUAN TRỌNG, KHÔNG ĐƯỢC BẢO VỆ BỞI AUTH
+app.all('/api/v1/payment/callback/doithe1s', paymentCallbackController.handleDoithe1sCallback);
+
+// Test callback endpoint (chỉ trong development)
+if (process.env.NODE_ENV === 'development') {
+  app.post('/api/v1/payment/test-callback', paymentCallbackController.testCallback);
+}
+
+// --- PUBLIC ROUTES (NO AUTH REQUIRED) ---
+// Authentication routes
+app.post('/api/v1/users/signup', authController.signup);
+app.post('/api/v1/users/login', authController.login);
+app.get('/api/v1/users/logout', authController.logout);
+app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
+app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
+
+// Public product routes
+app.get('/api/v1/products', productController.getAllProducts);
+app.get('/api/v1/products/stats', productController.getProductStats);
+app.get('/api/v1/products/:id', productController.getProduct);
+
+// Public review routes
+app.get('/api/v1/reviews', reviewController.getAllReviews);
+app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
+
+// --- PROTECTED ROUTES (AUTH REQUIRED) ---
+// Apply authentication middleware to all routes below
+app.use(authController.protect);
+
+// User profile routes
+app.get('/api/v1/users/me', userController.getMe);
+app.patch('/api/v1/users/updateMe', userController.updateMe);
+app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
+app.delete('/api/v1/users/deleteMe', userController.deleteMe);
+
+// Session management routes
+app.get('/api/v1/users/sessions', userController.getSessions);
+app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
+app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
+
+// Payment and transaction routes
+app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
+app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
+
+// Cart management routes
+app.route('/api/v1/cart')
+  .get(cartFavoriteController.getCart)
+  .post(cartFavoriteController.addToCart)
+  .delete(cartFavoriteController.clearCart);
+
+app.route('/api/v1/cart/:productId')
+  .patch(cartFavoriteController.updateCartItem)
+  .delete(cartFavoriteController.removeFromCart);
+
+// Favorites management routes
+app.route('/api/v1/favorites')
+  .get(cartFavoriteController.getFavorites)
+  .post(cartFavoriteController.addToFavorites);
+
+app.route('/api/v1/favorites/:productId')
+  .delete(cartFavoriteController.removeFromFavorites);
+
+app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
+
+// Review routes (authenticated)
+app.post('/api/v1/reviews', reviewController.createReview);
+app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
+
+app.route('/api/v1/reviews/:id')
+  .get(reviewController.getReview)
+  .patch(reviewController.updateReview)
+  .delete(reviewController.deleteReview);
+
+// User's own product management
+app.post('/api/v1/my-products', productController.createProduct);
+app.patch('/api/v1/my-products/:id', productController.updateProduct);
+app.delete('/api/v1/my-products/:id', productController.deleteProduct);
+
+// --- ADMIN ROUTES (ADMIN AUTH REQUIRED) ---
+// Apply admin restriction to all routes below
+app.use('/api/v1/admin', authController.restrictTo('admin'));
+
+// Admin user management
+app.route('/api/v1/admin/users')
+  .get(userController.getAllUsers);
+
+app.route('/api/v1/admin/users/:id')
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
+
+app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
+
+// Admin product management
+app.route('/api/v1/admin/products')
+  .post(productController.createProduct);
+
+app.route('/api/v1/admin/products/:id')
+  .patch(productController.updateProduct)
+  .delete(productController.deleteProduct);
+
+// Admin transaction management
+app.get('/api/v1/admin/transactions/stats', transactionController.getTransactionStats);
+
+// 404 handler for unmatched routes
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+// Global error handling middleware
+app.use(globalErrorHandler);
+
+// -----------------------------------------------------------------------------
+// --- SERVER STARTUP AND GRACEFUL SHUTDOWN ---
+// -----------------------------------------------------------------------------
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${port}/api/v1/health`);
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🧪 Test callback: http://localhost:${port}/api/v1/payment/test-callback`);
+  }
+});
+
+// Graceful shutdown handlers
+process.on('unhandledRejection', (err) => {
+  console.log('💥 UNHANDLED REJECTION! Shutting down...');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+process.on('uncaughtException', (err) => {
+  console.log('💥 UNCAUGHT EXCEPTION! Shutting down...');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
+  server.close(() => {
+    console.log('💥 Process terminated!');
+  });
+});
+
+// Gracefully close database connection
+process.on('SIGINT', async () => {
+  console.log('\n👋 SIGINT RECEIVED. Shutting down gracefully');
+  try {
+    await mongoose.connection.close();
+    console.log('📊 Database connection closed');
+  } catch (error) {
+    console.error('❌ Error closing database:', error);
+  }
+  process.exit(0);
+});
+
+module.exports = app;
