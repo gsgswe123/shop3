@@ -22,6 +22,17 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
-
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "express",
+    "mongodb",
+    "rest-api",
+    "payment",
+    "doithe1s"
+  ],
+  "author": "shop",
+  "license": "ISC"
 }
