@@ -1,23 +1,24 @@
 {
-  "name": "shop-grow-a-garden",
+  "name": "shop-backend",
   "version": "1.0.0",
-  "description": "Backend for Shop Grow A Garden",
+  "description": "Backend for Shop Application with Payment Integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "prod": "NODE_ENV=production node server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.4.3",
+    "mongoose": "^7.5.0",
+    "dotenv": "^16.3.1",
     "morgan": "^1.10.0",
-    "nodemailer": "^6.9.3",
-    "validator": "^13.9.0"
+    "cors": "^2.8.5",
+    "cookie-parser": "^1.4.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.4",
+    "validator": "^13.9.0",
     "axios": "^1.5.0"
   },
   "devDependencies": {
@@ -33,6 +34,6 @@
     "payment",
     "doithe1s"
   ],
-  "author": "shop",
+  "author": "Your Name",
   "license": "ISC"
 }
