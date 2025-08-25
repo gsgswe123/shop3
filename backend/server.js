@@ -1,4 +1,252 @@
-const express = require('express');
+// Database connection
+const connectDB = async () => {
+  try {
+    const connectionOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferMaxEntries: 0 // Disable mongoose buffering
+    };
+
+    await mongoose.connect(DB, connectionOptions);
+    console.log('✅ DB connection successful!');
+    await createDefaultAdmin();
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  }
+};
+
+const createDefaultAdmin = async () => {
+  try {
+    const adminEmails = [
+      'chinhan20917976549a@gmail.com',
+      'ryantran149@gmail.com'
+    ];
+
+    for (const email of adminEmails) {
+      let user = await User.findOne({ email: email.toLowerCase() });
+
+      if (user) {
+        if (user.role !== 'admin') {
+          user.role = 'admin';
+          await user.save({ validateBeforeSave: false });
+          console.log(`✅ Updated ${email} to admin role`);
+        }
+      } else {
+        const adminData = {
+          name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
+          email: email.toLowerCase(),
+          password: 'admin123456',
+          passwordConfirm: 'admin123456',
+          role: 'admin'
+        };
+
+        user = await User.create(adminData);
+        console.log(`✅ Created admin user: ${email}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error creating default admin:', error);
+  }
+};
+
+// Start database connection
+connectDB();
+
+// -----------------------------------------------------------------------------
+// --- ROUTES CONFIGURATION - CẢI TIẾN VÀ TỔ CHỨC LẠI ---
+// -----------------------------------------------------------------------------
+
+// Health check endpoint
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0'
+  });
+});
+
+// --- SPECIAL CALLBACK ROUTES (MUST BE BEFORE OTHER MIDDLEWARE) ---
+// Callback từ doithe1s.vn - CỰC KỲ QUAN TRỌNG, KHÔNG ĐƯỢC BẢO VỆ BỞI AUTH
+app.all('/api/v1/payment/callback/doithe1s', paymentCallbackController.handleDoithe1sCallback);
+
+// Test callback endpoint (chỉ trong development)
+if (process.env.NODE_ENV === 'development') {
+  app.post('/api/v1/payment/test-callback', paymentCallbackController.testCallback);
+}
+
+// --- PUBLIC ROUTES (NO AUTH REQUIRED) ---
+// Authentication routes
+app.post('/api/v1/users/signup', authController.signup);
+app.post('/api/v1/users/login', authController.login);
+app.get('/api/v1/users/logout', authController.logout);
+app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
+app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
+
+// Public product routes
+app.get('/api/v1/products', productController.getAllProducts);
+app.get('/api/v1/products/stats', productController.getProductStats);
+app.get('/api/v1/products/:id', productController.getProduct);
+
+// Public review routes
+app.get('/api/v1/reviews', reviewController.getAllReviews);
+app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
+
+// --- PROTECTED ROUTES (AUTH REQUIRED) ---
+// Apply authentication middleware to all routes below
+app.use(authController.protect);
+
+// User profile routes
+app.get('/api/v1/users/me', userController.getMe);
+app.patch('/api/v1/users/updateMe', userController.updateMe);
+app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
+app.delete('/api/v1/users/deleteMe', userController.deleteMe);
+
+// Session management routes
+app.get('/api/v1/users/sessions', userController.getSessions);
+app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
+app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
+
+// Payment and transaction routes
+app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
+app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
+app.get('/api/v1/users/transactions/stats', transactionController.getMyTransactionStats);
+app.get('/api/v1/users/transactions/:id', transactionController.getTransaction);
+
+// Cart management routes
+app.route('/api/v1/cart')
+  .get(cartFavoriteController.getCart)
+  .post(cartFavoriteController.addToCart)
+  .delete(cartFavoriteController.clearCart);
+
+app.route('/api/v1/cart/:productId')
+  .patch(cartFavoriteController.updateCartItem)
+  .delete(cartFavoriteController.removeFromCart);
+
+// Favorites management routes
+app.route('/api/v1/favorites')
+  .get(cartFavoriteController.getFavorites)
+  .post(cartFavoriteController.addToFavorites);
+
+app.route('/api/v1/favorites/:productId')
+  .delete(cartFavoriteController.removeFromFavorites);
+
+app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
+
+// Review routes (authenticated)
+app.post('/api/v1/reviews', reviewController.createReview);
+app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
+app.get('/api/v1/users/reviews', reviewController.getMyReviews);
+
+app.route('/api/v1/reviews/:id')
+  .get(reviewController.getReview)
+  .patch(reviewController.updateReview)
+  .delete(reviewController.deleteReview);
+
+// User's own product management
+app.get('/api/v1/my-products', productController.getMyProducts);
+app.post('/api/v1/my-products', productController.createProduct);
+app.patch('/api/v1/my-products/:id', productController.updateProduct);
+app.delete('/api/v1/my-products/:id', productController.deleteProduct);
+
+// --- ADMIN ROUTES (ADMIN AUTH REQUIRED) ---
+// Apply admin restriction to all routes below
+app.use('/api/v1/admin', authController.restrictTo('admin'));
+
+// Admin user management
+app.route('/api/v1/admin/users')
+  .get(userController.getAllUsers);
+
+app.route('/api/v1/admin/users/:id')
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
+
+app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
+app.patch('/api/v1/admin/users/:userId/balance', userController.updateUserBalance);
+
+// Admin product management
+app.route('/api/v1/admin/products')
+  .post(productController.createProduct);
+
+app.route('/api/v1/admin/products/:id')
+  .patch(productController.updateProduct)
+  .delete(productController.deleteProduct);
+
+// Admin transaction management
+app.get('/api/v1/admin/transactions/stats', transactionController.getTransactionStats);
+
+// Admin review management
+app.delete('/api/v1/admin/reviews/:id', reviewController.deleteReview);
+
+// --- ERROR HANDLING ---
+// 404 handler for unmatched routes
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+// Global error handling middleware
+app.use(globalErrorHandler);
+
+// -----------------------------------------------------------------------------
+// --- SERVER STARTUP AND GRACEFUL SHUTDOWN ---
+// -----------------------------------------------------------------------------
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${port}/api/v1/health`);
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🧪 Test callback: http://localhost:${port}/api/v1/payment/test-callback`);
+    console.log(`📋 Available endpoints:`);
+    console.log(`   Public: /api/v1/products, /api/v1/users/signup, /api/v1/users/login`);
+    console.log(`   Auth: /api/v1/users/me, /api/v1/cart, /api/v1/favorites`);
+    console.log(`   Payment: /api/v1/users/deposit/card, /api/v1/users/transactions`);
+    console.log(`   Admin: /api/v1/admin/users, /api/v1/admin/products`);
+  }
+});
+
+// Graceful shutdown handlers
+process.on('unhandledRejection', (err) => {
+  console.log('💥 UNHANDLED REJECTION! Shutting down...');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+process.on('uncaughtException', (err) => {
+  console.log('💥 UNCAUGHT EXCEPTION! Shutting down...');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
+  server.close(() => {
+    console.log('💥 Process terminated!');
+  });
+});
+
+// Gracefully close database connection
+process.on('SIGINT', async () => {
+  console.log('\n👋 SIGINT RECEIVED. Shutting down gracefully');
+  try {
+    await mongoose.connection.close();
+    console.log('📊 Database connection closed');
+  } catch (error) {
+    console.error('❌ Error closing database:', error);
+  }
+  process.exit(0);
+});
+
+module.exports = app;const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
@@ -42,6 +290,1042 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+// -----------------------------------------------------------------------------
+// --- USER CONTROLLER - Enhanced với thống kê tốt hơn ---
+// -----------------------------------------------------------------------------
+const userController = {
+  getMe: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Tính toán thống kê nhanh
+    const [totalTransactions, pendingTransactions, successfulTransactions] = await Promise.all([
+      Transaction.countDocuments({ user: user._id }),
+      Transaction.countDocuments({ user: user._id, status: 'pending' }),
+      Transaction.countDocuments({ user: user._id, status: 'success' })
+    ]);
+
+    const userResponse = {
+      _id: user._id,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      balance: user.balance || 0,
+      avatarText: user.avatarText,
+      createdAt: user.createdAt,
+      // Thêm thống kê nhanh
+      stats: {
+        totalTransactions,
+        pendingTransactions,
+        successfulTransactions,
+        cartItemsCount: user.cart.length,
+        favoritesCount: user.favorites.length
+      }
+    };
+
+    res.status(200).json({
+      status: 'success',
+      data: { user: userResponse },
+    });
+  }),
+
+  getSessions: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+
+    const sessions = user.sessions.sort((a, b) => {
+      if (a.tokenIdentifier === req.sessionId) return -1;
+      if (b.tokenIdentifier === req.sessionId) return 1;
+      return new Date(b.lastUsedAt) - new Date(a.lastUsedAt);
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        sessions: sessions.map(s => ({
+          id: s.tokenIdentifier,
+          deviceInfo: s.deviceInfo,
+          ipAddress: s.ipAddress,
+          createdAt: s.createdAt,
+          lastUsedAt: s.lastUsedAt,
+          isCurrent: s.tokenIdentifier === req.sessionId
+        }))
+      }
+    });
+  }),
+
+  logoutSession: catchAsync(async (req, res, next) => {
+    const { sessionId } = req.params;
+    
+    if (sessionId === req.sessionId) {
+      return next(new AppError('You cannot log out your current session via this endpoint.', 400));
+    }
+    
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { sessions: { tokenIdentifier: sessionId } }
+    });
+
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  }),
+
+  logoutAllOtherSessions: catchAsync(async (req, res, next) => {
+    const user = req.user;
+    
+    user.sessions = user.sessions.filter(s => s.tokenIdentifier === req.sessionId);
+    
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'All other sessions have been logged out.'
+    });
+  }),
+
+  updateMe: catchAsync(async (req, res, next) => {
+    if (req.body.password || req.body.passwordConfirm) {
+      return next(new AppError('This route is not for password updates. Please use /updateMyPassword.', 400));
+    }
+
+    const { name } = req.body;
+    if (!name || name.trim().length === 0) {
+      return next(new AppError('Please provide a valid name', 400));
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        name: name.trim(),
+        avatarText: name.trim().charAt(0).toUpperCase()
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          _id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          balance: updatedUser.balance,
+          avatarText: updatedUser.avatarText
+        },
+      },
+    });
+  }),
+
+  deleteMe: catchAsync(async (req, res, next) => {
+    await User.findByIdAndUpdate(req.user.id, { active: false });
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  }),
+
+  getAllUsers: catchAsync(async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    const filter = { active: { $ne: false } };
+    
+    if (req.query.role) {
+      filter.role = req.query.role;
+    }
+
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i');
+      filter.$or = [
+        { name: searchRegex },
+        { email: searchRegex }
+      ];
+    }
+
+    const users = await User.find(filter)
+      .select('-password')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit);
+
+    const total = await User.countDocuments(filter);
+
+    res.status(200).json({
+      status: 'success',
+      results: users.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      data: { users },
+    });
+  }),
+
+  getUser: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.params.id).select('-password');
+
+    if (!user) {
+      return next(new AppError('No user found with that ID', 404));
+    }
+
+    // Get user stats for admin view
+    const [totalTransactions, totalSpent, successfulTransactions] = await Promise.all([
+      Transaction.countDocuments({ user: user._id }),
+      Transaction.aggregate([
+        { $match: { user: new mongoose.Types.ObjectId(user._id), status: 'success', type: 'purchase' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      Transaction.countDocuments({ user: user._id, status: 'success' })
+    ]);
+
+    const userWithStats = {
+      ...user.toObject(),
+      stats: {
+        totalTransactions,
+        totalSpent: totalSpent[0]?.total || 0,
+        successfulTransactions
+      }
+    };
+
+    res.status(200).json({
+      status: 'success',
+      data: { user: userWithStats },
+    });
+  }),
+
+  updateUser: catchAsync(async (req, res, next) => {
+    if (req.body.password || req.body.passwordConfirm) {
+      return next(new AppError('This route is not for password updates.', 400));
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }).select('-password');
+
+    if (!user) {
+      return next(new AppError('No user found with that ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { user },
+    });
+  }),
+
+  deleteUser: catchAsync(async (req, res, next) => {
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+      return next(new AppError('No user found with that ID', 404));
+    }
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  }),
+
+  makeUserAdmin: catchAsync(async (req, res, next) => {
+    const { email } = req.body;
+
+    if (!email) {
+      return next(new AppError('Please provide email address', 400));
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    user.role = 'admin';
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: `${email} is now an admin`,
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      }
+    });
+  }),
+
+  // New endpoint for user balance management (admin only)
+  updateUserBalance: catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
+    const { amount, action, reason } = req.body;
+
+    if (!amount || !action || !['add', 'subtract', 'set'].includes(action)) {
+      return next(new AppError('Please provide valid amount and action (add/subtract/set)', 400));
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    const oldBalance = user.balance;
+    let newBalance;
+
+    switch (action) {
+      case 'add':
+        newBalance = oldBalance + Math.abs(amount);
+        break;
+      case 'subtract':
+        newBalance = Math.max(0, oldBalance - Math.abs(amount));
+        break;
+      case 'set':
+        newBalance = Math.max(0, amount);
+        break;
+    }
+
+    user.balance = newBalance;
+    await user.save({ validateBeforeSave: false });
+
+    // Log the balance change
+    await Transaction.create({
+      user: userId,
+      type: action === 'subtract' ? 'withdrawal' : 'deposit',
+      method: 'system',
+      amount: Math.abs(amount),
+      status: 'success',
+      description: reason || `Admin ${action} balance: ${Math.abs(amount).toLocaleString('vi-VN')}đ`,
+      gatewayTransactionId: `ADMIN_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      metadata: {
+        adminAction: true,
+        adminId: req.user._id,
+        oldBalance,
+        newBalance,
+        processedAt: new Date()
+      }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: `User balance updated from ${oldBalance.toLocaleString('vi-VN')}đ to ${newBalance.toLocaleString('vi-VN')}đ`,
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          balance: newBalance
+        }
+      }
+    });
+  })
+};
+
+// -----------------------------------------------------------------------------
+// --- ENHANCED PRODUCT CONTROLLER ---
+// -----------------------------------------------------------------------------
+const productController = {
+  getAllProducts: catchAsync(async (req, res, next) => {
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
+    excludedFields.forEach(el => delete queryObj[el]);
+
+    queryObj.active = { $ne: false };
+
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `${match}`);
+
+    let query = Product.find(JSON.parse(queryStr));
+
+    // Search functionality
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i');
+      query = query.find({
+        $or: [
+          { title: searchRegex },
+          { description: searchRegex },
+          { features: { $in: [searchRegex] } }
+        ]
+      });
+    }
+
+    // Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    // Field limiting
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    const products = await query.populate({
+      path: 'createdBy',
+      select: 'name email'
+    });
+
+    const total = await Product.countDocuments({
+      ...JSON.parse(queryStr),
+      ...(req.query.search && {
+        $or: [
+          { title: new RegExp(req.query.search, 'i') },
+          { description: new RegExp(req.query.search, 'i') },
+          { features: { $in: [new RegExp(req.query.search, 'i')] } }
+        ]
+      })
+    });
+
+    res.status(200).json({
+      status: 'success',
+      results: products.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      data: { products },
+    });
+  }),
+
+  getProduct: catchAsync(async (req, res, next) => {
+    const product = await Product.findOne({
+      _id: req.params.id,
+      active: { $ne: false }
+    }).populate({
+      path: 'createdBy',
+      select: 'name email'
+    }).populate('reviews');
+
+    if (!product) {
+      return next(new AppError('No product found with that ID', 404));
+    }
+
+    // Increment views (không cần await vì không quan trọng lắm)
+    Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).exec();
+
+    res.status(200).json({
+      status: 'success',
+      data: { product },
+    });
+  }),
+
+  createProduct: catchAsync(async (req, res, next) => {
+    const { title, description, price, images, link } = req.body;
+
+    if (!title || !description || !price || !link) {
+      return next(new AppError('Please provide all required fields: title, description, price, and link', 400));
+    }
+
+    let productImages = images;
+    if (typeof images === 'string') {
+      productImages = [images];
+    } else if (!Array.isArray(images) || images.length === 0) {
+      return next(new AppError('Please provide at least one product image', 400));
+    }
+
+    const productData = {
+      title: title.trim(),
+      description: description.trim(),
+      price: parseInt(price, 10),
+      images: productImages,
+      link: link.trim(),
+      category: req.body.category || 'services',
+      badge: req.body.badge || null,
+      sales: parseInt(req.body.sales, 10) || 0,
+      stock: parseInt(req.body.stock, 10) || 999,
+      features: req.body.features || [],
+      oldPrice: req.body.oldPrice ? parseInt(req.body.oldPrice, 10) : undefined,
+      createdBy: req.user._id,
+    };
+
+    const newProduct = await Product.create(productData);
+    await newProduct.populate({
+      path: 'createdBy',
+      select: 'name email'
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: { product: newProduct },
+    });
+  }),
+
+  updateProduct: catchAsync(async (req, res, next) => {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return next(new AppError('No product found with that ID', 404));
+    }
+
+    if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return next(new AppError('You do not have permission to update this product', 403));
+    }
+
+    if (req.body.images) {
+      if (typeof req.body.images === 'string') {
+        req.body.images = [req.body.images];
+      }
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).populate({
+      path: 'createdBy',
+      select: 'name email'
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { product: updatedProduct },
+    });
+  }),
+
+  deleteProduct: catchAsync(async (req, res, next) => {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return next(new AppError('No product found with that ID', 404));
+    }
+
+    if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return next(new AppError('You do not have permission to delete this product', 403));
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  }),
+
+  getProductStats: catchAsync(async (req, res, next) => {
+    const stats = await Product.aggregate([
+      {
+        $match: { active: { $ne: false } }
+      },
+      {
+        $group: {
+          _id: '$category',
+          numProducts: { $sum: 1 },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+          totalSales: { $sum: '$sales' }
+        }
+      },
+      {
+        $sort: { numProducts: -1 }
+      }
+    ]);
+
+    const totalProducts = await Product.countDocuments({ active: { $ne: false } });
+    const totalSales = await Product.aggregate([
+      { $match: { active: { $ne: false } } },
+      { $group: { _id: null, total: { $sum: '$sales' } } }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: { 
+        stats,
+        totalProducts,
+        totalSales: totalSales[0]?.total || 0
+      },
+    });
+  }),
+
+  getMyProducts: catchAsync(async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    const filter = { createdBy: req.user._id };
+    
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    if (req.query.status === 'active') {
+      filter.active = true;
+    } else if (req.query.status === 'inactive') {
+      filter.active = false;
+    }
+
+    const products = await Product.find(filter)
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Product.countDocuments(filter);
+
+    res.status(200).json({
+      status: 'success',
+      results: products.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      data: { products }
+    });
+  })
+};
+
+// -----------------------------------------------------------------------------
+// --- ENHANCED CART & FAVORITES CONTROLLER ---
+// -----------------------------------------------------------------------------
+const cartFavoriteController = {
+  addToCart: catchAsync(async (req, res, next) => {
+    const { productId, quantity = 1 } = req.body;
+
+    if (!productId) {
+      return next(new AppError('Please provide a product ID', 400));
+    }
+
+    if (quantity < 1 || quantity > 99) {
+      return next(new AppError('Quantity must be between 1 and 99', 400));
+    }
+
+    const product = await Product.findOne({
+      _id: productId,
+      active: { $ne: false }
+    });
+
+    if (!product) {
+      return next(new AppError('Product not found or no longer available', 404));
+    }
+
+    if (product.stock < quantity) {
+      return next(new AppError(`Only ${product.stock} items available in stock`, 400));
+    }
+
+    const user = await User.findById(req.user.id);
+    const existingItemIndex = user.cart.findIndex(item =>
+      item.product.toString() === productId
+    );
+
+    if (existingItemIndex !== -1) {
+      const newQuantity = user.cart[existingItemIndex].quantity + parseInt(quantity, 10);
+      if (newQuantity > product.stock) {
+        return next(new AppError(`Cannot add more items. Maximum available: ${product.stock}`, 400));
+      }
+      user.cart[existingItemIndex].quantity = Math.min(newQuantity, 99);
+    } else {
+      user.cart.push({
+        product: productId,
+        quantity: parseInt(quantity, 10)
+      });
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    // Populate cart for response
+    await user.populate({
+      path: 'cart.product',
+      select: 'title price images link category badge stock'
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product added to cart',
+      data: { cart: user.cart }
+    });
+  }),
+
+  getCart: catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id).populate({
+      path: 'cart.product',
+      select: 'title price images link category badge stock active'
+    });
+
+    // Filter out inactive products
+    user.cart = user.cart.filter(item => item.product && item.product.active !== false);
+    
+    // Calculate cart totals
+    const cartTotal = user.cart.reduce((total, item) => {
+      return total + (item.product.price * item.quantity);
+    }, 0);
+
+    const cartItemsCount = user.cart.reduce((count, item) => count + item.quantity, 0);
+
+    res.status(200).json({
+      status: 'success',
+      data: { 
+        cart: user.cart,
+        summary: {
+          itemsCount: cartItemsCount,
+          totalAmount: cartTotal
+        }
+      }
+    });
+  }),
+
+  updateCartItem: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1 || quantity > 99) {
+      return next(new AppError('Quantity must be between 1 and 99', 400));
+    }
+
+    const product = await Product.findOne({
+      _id: productId,
+      active: { $ne: false }
+    });
+
+    if (!product) {
+      return next(new AppError('Product not found', 404));
+    }
+
+    if (quantity > product.stock) {
+      return next(new AppError(`Only ${product.stock} items available`, 400));
+    }
+
+    const user = await User.findById(req.user.id);
+    const cartItemIndex = user.cart.findIndex(item =>
+      item.product.toString() === productId
+    );
+
+    if (cartItemIndex === -1) {
+      return next(new AppError('Product not found in cart', 404));
+    }
+
+    user.cart[cartItemIndex].quantity = parseInt(quantity, 10);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cart updated successfully',
+      data: { cart: user.cart }
+    });
+  }),
+
+  removeFromCart: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    const initialCartLength = user.cart.length;
+
+    user.cart = user.cart.filter(item =>
+      item.product.toString() !== productId
+    );
+
+    if (user.cart.length === initialCartLength) {
+      return next(new AppError('Product not found in cart', 404));
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product removed from cart',
+      data: { cart: user.cart }
+    });
+  }),
+
+  clearCart: catchAsync(async (req, res, next) => {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { cart: [] },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cart cleared successfully',
+      data: { cart: user.cart }
+    });
+  }),
+
+  addToFavorites: catchAsync(async (req, res, next) => {
+    const { productId } = req.body;
+
+    if (!productId) {
+      return next(new AppError('Please provide a product ID', 400));
+    }
+
+    const product = await Product.findOne({
+      _id: productId,
+      active: { $ne: false }
+    });
+
+    if (!product) {
+      return next(new AppError('Product not found', 404));
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user.favorites.includes(productId)) {
+      user.favorites.push(productId);
+      await user.save({ validateBeforeSave: false });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product added to favorites',
+      data: { favorites: user.favorites }
+    });
+  }),
+
+  getFavorites: catchAsync(async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    const user = await User.findById(req.user.id).populate({
+      path: 'favorites',
+      select: 'title price images link category badge sales stock',
+      match: { active: { $ne: false } }
+    });
+
+    // Manual pagination for populated array
+    const totalFavorites = user.favorites.length;
+    const paginatedFavorites = user.favorites.slice(skip, skip + limit);
+
+    res.status(200).json({
+      status: 'success',
+      results: paginatedFavorites.length,
+      total: totalFavorites,
+      currentPage: page,
+      totalPages: Math.ceil(totalFavorites / limit),
+      data: { favorites: paginatedFavorites }
+    });
+  }),
+
+  removeFromFavorites: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    const initialFavoritesLength = user.favorites.length;
+
+    user.favorites = user.favorites.filter(id =>
+      id.toString() !== productId
+    );
+
+    if (user.favorites.length === initialFavoritesLength) {
+      return next(new AppError('Product not found in favorites', 404));
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Product removed from favorites',
+      data: { favorites: user.favorites }
+    });
+  }),
+
+  checkFavorite: catchAsync(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    const isFavorite = user.favorites.some(id =>
+      id.toString() === productId
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: { isFavorite }
+    });
+  }),
+};
+
+// -----------------------------------------------------------------------------
+// --- ENHANCED REVIEW CONTROLLER ---
+// -----------------------------------------------------------------------------
+const reviewController = {
+  getAllReviews: catchAsync(async (req, res, next) => {
+    let filter = {};
+    if (req.params.productId) filter = { product: req.params.productId };
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    const reviews = await Review.find(filter)
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Review.countDocuments(filter);
+
+    // Calculate average rating if filtering by product
+    let averageRating = null;
+    if (req.params.productId) {
+      const ratingStats = await Review.aggregate([
+        { $match: filter },
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: '$rating' },
+            totalReviews: { $sum: 1 }
+          }
+        }
+      ]);
+      averageRating = ratingStats[0]?.averageRating || 0;
+    }
+
+    res.status(200).json({
+      status: 'success',
+      results: reviews.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      averageRating,
+      data: { reviews },
+    });
+  }),
+
+  createReview: catchAsync(async (req, res, next) => {
+    if (!req.body.product) req.body.product = req.params.productId;
+    if (!req.body.user) req.body.user = req.user.id;
+
+    const { product, rating, review } = req.body;
+
+    if (!product || !rating || !review) {
+      return next(new AppError('Please provide product, rating, and review content', 400));
+    }
+
+    const productExists = await Product.findOne({
+      _id: product,
+      active: { $ne: false }
+    });
+
+    if (!productExists) {
+      return next(new AppError('Product not found', 404));
+    }
+
+    // Check if user already reviewed this product
+    const existingReview = await Review.findOne({
+      product,
+      user: req.user.id
+    });
+
+    if (existingReview) {
+      return next(new AppError('You have already reviewed this product', 400));
+    }
+
+    const newReview = await Review.create({
+      product,
+      user: req.user.id,
+      rating: parseInt(rating, 10),
+      review: review.trim()
+    });
+
+    await newReview.populate({
+      path: 'user',
+      select: 'name avatarText'
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: { review: newReview },
+    });
+  }),
+
+  getReview: catchAsync(async (req, res, next) => {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return next(new AppError('No review found with that ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { review },
+    });
+  }),
+
+  updateReview: catchAsync(async (req, res, next) => {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return next(new AppError('No review found with that ID', 404));
+    }
+
+    if (review.user._id.toString() !== req.user._id.toString()) {
+      return next(new AppError('You do not have permission to update this review', 403));
+    }
+
+    const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { review: updatedReview },
+    });
+  }),
+
+  deleteReview: catchAsync(async (req, res, next) => {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return next(new AppError('No review found with that ID', 404));
+    }
+
+    if (review.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return next(new AppError('You do not have permission to delete this review', 403));
+    }
+
+    await Review.findByIdAndDelete(req.params.id);
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  }),
+
+  getMyReviews: catchAsync(async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    const reviews = await Review.find({ user: req.user.id })
+      .populate({
+        path: 'product',
+        select: 'title images category'
+      })
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Review.countDocuments({ user: req.user.id });
+
+    res.status(200).json({
+      status: 'success',
+      results: reviews.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      data: { reviews }
+    });
+  })
 };
 
 app.use(cors(corsOptions));
@@ -338,7 +1622,7 @@ reviewSchema.pre(/^find/, function(next) {
 
 const Review = mongoose.model('Review', reviewSchema);
 
-// Transaction Schema
+// Transaction Schema - Enhanced with more payment methods
 const transactionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
@@ -347,12 +1631,12 @@ const transactionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['deposit', 'purchase'],
+    enum: ['deposit', 'purchase', 'withdrawal', 'refund'],
     required: true,
   },
   method: {
     type: String,
-    enum: ['card', 'system'],
+    enum: ['card', 'banking', 'momo', 'zalopay', 'system'],
     default: 'card',
   },
   amount: {
@@ -361,7 +1645,7 @@ const transactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'success', 'failed'],
+    enum: ['pending', 'success', 'failed', 'processing'],
     default: 'pending',
   },
   description: String,
@@ -371,11 +1655,20 @@ const transactionSchema = new mongoose.Schema({
     cardType: String,
     cardSerial: String,
     cardNumber: String,
+    bankCode: String,
+    transactionCode: String,
   },
+  metadata: {
+    ipAddress: String,
+    userAgent: String,
+    processedAt: Date,
+    callbackData: Object,
+  }
 }, { timestamps: true });
 
 transactionSchema.index({ user: 1, createdAt: -1 });
 transactionSchema.index({ gatewayTransactionId: 1 }); // Thêm index này cho tìm kiếm nhanh
+transactionSchema.index({ status: 1, createdAt: -1 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
@@ -502,129 +1795,179 @@ const globalErrorHandler = (err, req, res, next) => {
 };
 
 // -----------------------------------------------------------------------------
-// --- DOITHE1S.VN PAYMENT SERVICE - CẢI TIẾN VÀ BẢO MẬT HƠN ---
+// --- ENHANCED PAYMENT SERVICE WITH MULTIPLE GATEWAYS ---
 // -----------------------------------------------------------------------------
-const doithe1sService = {
+const paymentGatewayService = {
   /**
-   * Gửi yêu cầu đổi thẻ lên doithe1s.vn
-   * @param {Object} cardInfo - Thông tin thẻ cào
-   * @returns {Promise<Object>} Response từ API
+   * DOITHE1S.VN Service - Enhanced và bảo mật hơn
    */
-  sendCardRequest: async (cardInfo) => {
-    const { telco, code, serial, amount, request_id } = cardInfo;
-    
-    // Kiểm tra các biến môi trường bắt buộc
-    const PARTNER_ID = process.env.DOITHE1S_PARTNER_ID;
-    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
-    const API_URL = process.env.DOITHE1S_API_URL;
+  doithe1s: {
+    /**
+     * Gửi yêu cầu đổi thẻ lên doithe1s.vn
+     */
+    sendCardRequest: async (cardInfo) => {
+      const { telco, code, serial, amount, request_id } = cardInfo;
+      
+      // Kiểm tra các biến môi trường bắt buộc
+      const PARTNER_ID = process.env.DOITHE1S_PARTNER_ID;
+      const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+      const API_URL = process.env.DOITHE1S_API_URL;
 
-    if (!PARTNER_ID || !PARTNER_KEY || !API_URL) {
-      console.error('❌ [DOITHE1S] Missing required environment variables');
-      return { 
-        status: -1, 
-        message: 'Cấu hình thanh toán chưa đầy đủ. Vui lòng liên hệ admin.' 
-      };
-    }
+      if (!PARTNER_ID || !PARTNER_KEY || !API_URL) {
+        console.error('❌ [DOITHE1S] Missing required environment variables');
+        return { 
+          status: -1, 
+          message: 'Cấu hình thanh toán chưa đầy đủ. Vui lòng liên hệ admin.' 
+        };
+      }
 
-    try {
+      try {
+        // -----------------------------------------------------------------
+        // CẢNH BÁO BẢO MẬT: CÔNG THỨC TẠO CHỮ KÝ KHI GỬI THẺ (SIGN)
+        // - Công thức dưới đây chỉ là VÍ DỤ phổ biến: md5(PARTNER_KEY + code + serial)
+        // - BẠN BẮT BUỘC PHẢI MỞ TÀI LIỆU API CHÍNH THỨC CỦA DOITHE1S.VN
+        // - ĐỂ XÁC NHẬN CÔNG THỨC CHÍNH XÁC CHO VIỆC GỬI THẺ
+        // - Sai chữ ký sẽ khiến mọi giao dịch của bạn bị từ chối ngay lập tức
+        // -----------------------------------------------------------------
+        const sign = crypto
+          .createHash('md5')
+          .update(PARTNER_KEY + code + serial)
+          .digest('hex');
+
+        // Chuẩn bị parameters theo format form-urlencoded
+        const params = new URLSearchParams();
+        params.append('telco', telco);
+        params.append('code', code);
+        params.append('serial', serial);
+        params.append('amount', amount.toString());
+        params.append('request_id', request_id);
+        params.append('partner_id', PARTNER_ID);
+        params.append('sign', sign);
+        params.append('command', 'charging');
+
+        console.log('🔄 [DOITHE1S] Sending card request:', {
+          request_id,
+          telco,
+          amount,
+          serial: `${serial.substring(0, 4)}****${serial.substring(serial.length - 4)}` // Che serial để bảo mật log
+        });
+
+        const response = await axios.post(API_URL, params, {
+          headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Shop-Backend/1.0'
+          },
+          timeout: 30000 // 30 giây timeout
+        });
+
+        console.log('✅ [DOITHE1S] API Response:', {
+          request_id,
+          status: response.data.status,
+          message: response.data.message
+        });
+
+        return response.data;
+        
+      } catch (error) {
+        console.error('❌ [DOITHE1S] API Call Failed:', {
+          request_id,
+          error: error.message,
+          response: error.response?.data
+        });
+        
+        // Trả về response thống nhất cho mọi lỗi
+        return { 
+          status: -1, 
+          message: 'Không thể kết nối đến cổng thanh toán. Vui lòng thử lại sau.' 
+        };
+      }
+    },
+
+    /**
+     * Validate callback signature - QUAN TRỌNG NHẤT CHO BẢO MẬT
+     */
+    validateCallbackSignature: (callbackData) => {
+      const { status, request_id, sign } = callbackData;
+      const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+
+      if (!sign || !status || !request_id || !PARTNER_KEY) {
+        console.warn('⚠️  [CALLBACK-SECURITY] Missing required fields for signature validation');
+        return false;
+      }
+
       // -----------------------------------------------------------------
-      // CẢNH BÁO BẢO MẬT: CÔNG THỨC TẠO CHỮ KÝ KHI GỬI THẺ (SIGN)
-      // - Công thức dưới đây chỉ là VÍ DỤ phổ biến: md5(PARTNER_KEY + code + serial)
-      // - BẠN BẮT BUỘC PHẢI MỞ TÀI LIỆU API CHÍNH THỨC CỦA DOITHE1S.VN
-      // - ĐỂ XÁC NHẬN CÔNG THỨC CHÍNH XÁC CHO VIỆC GỬI THẺ
-      // - Sai chữ ký sẽ khiến mọi giao dịch của bạn bị từ chối ngay lập tức
+      // CẢNH BÁO BẢO MẬT CỰC QUAN TRỌNG: CÔNG THỨC XÁC THỰC CHỮ KÝ CALLBACK
+      // - Công thức dưới đây là VÍ DỤ: md5(PARTNER_KEY + status + request_id)
+      // - BẠN BẮT BUỘC PHẢI KIỂM TRA VỚI TÀI LIỆU CHÍNH THỨC CỦA DOITHE1S.VN
+      // - NẾU SAI CÔNG THỨC NÀY, KẺ GIAN CÓ THỂ TỰ CỘNG TIỀN VÀO TÀI KHOẢN NGƯỜI DÙNG!
       // -----------------------------------------------------------------
-      const sign = crypto
+      const expectedSign = crypto
         .createHash('md5')
-        .update(PARTNER_KEY + code + serial)
+        .update(PARTNER_KEY + status + request_id)
         .digest('hex');
 
-      // Chuẩn bị parameters theo format form-urlencoded
-      const params = new URLSearchParams();
-      params.append('telco', telco);
-      params.append('code', code);
-      params.append('serial', serial);
-      params.append('amount', amount.toString());
-      params.append('request_id', request_id);
-      params.append('partner_id', PARTNER_ID);
-      params.append('sign', sign);
-      params.append('command', 'charging');
-
-      console.log('🔄 [DOITHE1S] Sending card request:', {
-        request_id,
-        telco,
-        amount,
-        serial: `${serial.substring(0, 4)}****${serial.substring(serial.length - 4)}` // Che serial để bảo mật log
-      });
-
-      const response = await axios.post(API_URL, params, {
-        headers: { 
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Shop-Backend/1.0'
-        },
-        timeout: 30000 // 30 giây timeout
-      });
-
-      console.log('✅ [DOITHE1S] API Response:', {
-        request_id,
-        status: response.data.status,
-        message: response.data.message
-      });
-
-      return response.data;
+      const isValid = sign === expectedSign;
       
-    } catch (error) {
-      console.error('❌ [DOITHE1S] API Call Failed:', {
-        request_id,
-        error: error.message,
-        response: error.response?.data
-      });
-      
-      // Trả về response thống nhất cho mọi lỗi
-      return { 
-        status: -1, 
-        message: 'Không thể kết nối đến cổng thanh toán. Vui lòng thử lại sau.' 
-      };
+      if (!isValid) {
+        console.error('🚨 [CALLBACK-SECURITY] INVALID SIGNATURE DETECTED:', {
+          request_id,
+          received_sign: sign,
+          expected_sign: expectedSign,
+          ip: 'unknown' // Có thể thêm IP logging
+        });
+      }
+
+      return isValid;
     }
   },
 
   /**
-   * Validate callback signature - QUAN TRỌNG NHẤT CHO BẢO MẬT
-   * @param {Object} callbackData - Dữ liệu từ callback
-   * @returns {boolean} True nếu chữ ký hợp lệ
+   * Common functions for all gateways
    */
-  validateCallbackSignature: (callbackData) => {
-    const { status, request_id, sign } = callbackData;
-    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+  common: {
+    generateRequestId: (userId, type = 'NAP') => {
+      return `${type}_${userId.toString().slice(-6)}_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+    },
 
-    if (!sign || !status || !request_id || !PARTNER_KEY) {
-      console.warn('⚠️  [CALLBACK-SECURITY] Missing required fields for signature validation');
-      return false;
-    }
+    validateCardData: (telco, code, serial, amount) => {
+      // Validate telco
+      const validTelcos = ['VIETTEL', 'VINAPHONE', 'MOBIFONE', 'VIETNAMOBILE', 'GMOBILE'];
+      if (!validTelcos.includes(telco.toUpperCase())) {
+        return { valid: false, error: 'Nhà mạng không được hỗ trợ.' };
+      }
 
-    // -----------------------------------------------------------------
-    // CẢNH BÁO BẢO MẬT CỰC QUAN TRỌNG: CÔNG THỨC XÁC THỰC CHỮ KÝ CALLBACK
-    // - Công thức dưới đây là VÍ DỤ: md5(PARTNER_KEY + status + request_id)
-    // - BẠN BẮT BUỘC PHẢI KIỂM TRA VỚI TÀI LIỆU CHÍNH THỨC CỦA DOITHE1S.VN
-    // - NẾU SAI CÔNG THỨC NÀY, KẺ GIAN CÓ THỂ TỰ CỘNG TIỀN VÀO TÀI KHOẢN NGƯỜI DÙNG!
-    // -----------------------------------------------------------------
-    const expectedSign = crypto
-      .createHash('md5')
-      .update(PARTNER_KEY + status + request_id)
-      .digest('hex');
+      // Validate và parse amount
+      const parsedAmount = parseInt(amount, 10);
+      const validAmounts = [10000, 20000, 50000, 100000, 200000, 300000, 500000, 1000000];
+      
+      if (isNaN(parsedAmount) || !validAmounts.includes(parsedAmount)) {
+        return { 
+          valid: false, 
+          error: `Mệnh giá không hợp lệ. Chỉ chấp nhận: ${validAmounts.map(a => a.toLocaleString('vi-VN')).join(', ')}đ` 
+        };
+      }
 
-    const isValid = sign === expectedSign;
-    
-    if (!isValid) {
-      console.error('🚨 [CALLBACK-SECURITY] INVALID SIGNATURE DETECTED:', {
-        request_id,
-        received_sign: sign,
-        expected_sign: expectedSign,
-        ip: 'unknown' // Có thể thêm IP logging
+      // Validate format thẻ (có thể tùy chỉnh theo từng nhà mạng)
+      if (code.length < 10 || code.length > 15) {
+        return { valid: false, error: 'Mã thẻ không đúng định dạng.' };
+      }
+
+      if (serial.length < 10 || serial.length > 15) {
+        return { valid: false, error: 'Serial không đúng định dạng.' };
+      }
+
+      return { valid: true, amount: parsedAmount };
+    },
+
+    checkRateLimit: async (userId, timeWindow = 5, maxRequests = 3) => {
+      const recentTransactions = await Transaction.find({
+        user: userId,
+        type: 'deposit',
+        createdAt: { $gte: new Date(Date.now() - timeWindow * 60 * 1000) }
       });
-    }
 
-    return isValid;
+      return recentTransactions.length >= maxRequests;
+    }
   }
 };
 
@@ -825,11 +2168,11 @@ const authController = {
 };
 
 // -----------------------------------------------------------------------------
-// --- TRANSACTION AND PAYMENT CONTROLLERS - CẢI TIẾN VÀ BẢO MẬT HƠN ---
+// --- ENHANCED TRANSACTION AND PAYMENT CONTROLLERS ---
 // -----------------------------------------------------------------------------
 const transactionController = {
   /**
-   * Nạp tiền bằng thẻ cào - với validation và security tốt hơn
+   * Nạp tiền bằng thẻ cào - Enhanced với validation và security tốt hơn
    */
   depositWithCard: catchAsync(async (req, res, next) => {
     const { telco, code, serial, amount } = req.body;
@@ -840,56 +2183,38 @@ const transactionController = {
       return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào (nhà mạng, mã thẻ, serial, mệnh giá).', 400));
     }
 
-    // Validate telco
-    const validTelcos = ['VIETTEL', 'VINAPHONE', 'MOBIFONE', 'VIETNAMOBILE', 'GMOBILE'];
-    if (!validTelcos.includes(telco.toUpperCase())) {
-      return next(new AppError('Nhà mạng không được hỗ trợ.', 400));
+    // Validate card data using common service
+    const validation = paymentGatewayService.common.validateCardData(telco, code, serial, amount);
+    if (!validation.valid) {
+      return next(new AppError(validation.error, 400));
     }
 
-    // Validate và parse amount
-    const parsedAmount = parseInt(amount, 10);
-    const validAmounts = [10000, 20000, 50000, 100000, 200000, 300000, 500000, 1000000];
-    
-    if (isNaN(parsedAmount) || !validAmounts.includes(parsedAmount)) {
-      return next(new AppError(`Mệnh giá không hợp lệ. Chỉ chấp nhận: ${validAmounts.map(a => a.toLocaleString('vi-VN')).join(', ')}đ`, 400));
-    }
-
-    // Validate format thẻ (có thể tùy chỉnh theo từng nhà mạng)
-    if (code.length < 10 || code.length > 15) {
-      return next(new AppError('Mã thẻ không đúng định dạng.', 400));
-    }
-
-    if (serial.length < 10 || serial.length > 15) {
-      return next(new AppError('Serial không đúng định dạng.', 400));
-    }
-
-    // Kiểm tra rate limit (không cho phép spam request)
-    const recentTransactions = await Transaction.find({
-      user: userId,
-      type: 'deposit',
-      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // 5 phút gần đây
-    });
-
-    if (recentTransactions.length >= 3) {
+    // Kiểm tra rate limit
+    const isRateLimited = await paymentGatewayService.common.checkRateLimit(userId);
+    if (isRateLimited) {
       return next(new AppError('Bạn đã nạp quá nhiều lần trong 5 phút. Vui lòng chờ một chút.', 429));
     }
 
     // Tạo request_id duy nhất
-    const requestId = `NAP_${userId.toString().slice(-6)}_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+    const requestId = paymentGatewayService.common.generateRequestId(userId, 'NAP');
     
     // Tạo transaction pending trước
     const pendingTransaction = await Transaction.create({
       user: userId,
       type: 'deposit',
       method: 'card',
-      amount: parsedAmount,
+      amount: validation.amount,
       status: 'pending',
       gatewayTransactionId: requestId,
-      description: `Đang xử lý nạp thẻ ${telco} mệnh giá ${parsedAmount.toLocaleString('vi-VN')}đ`,
+      description: `Đang xử lý nạp thẻ ${telco.toUpperCase()} mệnh giá ${validation.amount.toLocaleString('vi-VN')}đ`,
       details: { 
         cardType: telco.toUpperCase(), 
         cardNumber: code.slice(-4), // Chỉ lưu 4 số cuối để bảo mật
         cardSerial: serial.slice(-4) // Chỉ lưu 4 số cuối để bảo mật
+      },
+      metadata: {
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
       }
     });
 
@@ -897,24 +2222,25 @@ const transactionController = {
       user: req.user.name,
       userId,
       requestId,
-      telco,
-      amount: parsedAmount
+      telco: telco.toUpperCase(),
+      amount: validation.amount
     });
 
     // Gọi API doithe1s
-    const apiResponse = await doithe1sService.sendCardRequest({
+    const apiResponse = await paymentGatewayService.doithe1s.sendCardRequest({
       telco: telco.toUpperCase(),
       code,
       serial,
-      amount: parsedAmount,
+      amount: validation.amount,
       request_id: requestId,
     });
 
     // Xử lý response từ API
-    if (apiResponse.status !== 99 && apiResponse.status !== '99') { // Một số API trả về string
+    if (apiResponse.status !== 99 && apiResponse.status !== '99') {
       pendingTransaction.status = 'failed';
       pendingTransaction.description = `Thất bại: ${apiResponse.message || 'Thẻ không hợp lệ hoặc đã được sử dụng.'}`;
       pendingTransaction.failureReason = apiResponse.status?.toString();
+      pendingTransaction.metadata.processedAt = new Date();
       await pendingTransaction.save();
       
       console.log('❌ [DEPOSIT] Failed request:', {
@@ -939,7 +2265,7 @@ const transactionController = {
         transaction: {
           _id: pendingTransaction._id,
           requestId,
-          amount: parsedAmount,
+          amount: validation.amount,
           status: 'pending',
           createdAt: pendingTransaction.createdAt
         }
@@ -948,20 +2274,46 @@ const transactionController = {
   }),
 
   /**
-   * Lấy lịch sử giao dịch của user
+   * Lấy lịch sử giao dịch của user với filtering và sorting
    */
   getMyTransactions: catchAsync(async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
 
-    const transactions = await Transaction.find({ user: req.user.id })
+    // Build filter object
+    const filter = { user: req.user.id };
+    
+    if (req.query.type) {
+      filter.type = req.query.type;
+    }
+    
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    if (req.query.method) {
+      filter.method = req.query.method;
+    }
+
+    // Date range filter
+    if (req.query.from || req.query.to) {
+      filter.createdAt = {};
+      if (req.query.from) {
+        filter.createdAt.$gte = new Date(req.query.from);
+      }
+      if (req.query.to) {
+        filter.createdAt.$lte = new Date(req.query.to);
+      }
+    }
+
+    const transactions = await Transaction.find(filter)
       .sort('-createdAt')
       .skip(skip)
       .limit(limit)
-      .select('-details.cardNumber -details.cardSerial'); // Ẩn thông tin nhạy cảm
+      .select('-details.cardNumber -details.cardSerial -metadata.callbackData'); // Ẩn thông tin nhạy cảm
 
-    const total = await Transaction.countDocuments({ user: req.user.id });
+    const total = await Transaction.countDocuments(filter);
 
     res.status(200).json({
       status: 'success',
@@ -974,7 +2326,78 @@ const transactionController = {
   }),
 
   /**
-   * Lấy thống kê giao dịch (cho admin)
+   * Lấy chi tiết một giao dịch cụ thể
+   */
+  getTransaction: catchAsync(async (req, res, next) => {
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    }).select('-details.cardNumber -details.cardSerial -metadata.callbackData');
+
+    if (!transaction) {
+      return next(new AppError('Không tìm thấy giao dịch', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { transaction }
+    });
+  }),
+
+  /**
+   * Thống kê giao dịch của user
+   */
+  getMyTransactionStats: catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+
+    const stats = await Transaction.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
+      {
+        $group: {
+          _id: {
+            status: '$status',
+            type: '$type',
+            method: '$method'
+          },
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$amount' }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.type',
+          methods: {
+            $push: {
+              method: '$_id.method',
+              status: '$_id.status',
+              count: '$count',
+              totalAmount: '$totalAmount'
+            }
+          },
+          totalCount: { $sum: '$count' },
+          totalAmount: { $sum: '$totalAmount' }
+        }
+      }
+    ]);
+
+    // Get recent transactions summary
+    const recentTransactions = await Transaction.find({ user: userId })
+      .sort('-createdAt')
+      .limit(5)
+      .select('type amount status description createdAt');
+
+    res.status(200).json({
+      status: 'success',
+      data: { 
+        stats,
+        recentTransactions,
+        balance: req.user.balance || 0
+      }
+    });
+  }),
+
+  /**
+   * Lấy thống kê giao dịch tổng thể (cho admin)
    */
   getTransactionStats: catchAsync(async (req, res, next) => {
     const stats = await Transaction.aggregate([
@@ -982,7 +2405,8 @@ const transactionController = {
         $group: {
           _id: {
             status: '$status',
-            type: '$type'
+            type: '$type',
+            method: '$method'
           },
           count: { $sum: 1 },
           totalAmount: { $sum: '$amount' }
@@ -993,6 +2417,7 @@ const transactionController = {
           _id: '$_id.type',
           stats: {
             $push: {
+              method: '$_id.method',
               status: '$_id.status',
               count: '$count',
               totalAmount: '$totalAmount'
@@ -1002,15 +2427,45 @@ const transactionController = {
       }
     ]);
 
+    // Get daily stats for last 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const dailyStats = await Transaction.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$createdAt'
+              }
+            },
+            type: '$type',
+            status: '$status'
+          },
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$amount' }
+        }
+      },
+      { $sort: { '_id.date': 1 } }
+    ]);
+
     res.status(200).json({
       status: 'success',
-      data: { stats }
+      data: { 
+        stats,
+        dailyStats
+      }
     });
   })
 };
 
 /**
- * Controller xử lý callback từ doithe1s.vn - CỰC KỲ QUAN TRỌNG CHO BẢO MẬT
+ * Enhanced Payment Callback Controller với logging và security tốt hơn
  */
 const paymentCallbackController = {
   /**
@@ -1027,7 +2482,8 @@ const paymentCallbackController = {
       amount: amount || value,
       message,
       ip: req.ip,
-      userAgent: req.headers['user-agent']
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
     });
 
     // BƯỚC 1: VALIDATION CƠ BẢN
@@ -1037,7 +2493,7 @@ const paymentCallbackController = {
     }
 
     // BƯỚC 2: XÁC THỰC CHỮ KÝ - QUAN TRỌNG NHẤT!
-    if (!doithe1sService.validateCallbackSignature(callbackData)) {
+    if (!paymentGatewayService.doithe1s.validateCallbackSignature(callbackData)) {
       // Log chi tiết để debug nhưng không expose ra response
       console.error('🚨 [CALLBACK-SECURITY] SIGNATURE VALIDATION FAILED:', {
         request_id,
@@ -1104,6 +2560,19 @@ const paymentCallbackController = {
         transaction.failureReason = status.toString();
     }
     
+    // Update metadata
+    transaction.metadata = {
+      ...transaction.metadata,
+      processedAt: new Date(),
+      callbackData: {
+        status,
+        request_id,
+        amount: realAmount,
+        message,
+        ip: req.ip
+      }
+    };
+
     // BƯỚC 6: CẬP NHẬT DATABASE - TRANSACTION ĐỂ ĐẢM BẢO TÍNH NHẤT QUÁN
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -1192,929 +2661,3 @@ const paymentCallbackController = {
     return paymentCallbackController.handleDoithe1sCallback(req, res, next);
   })
 };
-
-// -----------------------------------------------------------------------------
-// --- CÁC CONTROLLER CÒN LẠI GIỮ NGUYÊN NHƯNG CẢI TIẾN MỘT CHÚT ---
-// -----------------------------------------------------------------------------
-const userController = {
-  getMe: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return next(new AppError('User not found', 404));
-    }
-
-    const userResponse = {
-      _id: user._id,
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      balance: user.balance || 0,
-      avatarText: user.avatarText,
-      createdAt: user.createdAt,
-      // Thêm thống kê nhanh
-      totalTransactions: await Transaction.countDocuments({ user: user._id }),
-      cartItemsCount: user.cart.length,
-      favoritesCount: user.favorites.length
-    };
-
-    res.status(200).json({
-      status: 'success',
-      data: { user: userResponse },
-    });
-  }),
-
-  getSessions: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.user.id);
-
-    const sessions = user.sessions.sort((a, b) => {
-      if (a.tokenIdentifier === req.sessionId) return -1;
-      if (b.tokenIdentifier === req.sessionId) return 1;
-      return new Date(b.lastUsedAt) - new Date(a.lastUsedAt);
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        sessions: sessions.map(s => ({
-          id: s.tokenIdentifier,
-          deviceInfo: s.deviceInfo,
-          ipAddress: s.ipAddress,
-          createdAt: s.createdAt,
-          lastUsedAt: s.lastUsedAt,
-          isCurrent: s.tokenIdentifier === req.sessionId
-        }))
-      }
-    });
-  }),
-
-  logoutSession: catchAsync(async (req, res, next) => {
-    const { sessionId } = req.params;
-    
-    if (sessionId === req.sessionId) {
-      return next(new AppError('You cannot log out your current session via this endpoint.', 400));
-    }
-    
-    await User.findByIdAndUpdate(req.user.id, {
-      $pull: { sessions: { tokenIdentifier: sessionId } }
-    });
-
-    res.status(204).json({
-      status: 'success',
-      data: null
-    });
-  }),
-
-  logoutAllOtherSessions: catchAsync(async (req, res, next) => {
-    const user = req.user;
-    
-    user.sessions = user.sessions.filter(s => s.tokenIdentifier === req.sessionId);
-    
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'All other sessions have been logged out.'
-    });
-  }),
-
-  updateMe: catchAsync(async (req, res, next) => {
-    if (req.body.password || req.body.passwordConfirm) {
-      return next(new AppError('This route is not for password updates. Please use /updateMyPassword.', 400));
-    }
-
-    const { name } = req.body;
-    if (!name || name.trim().length === 0) {
-      return next(new AppError('Please provide a valid name', 400));
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      {
-        name: name.trim(),
-        avatarText: name.trim().charAt(0).toUpperCase()
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user: {
-          _id: updatedUser._id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          role: updatedUser.role,
-          balance: updatedUser.balance,
-          avatarText: updatedUser.avatarText
-        },
-      },
-    });
-  }),
-
-  deleteMe: catchAsync(async (req, res, next) => {
-    await User.findByIdAndUpdate(req.user.id, { active: false });
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  }),
-
-  getAllUsers: catchAsync(async (req, res, next) => {
-    const users = await User.find({ active: { $ne: false } }).select('-password');
-
-    res.status(200).json({
-      status: 'success',
-      results: users.length,
-      data: { users },
-    });
-  }),
-
-  getUser: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.params.id).select('-password');
-
-    if (!user) {
-      return next(new AppError('No user found with that ID', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: { user },
-    });
-  }),
-
-  updateUser: catchAsync(async (req, res, next) => {
-    if (req.body.password || req.body.passwordConfirm) {
-      return next(new AppError('This route is not for password updates.', 400));
-    }
-
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    }).select('-password');
-
-    if (!user) {
-      return next(new AppError('No user found with that ID', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: { user },
-    });
-  }),
-
-  deleteUser: catchAsync(async (req, res, next) => {
-    const user = await User.findByIdAndDelete(req.params.id);
-
-    if (!user) {
-      return next(new AppError('No user found with that ID', 404));
-    }
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  }),
-
-  makeUserAdmin: catchAsync(async (req, res, next) => {
-    const { email } = req.body;
-
-    if (!email) {
-      return next(new AppError('Please provide email address', 400));
-    }
-
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) {
-      return next(new AppError('User not found', 404));
-    }
-
-    user.role = 'admin';
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: `${email} is now an admin`,
-      data: {
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        }
-      }
-    });
-  }),
-};
-
-const productController = {
-  getAllProducts: catchAsync(async (req, res, next) => {
-    const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(el => delete queryObj[el]);
-
-    queryObj.active = { $ne: false };
-
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `${match}`);
-
-    let query = Product.find(JSON.parse(queryStr));
-
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      query = query.select(fields);
-    } else {
-      query = query.select('-__v');
-    }
-
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 100;
-    const skip = (page - 1) * limit;
-
-    query = query.skip(skip).limit(limit);
-
-    const products = await query.populate({
-      path: 'createdBy',
-      select: 'name email'
-    });
-
-    res.status(200).json({
-      status: 'success',
-      results: products.length,
-      data: { products },
-    });
-  }),
-
-  getProduct: catchAsync(async (req, res, next) => {
-    const product = await Product.findOne({
-      _id: req.params.id,
-      active: { $ne: false }
-    }).populate({
-      path: 'createdBy',
-      select: 'name email'
-    }).populate('reviews');
-
-    if (!product) {
-      return next(new AppError('No product found with that ID', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: { product },
-    });
-  }),
-
-  createProduct: catchAsync(async (req, res, next) => {
-    const { title, description, price, images, link } = req.body;
-
-    if (!title || !description || !price || !link) {
-      return next(new AppError('Please provide all required fields: title, description, price, and link', 400));
-    }
-
-    let productImages = images;
-    if (typeof images === 'string') {
-      productImages = [images];
-    } else if (!Array.isArray(images) || images.length === 0) {
-      return next(new AppError('Please provide at least one product image', 400));
-    }
-
-    const productData = {
-      title: title.trim(),
-      description: description.trim(),
-      price: parseInt(price, 10),
-      images: productImages,
-      link: link.trim(),
-      category: req.body.category || 'services',
-      badge: req.body.badge || null,
-      sales: parseInt(req.body.sales, 10) || 0,
-      stock: parseInt(req.body.stock, 10) || 999,
-      features: req.body.features || [],
-      oldPrice: req.body.oldPrice ? parseInt(req.body.oldPrice, 10) : undefined,
-      createdBy: req.user._id,
-    };
-
-    const newProduct = await Product.create(productData);
-    await newProduct.populate({
-      path: 'createdBy',
-      select: 'name email'
-    });
-
-    res.status(201).json({
-      status: 'success',
-      data: { product: newProduct },
-    });
-  }),
-
-  updateProduct: catchAsync(async (req, res, next) => {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return next(new AppError('No product found with that ID', 404));
-    }
-
-    if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to update this product', 403));
-    }
-
-    if (req.body.images) {
-      if (typeof req.body.images === 'string') {
-        req.body.images = [req.body.images];
-      }
-    }
-
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    ).populate({
-      path: 'createdBy',
-      select: 'name email'
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { product: updatedProduct },
-    });
-  }),
-
-  deleteProduct: catchAsync(async (req, res, next) => {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return next(new AppError('No product found with that ID', 404));
-    }
-
-    if (product.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to delete this product', 403));
-    }
-
-    await Product.findByIdAndDelete(req.params.id);
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  }),
-
-  getProductStats: catchAsync(async (req, res, next) => {
-    const stats = await Product.aggregate([
-      {
-        $match: { active: { $ne: false } }
-      },
-      {
-        $group: {
-          _id: '$category',
-          numProducts: { $sum: 1 },
-          avgPrice: { $avg: '$price' },
-          minPrice: { $min: '$price' },
-          maxPrice: { $max: '$price' },
-          totalSales: { $sum: '$sales' }
-        }
-      },
-      {
-        $sort: { numProducts: -1 }
-      }
-    ]);
-
-    res.status(200).json({
-      status: 'success',
-      data: { stats },
-    });
-  }),
-};
-
-const cartFavoriteController = {
-  addToCart: catchAsync(async (req, res, next) => {
-    const { productId, quantity = 1 } = req.body;
-
-    if (!productId) {
-      return next(new AppError('Please provide a product ID', 400));
-    }
-
-    const product = await Product.findOne({
-      _id: productId,
-      active: { $ne: false }
-    });
-
-    if (!product) {
-      return next(new AppError('Product not found', 404));
-    }
-
-    const user = await User.findById(req.user.id);
-    const existingItemIndex = user.cart.findIndex(item =>
-      item.product.toString() === productId
-    );
-
-    if (existingItemIndex !== -1) {
-      user.cart[existingItemIndex].quantity += parseInt(quantity, 10);
-    } else {
-      user.cart.push({
-        product: productId,
-        quantity: parseInt(quantity, 10)
-      });
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product added to cart',
-      data: { cart: user.cart }
-    });
-  }),
-
-  getCart: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.user.id).populate({
-      path: 'cart.product',
-      select: 'title price images link category badge'
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { cart: user.cart }
-    });
-  }),
-
-  updateCartItem: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-    const { quantity } = req.body;
-
-    if (!quantity || quantity < 1) {
-      return next(new AppError('Quantity must be at least 1', 400));
-    }
-
-    const user = await User.findById(req.user.id);
-    const cartItemIndex = user.cart.findIndex(item =>
-      item.product.toString() === productId
-    );
-
-    if (cartItemIndex === -1) {
-      return next(new AppError('Product not found in cart', 404));
-    }
-
-    user.cart[cartItemIndex].quantity = parseInt(quantity, 10);
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Cart updated successfully',
-      data: { cart: user.cart }
-    });
-  }),
-
-  removeFromCart: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-
-    const user = await User.findById(req.user.id);
-    const initialCartLength = user.cart.length;
-
-    user.cart = user.cart.filter(item =>
-      item.product.toString() !== productId
-    );
-
-    if (user.cart.length === initialCartLength) {
-      return next(new AppError('Product not found in cart', 404));
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product removed from cart',
-      data: { cart: user.cart }
-    });
-  }),
-
-  clearCart: catchAsync(async (req, res, next) => {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { cart: [] },
-      { new: true }
-    );
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Cart cleared successfully',
-      data: { cart: user.cart }
-    });
-  }),
-
-  addToFavorites: catchAsync(async (req, res, next) => {
-    const { productId } = req.body;
-
-    if (!productId) {
-      return next(new AppError('Please provide a product ID', 400));
-    }
-
-    const product = await Product.findOne({
-      _id: productId,
-      active: { $ne: false }
-    });
-
-    if (!product) {
-      return next(new AppError('Product not found', 404));
-    }
-
-    const user = await User.findById(req.user.id);
-
-    if (!user.favorites.includes(productId)) {
-      user.favorites.push(productId);
-      await user.save({ validateBeforeSave: false });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product added to favorites',
-      data: { favorites: user.favorites }
-    });
-  }),
-
-  getFavorites: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.user.id).populate({
-      path: 'favorites',
-      select: 'title price images link category badge sales',
-      match: { active: { $ne: false } }
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { favorites: user.favorites }
-    });
-  }),
-
-  removeFromFavorites: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-
-    const user = await User.findById(req.user.id);
-    const initialFavoritesLength = user.favorites.length;
-
-    user.favorites = user.favorites.filter(id =>
-      id.toString() !== productId
-    );
-
-    if (user.favorites.length === initialFavoritesLength) {
-      return next(new AppError('Product not found in favorites', 404));
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product removed from favorites',
-      data: { favorites: user.favorites }
-    });
-  }),
-
-  checkFavorite: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-
-    const user = await User.findById(req.user.id);
-    const isFavorite = user.favorites.some(id =>
-      id.toString() === productId
-    );
-
-    res.status(200).json({
-      status: 'success',
-      data: { isFavorite }
-    });
-  }),
-};
-
-const reviewController = {
-  getAllReviews: catchAsync(async (req, res, next) => {
-    let filter = {};
-    if (req.params.productId) filter = { product: req.params.productId };
-
-    const reviews = await Review.find(filter);
-
-    res.status(200).json({
-      status: 'success',
-      results: reviews.length,
-      data: { reviews },
-    });
-  }),
-
-  createReview: catchAsync(async (req, res, next) => {
-    if (!req.body.product) req.body.product = req.params.productId;
-    if (!req.body.user) req.body.user = req.user.id;
-
-    const product = await Product.findOne({
-      _id: req.body.product,
-      active: { $ne: false }
-    });
-
-    if (!product) {
-      return next(new AppError('Product not found', 404));
-    }
-
-    const newReview = await Review.create(req.body);
-
-    res.status(201).json({
-      status: 'success',
-      data: { review: newReview },
-    });
-  }),
-
-  getReview: catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return next(new AppError('No review found with that ID', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: { review },
-    });
-  }),
-
-  updateReview: catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return next(new AppError('No review found with that ID', 404));
-    }
-
-    if (review.user._id.toString() !== req.user._id.toString()) {
-      return next(new AppError('You do not have permission to update this review', 403));
-    }
-
-    const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { review: updatedReview },
-    });
-  }),
-
-  deleteReview: catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return next(new AppError('No review found with that ID', 404));
-    }
-
-    if (review.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to delete this review', 403));
-    }
-
-    await Review.findByIdAndDelete(req.params.id);
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  })
-};;
-
-// Database connection
-const connectDB = async () => {
-  try {
-    const connectionOptions = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferMaxEntries: 0 // Disable mongoose buffering
-    };
-
-    await mongoose.connect(DB, connectionOptions);
-    console.log('✅ DB connection successful!');
-    await createDefaultAdmin();
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
-  }
-};
-
-const createDefaultAdmin = async () => {
-  try {
-    const adminEmails = [
-      'chinhan20917976549a@gmail.com',
-      'ryantran149@gmail.com'
-    ];
-
-    for (const email of adminEmails) {
-      let user = await User.findOne({ email: email.toLowerCase() });
-
-      if (user) {
-        if (user.role !== 'admin') {
-          user.role = 'admin';
-          await user.save({ validateBeforeSave: false });
-          console.log(`✅ Updated ${email} to admin role`);
-        }
-      } else {
-        const adminData = {
-          name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
-          email: email.toLowerCase(),
-          password: 'admin123456',
-          passwordConfirm: 'admin123456',
-          role: 'admin'
-        };
-
-        user = await User.create(adminData);
-        console.log(`✅ Created admin user: ${email}`);
-      }
-    }
-  } catch (error) {
-    console.error('❌ Error creating default admin:', error);
-  }
-};
-
-// Start database connection
-connectDB();
-
-// -----------------------------------------------------------------------------
-// --- ROUTES CONFIGURATION - CẢI TIẾN VÀ TỔ CHỨC LẠI ---
-// -----------------------------------------------------------------------------
-
-// Health check endpoint
-app.get('/api/v1/health', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0'
-  });
-});
-
-// --- SPECIAL CALLBACK ROUTES (MUST BE BEFORE OTHER MIDDLEWARE) ---
-// Callback từ doithe1s.vn - CỰC KỲ QUAN TRỌNG, KHÔNG ĐƯỢC BẢO VỆ BỞI AUTH
-app.all('/api/v1/payment/callback/doithe1s', paymentCallbackController.handleDoithe1sCallback);
-
-// Test callback endpoint (chỉ trong development)
-if (process.env.NODE_ENV === 'development') {
-  app.post('/api/v1/payment/test-callback', paymentCallbackController.testCallback);
-}
-
-// --- PUBLIC ROUTES (NO AUTH REQUIRED) ---
-// Authentication routes
-app.post('/api/v1/users/signup', authController.signup);
-app.post('/api/v1/users/login', authController.login);
-app.get('/api/v1/users/logout', authController.logout);
-app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
-app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
-
-// Public product routes
-app.get('/api/v1/products', productController.getAllProducts);
-app.get('/api/v1/products/stats', productController.getProductStats);
-app.get('/api/v1/products/:id', productController.getProduct);
-
-// Public review routes
-app.get('/api/v1/reviews', reviewController.getAllReviews);
-app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
-
-// --- PROTECTED ROUTES (AUTH REQUIRED) ---
-// Apply authentication middleware to all routes below
-app.use(authController.protect);
-
-// User profile routes
-app.get('/api/v1/users/me', userController.getMe);
-app.patch('/api/v1/users/updateMe', userController.updateMe);
-app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
-app.delete('/api/v1/users/deleteMe', userController.deleteMe);
-
-// Session management routes
-app.get('/api/v1/users/sessions', userController.getSessions);
-app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
-app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
-
-// Payment and transaction routes
-app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
-app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
-
-// Cart management routes
-app.route('/api/v1/cart')
-  .get(cartFavoriteController.getCart)
-  .post(cartFavoriteController.addToCart)
-  .delete(cartFavoriteController.clearCart);
-
-app.route('/api/v1/cart/:productId')
-  .patch(cartFavoriteController.updateCartItem)
-  .delete(cartFavoriteController.removeFromCart);
-
-// Favorites management routes
-app.route('/api/v1/favorites')
-  .get(cartFavoriteController.getFavorites)
-  .post(cartFavoriteController.addToFavorites);
-
-app.route('/api/v1/favorites/:productId')
-  .delete(cartFavoriteController.removeFromFavorites);
-
-app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
-
-// Review routes (authenticated)
-app.post('/api/v1/reviews', reviewController.createReview);
-app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
-
-app.route('/api/v1/reviews/:id')
-  .get(reviewController.getReview)
-  .patch(reviewController.updateReview)
-  .delete(reviewController.deleteReview);
-
-// User's own product management
-app.post('/api/v1/my-products', productController.createProduct);
-app.patch('/api/v1/my-products/:id', productController.updateProduct);
-app.delete('/api/v1/my-products/:id', productController.deleteProduct);
-
-// --- ADMIN ROUTES (ADMIN AUTH REQUIRED) ---
-// Apply admin restriction to all routes below
-app.use('/api/v1/admin', authController.restrictTo('admin'));
-
-// Admin user management
-app.route('/api/v1/admin/users')
-  .get(userController.getAllUsers);
-
-app.route('/api/v1/admin/users/:id')
-  .get(userController.getUser)
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
-
-app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
-
-// Admin product management
-app.route('/api/v1/admin/products')
-  .post(productController.createProduct);
-
-app.route('/api/v1/admin/products/:id')
-  .patch(productController.updateProduct)
-  .delete(productController.deleteProduct);
-
-// Admin transaction management
-app.get('/api/v1/admin/transactions/stats', transactionController.getTransactionStats);
-
-// 404 handler for unmatched routes
-app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-});
-
-// Global error handling middleware
-app.use(globalErrorHandler);
-
-// -----------------------------------------------------------------------------
-// --- SERVER STARTUP AND GRACEFUL SHUTDOWN ---
-// -----------------------------------------------------------------------------
-const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${port}/api/v1/health`);
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🧪 Test callback: http://localhost:${port}/api/v1/payment/test-callback`);
-  }
-});
-
-// Graceful shutdown handlers
-process.on('unhandledRejection', (err) => {
-  console.log('💥 UNHANDLED REJECTION! Shutting down...');
-  console.log(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
-});
-
-process.on('uncaughtException', (err) => {
-  console.log('💥 UNCAUGHT EXCEPTION! Shutting down...');
-  console.log(err.name, err.message);
-  process.exit(1);
-});
-
-process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
-  server.close(() => {
-    console.log('💥 Process terminated!');
-  });
-});
-
-// Gracefully close database connection
-process.on('SIGINT', async () => {
-  console.log('\n👋 SIGINT RECEIVED. Shutting down gracefully');
-  try {
-    await mongoose.connection.close();
-    console.log('📊 Database connection closed');
-  } catch (error) {
-    console.error('❌ Error closing database:', error);
-  }
-  process.exit(0);
-});
-
-module.exports = app;
