@@ -17,9 +17,9 @@ dotenv.config({ path: './config.env' });
 
 const app = express();
 
-// Middleware configuration
+// Middleware configuration - ĐẶC BIỆT QUAN TRỌNG CHO CALLBACK
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Quan trọng cho callback form-data
 app.use(cookieParser());
 app.set('trust proxy', true);
 
@@ -29,7 +29,9 @@ const corsOptions = {
     const allowedOrigins = [
       'https://gsgswe123.github.io',
       'https://gsgswe123.github.io/shop3/',
-      'http://127.0.0.1:5500'
+      'http://127.0.0.1:5500',
+      'http://localhost:3000',
+      'https://localhost:3000'
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -373,6 +375,7 @@ const transactionSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 transactionSchema.index({ user: 1, createdAt: -1 });
+transactionSchema.index({ gatewayTransactionId: 1 }); // Thêm index này cho tìm kiếm nhanh
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
@@ -432,7 +435,7 @@ const createSendToken = (user, sessionId, statusCode, res) => {
   });
 };
 
-// Error handling
+// Error handling functions
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`;
   return new AppError(message, 400);
@@ -498,47 +501,132 @@ const globalErrorHandler = (err, req, res, next) => {
   }
 };
 
-
 // -----------------------------------------------------------------------------
-// --- DOITHE1S.VN PAYMENT SERVICE ---
+// --- DOITHE1S.VN PAYMENT SERVICE - CẢI TIẾN VÀ BẢO MẬT HƠN ---
 // -----------------------------------------------------------------------------
 const doithe1sService = {
+  /**
+   * Gửi yêu cầu đổi thẻ lên doithe1s.vn
+   * @param {Object} cardInfo - Thông tin thẻ cào
+   * @returns {Promise<Object>} Response từ API
+   */
   sendCardRequest: async (cardInfo) => {
     const { telco, code, serial, amount, request_id } = cardInfo;
+    
+    // Kiểm tra các biến môi trường bắt buộc
     const PARTNER_ID = process.env.DOITHE1S_PARTNER_ID;
     const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
     const API_URL = process.env.DOITHE1S_API_URL;
 
-    // -----------------------------------------------------------------
-    // CẢNH BÁO BẢO MẬT: CÔNG THỨC TẠO CHỮ KÝ KHI GỬI THẺ (SIGN)
-    // - Công thức `md5(PARTNER_KEY + code + serial)` là một ví dụ phổ biến.
-    // - BẠN BẮT BUỘC PHẢI MỞ TÀI LIỆU API CỦA DOITHE1S.VN ĐỂ XÁC NHẬN CÔNG THỨC CHÍNH XÁC.
-    // - Sai chữ ký sẽ khiến mọi giao dịch của bạn bị từ chối.
-    // -----------------------------------------------------------------
-    const sign = crypto.createHash('md5').update(PARTNER_KEY + code + serial).digest('hex');
-
-    const params = new URLSearchParams();
-    params.append('telco', telco);
-    params.append('code', code);
-    params.append('serial', serial);
-    params.append('amount', amount);
-    params.append('request_id', request_id);
-    params.append('partner_id', PARTNER_ID);
-    params.append('sign', sign);
-    params.append('command', 'charging');
+    if (!PARTNER_ID || !PARTNER_KEY || !API_URL) {
+      console.error('❌ [DOITHE1S] Missing required environment variables');
+      return { 
+        status: -1, 
+        message: 'Cấu hình thanh toán chưa đầy đủ. Vui lòng liên hệ admin.' 
+      };
+    }
 
     try {
-      const response = await axios.post(API_URL, params, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      // -----------------------------------------------------------------
+      // CẢNH BÁO BẢO MẬT: CÔNG THỨC TẠO CHỮ KÝ KHI GỬI THẺ (SIGN)
+      // - Công thức dưới đây chỉ là VÍ DỤ phổ biến: md5(PARTNER_KEY + code + serial)
+      // - BẠN BẮT BUỘC PHẢI MỞ TÀI LIỆU API CHÍNH THỨC CỦA DOITHE1S.VN
+      // - ĐỂ XÁC NHẬN CÔNG THỨC CHÍNH XÁC CHO VIỆC GỬI THẺ
+      // - Sai chữ ký sẽ khiến mọi giao dịch của bạn bị từ chối ngay lập tức
+      // -----------------------------------------------------------------
+      const sign = crypto
+        .createHash('md5')
+        .update(PARTNER_KEY + code + serial)
+        .digest('hex');
+
+      // Chuẩn bị parameters theo format form-urlencoded
+      const params = new URLSearchParams();
+      params.append('telco', telco);
+      params.append('code', code);
+      params.append('serial', serial);
+      params.append('amount', amount.toString());
+      params.append('request_id', request_id);
+      params.append('partner_id', PARTNER_ID);
+      params.append('sign', sign);
+      params.append('command', 'charging');
+
+      console.log('🔄 [DOITHE1S] Sending card request:', {
+        request_id,
+        telco,
+        amount,
+        serial: `${serial.substring(0, 4)}****${serial.substring(serial.length - 4)}` // Che serial để bảo mật log
       });
+
+      const response = await axios.post(API_URL, params, {
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Shop-Backend/1.0'
+        },
+        timeout: 30000 // 30 giây timeout
+      });
+
+      console.log('✅ [DOITHE1S] API Response:', {
+        request_id,
+        status: response.data.status,
+        message: response.data.message
+      });
+
       return response.data;
+      
     } catch (error) {
-      console.error('Error calling Doithe1s API:', error.message);
-      return { status: -1, message: 'Không thể kết nối đến cổng thanh toán.' };
+      console.error('❌ [DOITHE1S] API Call Failed:', {
+        request_id,
+        error: error.message,
+        response: error.response?.data
+      });
+      
+      // Trả về response thống nhất cho mọi lỗi
+      return { 
+        status: -1, 
+        message: 'Không thể kết nối đến cổng thanh toán. Vui lòng thử lại sau.' 
+      };
     }
+  },
+
+  /**
+   * Validate callback signature - QUAN TRỌNG NHẤT CHO BẢO MẬT
+   * @param {Object} callbackData - Dữ liệu từ callback
+   * @returns {boolean} True nếu chữ ký hợp lệ
+   */
+  validateCallbackSignature: (callbackData) => {
+    const { status, request_id, sign } = callbackData;
+    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+
+    if (!sign || !status || !request_id || !PARTNER_KEY) {
+      console.warn('⚠️  [CALLBACK-SECURITY] Missing required fields for signature validation');
+      return false;
+    }
+
+    // -----------------------------------------------------------------
+    // CẢNH BÁO BẢO MẬT CỰC QUAN TRỌNG: CÔNG THỨC XÁC THỰC CHỮ KÝ CALLBACK
+    // - Công thức dưới đây là VÍ DỤ: md5(PARTNER_KEY + status + request_id)
+    // - BẠN BẮT BUỘC PHẢI KIỂM TRA VỚI TÀI LIỆU CHÍNH THỨC CỦA DOITHE1S.VN
+    // - NẾU SAI CÔNG THỨC NÀY, KẺ GIAN CÓ THỂ TỰ CỘNG TIỀN VÀO TÀI KHOẢN NGƯỜI DÙNG!
+    // -----------------------------------------------------------------
+    const expectedSign = crypto
+      .createHash('md5')
+      .update(PARTNER_KEY + status + request_id)
+      .digest('hex');
+
+    const isValid = sign === expectedSign;
+    
+    if (!isValid) {
+      console.error('🚨 [CALLBACK-SECURITY] INVALID SIGNATURE DETECTED:', {
+        request_id,
+        received_sign: sign,
+        expected_sign: expectedSign,
+        ip: 'unknown' // Có thể thêm IP logging
+      });
+    }
+
+    return isValid;
   }
 };
-
 
 // Controllers
 const authController = {
@@ -559,7 +647,7 @@ const authController = {
       email: email.toLowerCase().trim(),
       password,
       passwordConfirm,
-      role: role === 'admin' ? 'user' : (role || 'user'),
+      role: role === 'admin' ? 'user' : (role || 'user'), // Chặn tự đăng ký admin
     });
 
     const sessionId = crypto.randomBytes(16).toString('hex');
@@ -618,7 +706,7 @@ const authController = {
       status: 'success',
       message: 'Logged out successfully. Please clear token on client-side.'
     });
-  },
+  }),
 
   protect: catchAsync(async (req, res, next) => {
     let token;
@@ -648,6 +736,7 @@ const authController = {
       return next(new AppError('User recently changed password! Please log in again.', 401));
     }
     
+    // Update last used time asynchronously
     User.updateOne(
       { _id: currentUser._id, 'sessions.tokenIdentifier': decoded.sessionId },
       { $set: { 'sessions.$.lastUsedAt': Date.now() } }
@@ -736,24 +825,59 @@ const authController = {
 };
 
 // -----------------------------------------------------------------------------
-// --- TRANSACTION AND PAYMENT CONTROLLERS ---
+// --- TRANSACTION AND PAYMENT CONTROLLERS - CẢI TIẾN VÀ BẢO MẬT HƠN ---
 // -----------------------------------------------------------------------------
 const transactionController = {
+  /**
+   * Nạp tiền bằng thẻ cào - với validation và security tốt hơn
+   */
   depositWithCard: catchAsync(async (req, res, next) => {
     const { telco, code, serial, amount } = req.body;
     const userId = req.user.id;
 
+    // Validation đầu vào chi tiết hơn
     if (!telco || !code || !serial || !amount) {
-      return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào.', 400));
+      return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào (nhà mạng, mã thẻ, serial, mệnh giá).', 400));
     }
 
+    // Validate telco
+    const validTelcos = ['VIETTEL', 'VINAPHONE', 'MOBIFONE', 'VIETNAMOBILE', 'GMOBILE'];
+    if (!validTelcos.includes(telco.toUpperCase())) {
+      return next(new AppError('Nhà mạng không được hỗ trợ.', 400));
+    }
+
+    // Validate và parse amount
     const parsedAmount = parseInt(amount, 10);
-    if (isNaN(parsedAmount) || parsedAmount < 10000) {
-      return next(new AppError('Mệnh giá thẻ không hợp lệ (tối thiểu 10,000đ).', 400));
+    const validAmounts = [10000, 20000, 50000, 100000, 200000, 300000, 500000, 1000000];
+    
+    if (isNaN(parsedAmount) || !validAmounts.includes(parsedAmount)) {
+      return next(new AppError(`Mệnh giá không hợp lệ. Chỉ chấp nhận: ${validAmounts.map(a => a.toLocaleString('vi-VN')).join(', ')}đ`, 400));
     }
 
-    const requestId = `NAP_${userId.toString().slice(-6)}_${Date.now()}`;
+    // Validate format thẻ (có thể tùy chỉnh theo từng nhà mạng)
+    if (code.length < 10 || code.length > 15) {
+      return next(new AppError('Mã thẻ không đúng định dạng.', 400));
+    }
+
+    if (serial.length < 10 || serial.length > 15) {
+      return next(new AppError('Serial không đúng định dạng.', 400));
+    }
+
+    // Kiểm tra rate limit (không cho phép spam request)
+    const recentTransactions = await Transaction.find({
+      user: userId,
+      type: 'deposit',
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // 5 phút gần đây
+    });
+
+    if (recentTransactions.length >= 3) {
+      return next(new AppError('Bạn đã nạp quá nhiều lần trong 5 phút. Vui lòng chờ một chút.', 429));
+    }
+
+    // Tạo request_id duy nhất
+    const requestId = `NAP_${userId.toString().slice(-6)}_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
     
+    // Tạo transaction pending trước
     const pendingTransaction = await Transaction.create({
       user: userId,
       type: 'deposit',
@@ -761,106 +885,316 @@ const transactionController = {
       amount: parsedAmount,
       status: 'pending',
       gatewayTransactionId: requestId,
-      description: `Chờ xử lý nạp thẻ ${telco} ${parsedAmount.toLocaleString('vi-VN')}đ`,
-      details: { cardType: telco, cardNumber: code, cardSerial: serial }
+      description: `Đang xử lý nạp thẻ ${telco} mệnh giá ${parsedAmount.toLocaleString('vi-VN')}đ`,
+      details: { 
+        cardType: telco.toUpperCase(), 
+        cardNumber: code.slice(-4), // Chỉ lưu 4 số cuối để bảo mật
+        cardSerial: serial.slice(-4) // Chỉ lưu 4 số cuối để bảo mật
+      }
     });
 
-    const apiResponse = await doithe1sService.sendCardRequest({
+    console.log('💳 [DEPOSIT] New card request:', {
+      user: req.user.name,
+      userId,
+      requestId,
       telco,
+      amount: parsedAmount
+    });
+
+    // Gọi API doithe1s
+    const apiResponse = await doithe1sService.sendCardRequest({
+      telco: telco.toUpperCase(),
       code,
       serial,
       amount: parsedAmount,
       request_id: requestId,
     });
 
-    if (apiResponse.status !== 99) {
+    // Xử lý response từ API
+    if (apiResponse.status !== 99 && apiResponse.status !== '99') { // Một số API trả về string
       pendingTransaction.status = 'failed';
-      pendingTransaction.description = `Thất bại: ${apiResponse.message || 'Lỗi từ cổng thanh toán.'}`;
+      pendingTransaction.description = `Thất bại: ${apiResponse.message || 'Thẻ không hợp lệ hoặc đã được sử dụng.'}`;
+      pendingTransaction.failureReason = apiResponse.status?.toString();
       await pendingTransaction.save();
+      
+      console.log('❌ [DEPOSIT] Failed request:', {
+        requestId,
+        status: apiResponse.status,
+        message: apiResponse.message
+      });
+      
       return next(new AppError(pendingTransaction.description, 400));
     }
 
+    console.log('✅ [DEPOSIT] Request accepted:', {
+      requestId,
+      status: apiResponse.status,
+      message: apiResponse.message
+    });
+
     res.status(200).json({
       status: 'success',
-      message: 'Yêu cầu nạp thẻ đã được gửi đi và đang chờ xử lý.',
-      data: { transaction: pendingTransaction },
+      message: 'Yêu cầu nạp thẻ đã được gửi thành công và đang được xử lý. Kết quả sẽ được cập nhật trong vài phút.',
+      data: { 
+        transaction: {
+          _id: pendingTransaction._id,
+          requestId,
+          amount: parsedAmount,
+          status: 'pending',
+          createdAt: pendingTransaction.createdAt
+        }
+      },
     });
   }),
 
+  /**
+   * Lấy lịch sử giao dịch của user
+   */
   getMyTransactions: catchAsync(async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
     const transactions = await Transaction.find({ user: req.user.id })
       .sort('-createdAt')
-      .limit(50);
+      .skip(skip)
+      .limit(limit)
+      .select('-details.cardNumber -details.cardSerial'); // Ẩn thông tin nhạy cảm
+
+    const total = await Transaction.countDocuments({ user: req.user.id });
 
     res.status(200).json({
       status: 'success',
       results: transactions.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
       data: { transactions }
+    });
+  }),
+
+  /**
+   * Lấy thống kê giao dịch (cho admin)
+   */
+  getTransactionStats: catchAsync(async (req, res, next) => {
+    const stats = await Transaction.aggregate([
+      {
+        $group: {
+          _id: {
+            status: '$status',
+            type: '$type'
+          },
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$amount' }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.type',
+          stats: {
+            $push: {
+              status: '$_id.status',
+              count: '$count',
+              totalAmount: '$totalAmount'
+            }
+          }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: { stats }
     });
   })
 };
 
-
+/**
+ * Controller xử lý callback từ doithe1s.vn - CỰC KỲ QUAN TRỌNG CHO BẢO MẬT
+ */
 const paymentCallbackController = {
+  /**
+   * Xử lý callback từ doithe1s - PHẢI CỰC KỲ BẢO MẬT
+   */
   handleDoithe1sCallback: catchAsync(async (req, res, next) => {
+    // Merge cả body và query để đảm bảo nhận đủ data
     const callbackData = { ...req.body, ...req.query };
     const { status, request_id, value, amount, message, sign } = callbackData;
-    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
     
-    console.log('Received callback:', callbackData);
+    console.log('📞 [CALLBACK] Received data:', {
+      request_id,
+      status,
+      amount: amount || value,
+      message,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
 
-    // -----------------------------------------------------------------
-    // BƯỚC 1: XÁC THỰC CHỮ KÝ - BƯỚC BẢO MẬT QUAN TRỌNG NHẤT
-    // - Luôn xác thực chữ ký đầu tiên để chống lại các cuộc gọi callback giả mạo.
-    // - Cảnh báo: Công thức `md5(PARTNER_KEY + status + request_id)` LÀ MỘT VÍ DỤ.
-    // - BẠN PHẢI KIỂM TRA LẠI VỚI TÀI LIỆU CỦA DOITHE1S.VN ĐỂ CÓ CÔNG THỨC CHÍNH XÁC.
-    // - Nếu sai công thức này, kẻ gian có thể tự cộng tiền vào tài khoản người dùng.
-    // -----------------------------------------------------------------
-    const expectedSign = crypto.createHash('md5').update(PARTNER_KEY + status + request_id).digest('hex');
-
-    if (!sign || sign !== expectedSign) {
-      console.warn(`[CALLBACK-SECURITY] Invalid signature for request_id: ${request_id}. Received: ${sign}`);
-      return res.status(400).send('Error: Invalid signature.');
+    // BƯỚC 1: VALIDATION CƠ BẢN
+    if (!status || !request_id) {
+      console.warn('⚠️  [CALLBACK-WARN] Missing required fields:', callbackData);
+      return res.status(400).send('Error: Missing required fields.');
     }
 
-    const transaction = await Transaction.findOne({ gatewayTransactionId: request_id });
+    // BƯỚC 2: XÁC THỰC CHỮ KÝ - QUAN TRỌNG NHẤT!
+    if (!doithe1sService.validateCallbackSignature(callbackData)) {
+      // Log chi tiết để debug nhưng không expose ra response
+      console.error('🚨 [CALLBACK-SECURITY] SIGNATURE VALIDATION FAILED:', {
+        request_id,
+        received_data: { status, request_id, sign },
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(403).send('Error: Unauthorized.');
+    }
+
+    // BƯỚC 3: TÌM TRANSACTION
+    const transaction = await Transaction.findOne({ 
+      gatewayTransactionId: request_id 
+    });
+
     if (!transaction) {
-      console.warn(`[CALLBACK-WARN] Transaction not found for request_id: ${request_id}`);
+      console.warn(`⚠️  [CALLBACK-WARN] Transaction not found: ${request_id}`);
       return res.status(404).send('Error: Transaction not found.');
     }
     
+    // BƯỚC 4: KIỂM TRA TRẠNG THÁI ĐÃ XỬ LÝ CHƯA
     if (transaction.status !== 'pending') {
-      console.log(`[CALLBACK-INFO] Transaction ${request_id} already processed. Status: ${transaction.status}`);
-      return res.status(200).send('OK: Already processed.');
+      console.log(`ℹ️  [CALLBACK-INFO] Transaction already processed: ${request_id}, Status: ${transaction.status}`);
+      return res.status(200).send('OK'); // Vẫn trả về OK để tránh retry
     }
 
-    const realAmount = Number(amount);
+    // BƯỚC 5: XỬ LÝ CÁC TRẠNG THÁI KHÁC NHAU
+    const realAmount = Number(amount || value || 0);
     const STATUS_SUCCESS = '1';
     const STATUS_WRONG_AMOUNT = '2';
+    const STATUS_USED_CARD = '3';
+    const STATUS_WRONG_CARD = '4';
 
-    if (status === STATUS_SUCCESS) {
+    let balanceUpdate = 0;
+
+    switch (status) {
+      case STATUS_SUCCESS:
         transaction.status = 'success';
-        transaction.description = `Nạp thẻ thành công. Đã cộng ${realAmount.toLocaleString('vi-VN')}đ.`;
-        await User.findByIdAndUpdate(transaction.user, { $inc: { balance: realAmount } });
-    } else if (status === STATUS_WRONG_AMOUNT) {
-        transaction.status = 'success';
-        transaction.description = `Thẻ đúng nhưng sai mệnh giá. Thực nhận ${realAmount.toLocaleString('vi-VN')}đ.`;
-        await User.findByIdAndUpdate(transaction.user, { $inc: { balance: realAmount } });
-    } else {
+        transaction.description = `✅ Nạp thẻ thành công! Đã cộng ${realAmount.toLocaleString('vi-VN')}đ vào tài khoản.`;
+        balanceUpdate = realAmount;
+        break;
+        
+      case STATUS_WRONG_AMOUNT:
+        transaction.status = 'success'; // Vẫn thành công nhưng số tiền khác
+        transaction.description = `✅ Thẻ hợp lệ nhưng sai mệnh giá. Thực nhận: ${realAmount.toLocaleString('vi-VN')}đ`;
+        balanceUpdate = realAmount;
+        break;
+        
+      case STATUS_USED_CARD:
         transaction.status = 'failed';
-        transaction.description = `Nạp thẻ thất bại: ${message || `Mã lỗi hệ thống: ${status}`}`;
+        transaction.description = `❌ Thẻ đã được sử dụng trước đó.`;
+        transaction.failureReason = 'USED_CARD';
+        break;
+        
+      case STATUS_WRONG_CARD:
+        transaction.status = 'failed';
+        transaction.description = `❌ Thông tin thẻ không chính xác.`;
+        transaction.failureReason = 'WRONG_CARD';
+        break;
+        
+      default:
+        transaction.status = 'failed';
+        transaction.description = `❌ Giao dịch thất bại: ${message || `Mã lỗi: ${status}`}`;
         transaction.failureReason = status.toString();
     }
     
-    await transaction.save();
+    // BƯỚC 6: CẬP NHẬT DATABASE - TRANSACTION ĐỂ ĐẢM BẢO TÍNH NHẤT QUÁN
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    try {
+      // Cập nhật transaction
+      await transaction.save({ session });
+      
+      // Cộng tiền vào tài khoản nếu thành công
+      if (balanceUpdate > 0) {
+        await User.findByIdAndUpdate(
+          transaction.user, 
+          { $inc: { balance: balanceUpdate } },
+          { session }
+        );
+        
+        console.log('💰 [CALLBACK-SUCCESS] Balance updated:', {
+          request_id,
+          userId: transaction.user,
+          amount: balanceUpdate,
+          newStatus: transaction.status
+        });
+      }
+      
+      await session.commitTransaction();
+      
+      console.log('✅ [CALLBACK-SUCCESS] Transaction processed:', {
+        request_id,
+        status: transaction.status,
+        amount: balanceUpdate,
+        description: transaction.description
+      });
+      
+    } catch (error) {
+      await session.abortTransaction();
+      console.error('❌ [CALLBACK-ERROR] Database update failed:', {
+        request_id,
+        error: error.message
+      });
+      
+      // Vẫn trả về OK để tránh retry nhưng log lỗi
+      return res.status(200).send('OK');
+      
+    } finally {
+      session.endSession();
+    }
 
-    console.log(`[CALLBACK-SUCCESS] Processed request_id: ${request_id}, New Status: ${transaction.status}`);
+    // BƯỚC 7: TRẢ VỀ RESPONSE CHO DOITHE1S
+    // Quan trọng: Phải trả về chính xác format mà doithe1s yêu cầu
     res.status(200).send('OK');
   }),
+
+  /**
+   * Endpoint để test callback (chỉ dùng trong development)
+   */
+  testCallback: catchAsync(async (req, res, next) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return next(new AppError('This endpoint is only available in development mode', 403));
+    }
+
+    const { request_id, status = '1', amount = '50000' } = req.body;
+    
+    if (!request_id) {
+      return next(new AppError('request_id is required', 400));
+    }
+
+    // Tạo fake callback data với chữ ký hợp lệ
+    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+    const sign = crypto
+      .createHash('md5')
+      .update(PARTNER_KEY + status + request_id)
+      .digest('hex');
+
+    const fakeCallbackData = {
+      status,
+      request_id,
+      amount,
+      message: 'Test callback',
+      sign
+    };
+
+    // Gọi lại chính callback handler
+    req.body = fakeCallbackData;
+    req.query = {};
+    
+    return paymentCallbackController.handleDoithe1sCallback(req, res, next);
+  })
 };
 
 // -----------------------------------------------------------------------------
-// --- CÁC CONTROLLER CÒN LẠI GIỮ NGUYÊN ---
+// --- CÁC CONTROLLER CÒN LẠI GIỮ NGUYÊN NHƯNG CẢI TIẾN MỘT CHÚT ---
 // -----------------------------------------------------------------------------
 const userController = {
   getMe: catchAsync(async (req, res, next) => {
@@ -877,7 +1211,11 @@ const userController = {
       role: user.role,
       balance: user.balance || 0,
       avatarText: user.avatarText,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      // Thêm thống kê nhanh
+      totalTransactions: await Transaction.countDocuments({ user: user._id }),
+      cartItemsCount: user.cart.length,
+      favoritesCount: user.favorites.length
     };
 
     res.status(200).json({
@@ -1268,463 +1606,4 @@ const cartFavoriteController = {
 
     const product = await Product.findOne({
       _id: productId,
-      active: { $ne: false }
-    });
-
-    if (!product) {
-      return next(new AppError('Product not found', 404));
-    }
-
-    const user = await User.findById(req.user.id);
-    const existingItemIndex = user.cart.findIndex(item =>
-      item.product.toString() === productId
-    );
-
-    if (existingItemIndex !== -1) {
-      user.cart[existingItemIndex].quantity += parseInt(quantity, 10);
-    } else {
-      user.cart.push({
-        product: productId,
-        quantity: parseInt(quantity, 10)
-      });
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product added to cart',
-      data: { cart: user.cart }
-    });
-  }),
-
-  getCart: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.user.id).populate({
-      path: 'cart.product',
-      select: 'title price images link category badge'
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { cart: user.cart }
-    });
-  }),
-
-  updateCartItem: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-    const { quantity } = req.body;
-
-    if (!quantity || quantity < 1) {
-      return next(new AppError('Quantity must be at least 1', 400));
-    }
-
-    const user = await User.findById(req.user.id);
-    const cartItemIndex = user.cart.findIndex(item =>
-      item.product.toString() === productId
-    );
-
-    if (cartItemIndex === -1) {
-      return next(new AppError('Product not found in cart', 404));
-    }
-
-    user.cart[cartItemIndex].quantity = parseInt(quantity, 10);
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Cart updated successfully',
-      data: { cart: user.cart }
-    });
-  }),
-
-  removeFromCart: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-
-    const user = await User.findById(req.user.id);
-    const initialCartLength = user.cart.length;
-
-    user.cart = user.cart.filter(item =>
-      item.product.toString() !== productId
-    );
-
-    if (user.cart.length === initialCartLength) {
-      return next(new AppError('Product not found in cart', 404));
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product removed from cart',
-      data: { cart: user.cart }
-    });
-  }),
-
-  clearCart: catchAsync(async (req, res, next) => {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { cart: [] },
-      { new: true }
-    );
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Cart cleared successfully',
-      data: { cart: user.cart }
-    });
-  }),
-
-  addToFavorites: catchAsync(async (req, res, next) => {
-    const { productId } = req.body;
-
-    if (!productId) {
-      return next(new AppError('Please provide a product ID', 400));
-    }
-
-    const product = await Product.findOne({
-      _id: productId,
-      active: { $ne: false }
-    });
-
-    if (!product) {
-      return next(new AppError('Product not found', 404));
-    }
-
-    const user = await User.findById(req.user.id);
-
-    if (!user.favorites.includes(productId)) {
-      user.favorites.push(productId);
-      await user.save({ validateBeforeSave: false });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product added to favorites',
-      data: { favorites: user.favorites }
-    });
-  }),
-
-  getFavorites: catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.user.id).populate({
-      path: 'favorites',
-      select: 'title price images link category badge sales',
-      match: { active: { $ne: false } }
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { favorites: user.favorites }
-    });
-  }),
-
-  removeFromFavorites: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-
-    const user = await User.findById(req.user.id);
-    const initialFavoritesLength = user.favorites.length;
-
-    user.favorites = user.favorites.filter(id =>
-      id.toString() !== productId
-    );
-
-    if (user.favorites.length === initialFavoritesLength) {
-      return next(new AppError('Product not found in favorites', 404));
-    }
-
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Product removed from favorites',
-      data: { favorites: user.favorites }
-    });
-  }),
-
-  checkFavorite: catchAsync(async (req, res, next) => {
-    const { productId } = req.params;
-
-    const user = await User.findById(req.user.id);
-    const isFavorite = user.favorites.some(id =>
-      id.toString() === productId
-    );
-
-    res.status(200).json({
-      status: 'success',
-      data: { isFavorite }
-    });
-  }),
-};
-
-const reviewController = {
-  getAllReviews: catchAsync(async (req, res, next) => {
-    let filter = {};
-    if (req.params.productId) filter = { product: req.params.productId };
-
-    const reviews = await Review.find(filter);
-
-    res.status(200).json({
-      status: 'success',
-      results: reviews.length,
-      data: { reviews },
-    });
-  }),
-
-  createReview: catchAsync(async (req, res, next) => {
-    if (!req.body.product) req.body.product = req.params.productId;
-    if (!req.body.user) req.body.user = req.user.id;
-
-    const product = await Product.findOne({
-      _id: req.body.product,
-      active: { $ne: false }
-    });
-
-    if (!product) {
-      return next(new AppError('Product not found', 404));
-    }
-
-    const newReview = await Review.create(req.body);
-
-    res.status(201).json({
-      status: 'success',
-      data: { review: newReview },
-    });
-  }),
-
-  getReview: catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return next(new AppError('No review found with that ID', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: { review },
-    });
-  }),
-
-  updateReview: catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return next(new AppError('No review found with that ID', 404));
-    }
-
-    if (review.user._id.toString() !== req.user._id.toString()) {
-      return next(new AppError('You do not have permission to update this review', 403));
-    }
-
-    const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { review: updatedReview },
-    });
-  }),
-
-  deleteReview: catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return next(new AppError('No review found with that ID', 404));
-    }
-
-    if (review.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to delete this review', 403));
-    }
-
-    await Review.findByIdAndDelete(req.params.id);
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  })
-};
-
-// Database connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(DB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('DB connection successful!');
-    await createDefaultAdmin();
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    process.exit(1);
-  }
-};
-
-const createDefaultAdmin = async () => {
-  try {
-    const adminEmails = [
-      'chinhan20917976549a@gmail.com',
-      'ryantran149@gmail.com'
-    ];
-
-    for (const email of adminEmails) {
-      let user = await User.findOne({ email: email.toLowerCase() });
-
-      if (user) {
-        if (user.role !== 'admin') {
-          user.role = 'admin';
-          await user.save({ validateBeforeSave: false });
-          console.log(`Updated ${email} to admin role`);
-        }
-      } else {
-        const adminData = {
-          name: email === 'chinhan20917976549a@gmail.com' ? 'Co-owner (Chí Nghĩa)' : 'Ryan Tran Admin',
-          email: email.toLowerCase(),
-          password: 'admin123456',
-          passwordConfirm: 'admin123456',
-          role: 'admin'
-        };
-
-        user = await User.create(adminData);
-        console.log(`Created admin user: ${email}`);
-      }
-    }
-  } catch (error) {
-    console.error('Error creating default admin:', error);
-  }
-};
-
-connectDB();
-
-// -----------------------------------------------------------------------------
-// --- ROUTES CONFIGURATION ---
-// -----------------------------------------------------------------------------
-app.get('/api/v1/health', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// --- PUBLIC ROUTES ---
-app.post('/api/v1/users/signup', authController.signup);
-app.post('/api/v1/users/login', authController.login);
-app.get('/api/v1/users/logout', authController.logout);
-app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
-app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
-
-app.all('/api/v1/payment/callback/doithe1s', paymentCallbackController.handleDoithe1sCallback);
-
-app.get('/api/v1/products', productController.getAllProducts);
-app.get('/api/v1/products/stats', productController.getProductStats);
-app.get('/api/v1/products/:id', productController.getProduct);
-
-app.get('/api/v1/reviews', reviewController.getAllReviews);
-app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
-
-
-// --- PROTECTED ROUTES ---
-app.use(authController.protect);
-
-app.get('/api/v1/users/me', userController.getMe);
-app.patch('/api/v1/users/updateMe', userController.updateMe);
-app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
-app.delete('/api/v1/users/deleteMe', userController.deleteMe);
-
-app.get('/api/v1/users/sessions', userController.getSessions);
-app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
-app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
-
-app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
-app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
-
-app.route('/api/v1/cart')
-  .get(cartFavoriteController.getCart)
-  .post(cartFavoriteController.addToCart)
-  .delete(cartFavoriteController.clearCart);
-
-app.route('/api/v1/cart/:productId')
-  .patch(cartFavoriteController.updateCartItem)
-  .delete(cartFavoriteController.removeFromCart);
-
-app.route('/api/v1/favorites')
-  .get(cartFavoriteController.getFavorites)
-  .post(cartFavoriteController.addToFavorites);
-
-app.route('/api/v1/favorites/:productId')
-  .delete(cartFavoriteController.removeFromFavorites);
-
-app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
-
-app.post('/api/v1/reviews', reviewController.createReview);
-app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
-
-app.route('/api/v1/reviews/:id')
-  .get(reviewController.getReview)
-  .patch(reviewController.updateReview)
-  .delete(reviewController.deleteReview);
-
-app.post('/api/v1/my-products', productController.createProduct);
-app.patch('/api/v1/my-products/:id', productController.updateProduct);
-app.delete('/api/v1/my-products/:id', productController.deleteProduct);
-
-// --- ADMIN ROUTES ---
-app.use('/api/v1/admin', authController.restrictTo('admin'));
-
-app.route('/api/v1/admin/users')
-  .get(userController.getAllUsers);
-
-app.route('/api/v1/admin/users/:id')
-  .get(userController.getUser)
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
-
-app.post('/api/v1/admin/users/make-admin', userController.makeUserAdmin);
-
-app.route('/api/v1/admin/products')
-  .post(productController.createProduct);
-
-app.route('/api/v1/admin/products/:id')
-  .patch(productController.updateProduct)
-  .delete(productController.deleteProduct);
-
-// 404 handler for unmatched routes
-app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-});
-
-// Global error handler
-app.use(globalErrorHandler);
-
-// Server startup
-const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  console.log(`App running on port ${port}...`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-// Unhandled error handlers
-process.on('unhandledRejection', (err) => {
-  console.log('UNHANDLED REJECTION! 💥 Shutting down...');
-  console.log(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
-});
-
-process.on('uncaughtException', (err) => {
-  console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.log(err.name, err.message);
-  process.exit(1);
-});
-
-process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
-  server.close(() => {
-    console.log('💥 Process terminated!');
-  });
-});
-
-module.exports = app;
+      active: { $ne: false
