@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const nodemailer = require('nodemailer');
 const validator = require('validator');
+const axios = require('axios');
 
 // Load environment variables
 dotenv.config({ path: './config.env' });
@@ -362,7 +363,7 @@ const transactionSchema = new mongoose.Schema({
     default: 'pending',
   },
   description: String,
-  gatewayTransactionId: String,
+  gatewayTransactionId: String, // Dùng để lưu request_id
   failureReason: String,
   details: {
     cardType: String,
@@ -412,7 +413,6 @@ const createSendToken = (user, sessionId, statusCode, res) => {
 
   res.cookie('jwt', token, cookieOptions);
   
-  // Clean response data
   const userResponse = {
     _id: user._id,
     id: user._id,
@@ -498,40 +498,43 @@ const globalErrorHandler = (err, req, res, next) => {
   }
 };
 
-// Payment Gateway Service
-const paymentGatewayService = {
-  processCard: (cardInfo) => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const random = Math.random();
-        const gatewayId = `GATEWAY_${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
-        const amount = Number(cardInfo.amount).toLocaleString('vi-VN');
 
-        if (random < 0.75) {
-          resolve({
-            success: true,
-            message: `Giao dịch thành công. Cộng ${amount}đ.`,
-            transactionId: gatewayId,
-          });
-        } else if (random < 0.9) {
-          resolve({
-            success: false,
-            message: 'Mã thẻ hoặc số serial không đúng.',
-            failureReason: 'INVALID_CARD',
-            transactionId: gatewayId,
-          });
-        } else {
-          resolve({
-            success: false,
-            message: 'Thẻ đã được sử dụng hoặc hết hạn.',
-            failureReason: 'CARD_ALREADY_USED',
-            transactionId: gatewayId,
-          });
-        }
-      }, 1500);
-    });
+// -----------------------------------------------------------------------------
+// --- DOITHE1S.VN PAYMENT SERVICE ---
+// -----------------------------------------------------------------------------
+const doithe1sService = {
+  sendCardRequest: async (cardInfo) => {
+    const { telco, code, serial, amount, request_id } = cardInfo;
+    const PARTNER_ID = process.env.DOITHE1S_PARTNER_ID;
+    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+    const API_URL = process.env.DOITHE1S_API_URL;
+
+    // QUAN TRỌNG: Công thức tạo chữ ký phải tuân theo tài liệu của Doithe1s.vn.
+    // Đây là công thức phổ biến: MD5(partner_key + code + serial)
+    const sign = crypto.createHash('md5').update(PARTNER_KEY + code + serial).digest('hex');
+
+    const params = new URLSearchParams();
+    params.append('telco', telco);
+    params.append('code', code);
+    params.append('serial', serial);
+    params.append('amount', amount);
+    params.append('request_id', request_id);
+    params.append('partner_id', PARTNER_ID);
+    params.append('sign', sign);
+    params.append('command', 'charging');
+
+    try {
+      const response = await axios.post(API_URL, params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error calling Doithe1s API:', error.message);
+      return { status: -1, message: 'Không thể kết nối đến cổng thanh toán.' };
+    }
   }
 };
+
 
 // Controllers
 const authController = {
@@ -641,7 +644,6 @@ const authController = {
       return next(new AppError('User recently changed password! Please log in again.', 401));
     }
     
-    // Update session last used (async to avoid blocking)
     User.updateOne(
       { _id: currentUser._id, 'sessions.tokenIdentifier': decoded.sessionId },
       { $set: { 'sessions.$.lastUsedAt': Date.now() } }
@@ -729,61 +731,56 @@ const authController = {
   }),
 };
 
+// -----------------------------------------------------------------------------
+// --- TRANSACTION AND PAYMENT CONTROLLERS ---
+// -----------------------------------------------------------------------------
 const transactionController = {
   depositWithCard: catchAsync(async (req, res, next) => {
-    const { cardType, cardNumber, cardSerial, amount } = req.body;
+    const { telco, code, serial, amount } = req.body;
     const userId = req.user.id;
 
-    if (!cardType || !cardNumber || !cardSerial || !amount) {
+    if (!telco || !code || !serial || !amount) {
       return next(new AppError('Vui lòng điền đầy đủ thông tin thẻ cào.', 400));
     }
 
     const parsedAmount = parseInt(amount, 10);
     if (isNaN(parsedAmount) || parsedAmount < 10000) {
-      return next(new AppError('Mệnh giá thẻ không hợp lệ.', 400));
+      return next(new AppError('Mệnh giá thẻ không hợp lệ (tối thiểu 10,000đ).', 400));
     }
 
+    const requestId = `NAP_${userId.toString().slice(-6)}_${Date.now()}`;
+    
     const pendingTransaction = await Transaction.create({
       user: userId,
       type: 'deposit',
       method: 'card',
       amount: parsedAmount,
       status: 'pending',
-      description: `Đang xử lý nạp thẻ ${cardType} ${parsedAmount.toLocaleString('vi-VN')}đ`,
-      details: { cardType, cardNumber, cardSerial }
+      gatewayTransactionId: requestId,
+      description: `Chờ xử lý nạp thẻ ${telco} ${parsedAmount.toLocaleString('vi-VN')}đ`,
+      details: { cardType: telco, cardNumber: code, cardSerial: serial }
     });
-    
-    const gatewayResponse = await paymentGatewayService.processCard(req.body);
 
-    if (gatewayResponse.success) {
-      await User.findByIdAndUpdate(userId, 
-        { $inc: { balance: parsedAmount } }, 
-        { new: true, runValidators: true }
-      );
-      
-      pendingTransaction.status = 'success';
-      pendingTransaction.description = gatewayResponse.message;
-      pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
-      await pendingTransaction.save();
+    const apiResponse = await doithe1sService.sendCardRequest({
+      telco,
+      code,
+      serial,
+      amount: parsedAmount,
+      request_id: requestId,
+    });
 
-      const finalTransaction = await Transaction.findById(pendingTransaction._id).populate({
-        path: 'user', select: 'name balance'
-      });
-      
-      res.status(200).json({
-        status: 'success',
-        message: 'Nạp thẻ thành công!',
-        data: { transaction: finalTransaction },
-      });
-    } else {
+    if (apiResponse.status !== 99) {
       pendingTransaction.status = 'failed';
-      pendingTransaction.description = gatewayResponse.message;
-      pendingTransaction.gatewayTransactionId = gatewayResponse.transactionId;
-      pendingTransaction.failureReason = gatewayResponse.failureReason;
+      pendingTransaction.description = `Thất bại: ${apiResponse.message || 'Lỗi từ cổng thanh toán.'}`;
       await pendingTransaction.save();
-      
-      return next(new AppError(gatewayResponse.message, 400));
+      return next(new AppError(pendingTransaction.description, 400));
     }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Yêu cầu nạp thẻ đã được gửi đi và đang chờ xử lý.',
+      data: { transaction: pendingTransaction },
+    });
   }),
 
   getMyTransactions: catchAsync(async (req, res, next) => {
@@ -799,6 +796,88 @@ const transactionController = {
   })
 };
 
+
+const paymentCallbackController = {
+  /**
+   * Controller chuyên xử lý callback từ Doithe1s.vn
+   * Endpoint này PHẢI được để công khai (public)
+   */
+  handleDoithe1sCallback: catchAsync(async (req, res, next) => {
+    // Dữ liệu có thể được gửi qua GET (query) hoặc POST (body)
+    const callbackData = { ...req.body, ...req.query };
+
+    // Lấy các tham số quan trọng từ callbackData
+    // 'value' là mệnh giá user khai báo, 'amount' là mệnh giá thực của thẻ
+    const { status, request_id, value, amount, message, sign } = callbackData;
+    const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
+    
+    console.log('Received callback:', callbackData);
+
+    // STEP 1: XÁC THỰC CHỮ KÝ - CỰC KỲ QUAN TRỌNG
+    // Cảnh báo: Công thức tạo chữ ký cho callback có thể khác nhau.
+    // BẠN PHẢI XEM LẠI TÀI LIỆU CỦA DOITHE1S.VN ĐỂ BIẾT CÔNG THỨC CHÍNH XÁC.
+    // Công thức giả định phổ biến là: md5(PARTNER_KEY + status + request_id)
+    const expectedSign = crypto.createHash('md5').update(PARTNER_KEY + status + request_id).digest('hex');
+
+    if (sign !== expectedSign) {
+      console.warn(`[CALLBACK-SECURITY] Invalid signature for request_id: ${request_id}. Expected: ${expectedSign}, Received: ${sign}`);
+      // Không nên báo lỗi chi tiết, chỉ cần trả về lỗi chung
+      return res.status(400).send('ERROR: Invalid signature');
+    }
+
+    // STEP 2: TÌM GIAO DỊCH
+    const transaction = await Transaction.findOne({ gatewayTransactionId: request_id });
+    if (!transaction) {
+      console.warn(`[CALLBACK-WARN] Transaction not found for request_id: ${request_id}`);
+      // Không tìm thấy giao dịch, có thể là request_id giả mạo
+      return res.status(404).send('ERROR: Transaction not found');
+    }
+    
+    // STEP 3: KIỂM TRA TRẠNG THÁI GIAO DỊCH
+    // Nếu giao dịch đã được xử lý (thành công hoặc thất bại) thì bỏ qua
+    if (transaction.status !== 'pending') {
+      console.log(`[CALLBACK-INFO] Transaction ${request_id} already processed. Status: ${transaction.status}`);
+      // Phản hồi thành công để Doithe1s không gửi lại callback nữa
+      return res.status(200).send('OK: Already processed');
+    }
+
+    // STEP 4: CẬP NHẬT GIAO DỊCH VÀ SỐ DƯ
+    const realAmount = Number(amount); // Số tiền thực tế từ thẻ cào
+
+    // Theo tài liệu Doithe1s, các mã status chính:
+    const STATUS_SUCCESS = '1';       // Thẻ đúng và thành công
+    const STATUS_WRONG_AMOUNT = '2';  // Thẻ đúng nhưng sai mệnh giá
+    const STATUS_MAINTENANCE = '3';   // Hệ thống bảo trì
+    // Các mã khác (4, 99, 100...) là thất bại
+
+    if (status === STATUS_SUCCESS) {
+        transaction.status = 'success';
+        transaction.description = `Nạp thẻ thành công. Đã cộng ${realAmount.toLocaleString('vi-VN')}đ.`;
+        await User.findByIdAndUpdate(transaction.user, { $inc: { balance: realAmount } });
+    } else if (status === STATUS_WRONG_AMOUNT) {
+        transaction.status = 'success';
+        transaction.description = `Thẻ đúng nhưng sai mệnh giá. Thực nhận ${realAmount.toLocaleString('vi-VN')}đ.`;
+        // Vẫn cộng tiền cho người dùng theo mệnh giá THỰC của thẻ
+        await User.findByIdAndUpdate(transaction.user, { $inc: { balance: realAmount } });
+    } else {
+        transaction.status = 'failed';
+        transaction.description = `Nạp thẻ thất bại: ${message || `Mã lỗi: ${status}`}`;
+        transaction.failureReason = status.toString();
+    }
+    
+    // Lưu lại thay đổi vào transaction
+    await transaction.save();
+
+    // STEP 5: PHẢN HỒI CHO DOITHE1S.VN
+    // Sau khi xử lý xong, trả về tín hiệu 'OK' để server họ không gửi lại callback
+    console.log(`[CALLBACK-SUCCESS] Processed request_id: ${request_id}, New Status: ${transaction.status}`);
+    res.status(200).send('OK');
+  }),
+};
+
+// -----------------------------------------------------------------------------
+// --- CÁC CONTROLLER CÒN LẠI GIỮ NGUYÊN ---
+// -----------------------------------------------------------------------------
 const userController = {
   getMe: catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id);
@@ -1533,7 +1612,9 @@ const createDefaultAdmin = async () => {
 
 connectDB();
 
-// Routes
+// -----------------------------------------------------------------------------
+// --- ROUTES CONFIGURATION ---
+// -----------------------------------------------------------------------------
 app.get('/api/v1/health', (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -1543,12 +1624,17 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
+// --- PUBLIC ROUTES ---
 // Auth routes
 app.post('/api/v1/users/signup', authController.signup);
 app.post('/api/v1/users/login', authController.login);
 app.get('/api/v1/users/logout', authController.logout);
 app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
 app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
+
+// Payment callback route (MUST be public, no auth middleware)
+// Dùng app.all để chấp nhận cả GET và POST từ Doithe1s
+app.all('/api/v1/payment/callback/doithe1s', paymentCallbackController.handleDoithe1sCallback);
 
 // Public product routes
 app.get('/api/v1/products', productController.getAllProducts);
@@ -1559,7 +1645,8 @@ app.get('/api/v1/products/:id', productController.getProduct);
 app.get('/api/v1/reviews', reviewController.getAllReviews);
 app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
-// Protected routes
+
+// --- PROTECTED ROUTES (USER MUST BE LOGGED IN) ---
 app.use(authController.protect);
 
 // User routes
@@ -1573,7 +1660,7 @@ app.get('/api/v1/users/sessions', userController.getSessions);
 app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
 app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
 
-// Transaction routes
+// Transaction routes (nạp thẻ, xem lịch sử)
 app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
 app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
 
@@ -1611,7 +1698,7 @@ app.post('/api/v1/my-products', productController.createProduct);
 app.patch('/api/v1/my-products/:id', productController.updateProduct);
 app.delete('/api/v1/my-products/:id', productController.deleteProduct);
 
-// Admin routes
+// --- ADMIN ROUTES (USER MUST BE ADMIN) ---
 app.use('/api/v1/admin', authController.restrictTo('admin'));
 
 app.route('/api/v1/admin/users')
@@ -1631,7 +1718,7 @@ app.route('/api/v1/admin/products/:id')
   .patch(productController.updateProduct)
   .delete(productController.deleteProduct);
 
-// 404 handler
+// 404 handler for unmatched routes
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
@@ -1646,7 +1733,7 @@ const server = app.listen(port, () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Process handlers
+// Unhandled error handlers
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.log(err.name, err.message);
