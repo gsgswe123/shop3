@@ -509,8 +509,12 @@ const doithe1sService = {
     const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
     const API_URL = process.env.DOITHE1S_API_URL;
 
-    // QUAN TRỌNG: Công thức tạo chữ ký phải tuân theo tài liệu của Doithe1s.vn.
-    // Đây là công thức phổ biến: MD5(partner_key + code + serial)
+    // -----------------------------------------------------------------
+    // CẢNH BÁO BẢO MẬT: CÔNG THỨC TẠO CHỮ KÝ KHI GỬI THẺ (SIGN)
+    // - Công thức `md5(PARTNER_KEY + code + serial)` là một ví dụ phổ biến.
+    // - BẠN BẮT BUỘC PHẢI MỞ TÀI LIỆU API CỦA DOITHE1S.VN ĐỂ XÁC NHẬN CÔNG THỨC CHÍNH XÁC.
+    // - Sai chữ ký sẽ khiến mọi giao dịch của bạn bị từ chối.
+    // -----------------------------------------------------------------
     const sign = crypto.createHash('md5').update(PARTNER_KEY + code + serial).digest('hex');
 
     const params = new URLSearchParams();
@@ -798,57 +802,41 @@ const transactionController = {
 
 
 const paymentCallbackController = {
-  /**
-   * Controller chuyên xử lý callback từ Doithe1s.vn
-   * Endpoint này PHẢI được để công khai (public)
-   */
   handleDoithe1sCallback: catchAsync(async (req, res, next) => {
-    // Dữ liệu có thể được gửi qua GET (query) hoặc POST (body)
     const callbackData = { ...req.body, ...req.query };
-
-    // Lấy các tham số quan trọng từ callbackData
-    // 'value' là mệnh giá user khai báo, 'amount' là mệnh giá thực của thẻ
     const { status, request_id, value, amount, message, sign } = callbackData;
     const PARTNER_KEY = process.env.DOITHE1S_PARTNER_KEY;
     
     console.log('Received callback:', callbackData);
 
-    // STEP 1: XÁC THỰC CHỮ KÝ - CỰC KỲ QUAN TRỌNG
-    // Cảnh báo: Công thức tạo chữ ký cho callback có thể khác nhau.
-    // BẠN PHẢI XEM LẠI TÀI LIỆU CỦA DOITHE1S.VN ĐỂ BIẾT CÔNG THỨC CHÍNH XÁC.
-    // Công thức giả định phổ biến là: md5(PARTNER_KEY + status + request_id)
+    // -----------------------------------------------------------------
+    // BƯỚC 1: XÁC THỰC CHỮ KÝ - BƯỚC BẢO MẬT QUAN TRỌNG NHẤT
+    // - Luôn xác thực chữ ký đầu tiên để chống lại các cuộc gọi callback giả mạo.
+    // - Cảnh báo: Công thức `md5(PARTNER_KEY + status + request_id)` LÀ MỘT VÍ DỤ.
+    // - BẠN PHẢI KIỂM TRA LẠI VỚI TÀI LIỆU CỦA DOITHE1S.VN ĐỂ CÓ CÔNG THỨC CHÍNH XÁC.
+    // - Nếu sai công thức này, kẻ gian có thể tự cộng tiền vào tài khoản người dùng.
+    // -----------------------------------------------------------------
     const expectedSign = crypto.createHash('md5').update(PARTNER_KEY + status + request_id).digest('hex');
 
-    if (sign !== expectedSign) {
-      console.warn(`[CALLBACK-SECURITY] Invalid signature for request_id: ${request_id}. Expected: ${expectedSign}, Received: ${sign}`);
-      // Không nên báo lỗi chi tiết, chỉ cần trả về lỗi chung
-      return res.status(400).send('ERROR: Invalid signature');
+    if (!sign || sign !== expectedSign) {
+      console.warn(`[CALLBACK-SECURITY] Invalid signature for request_id: ${request_id}. Received: ${sign}`);
+      return res.status(400).send('Error: Invalid signature.');
     }
 
-    // STEP 2: TÌM GIAO DỊCH
     const transaction = await Transaction.findOne({ gatewayTransactionId: request_id });
     if (!transaction) {
       console.warn(`[CALLBACK-WARN] Transaction not found for request_id: ${request_id}`);
-      // Không tìm thấy giao dịch, có thể là request_id giả mạo
-      return res.status(404).send('ERROR: Transaction not found');
+      return res.status(404).send('Error: Transaction not found.');
     }
     
-    // STEP 3: KIỂM TRA TRẠNG THÁI GIAO DỊCH
-    // Nếu giao dịch đã được xử lý (thành công hoặc thất bại) thì bỏ qua
     if (transaction.status !== 'pending') {
       console.log(`[CALLBACK-INFO] Transaction ${request_id} already processed. Status: ${transaction.status}`);
-      // Phản hồi thành công để Doithe1s không gửi lại callback nữa
-      return res.status(200).send('OK: Already processed');
+      return res.status(200).send('OK: Already processed.');
     }
 
-    // STEP 4: CẬP NHẬT GIAO DỊCH VÀ SỐ DƯ
-    const realAmount = Number(amount); // Số tiền thực tế từ thẻ cào
-
-    // Theo tài liệu Doithe1s, các mã status chính:
-    const STATUS_SUCCESS = '1';       // Thẻ đúng và thành công
-    const STATUS_WRONG_AMOUNT = '2';  // Thẻ đúng nhưng sai mệnh giá
-    const STATUS_MAINTENANCE = '3';   // Hệ thống bảo trì
-    // Các mã khác (4, 99, 100...) là thất bại
+    const realAmount = Number(amount);
+    const STATUS_SUCCESS = '1';
+    const STATUS_WRONG_AMOUNT = '2';
 
     if (status === STATUS_SUCCESS) {
         transaction.status = 'success';
@@ -857,19 +845,15 @@ const paymentCallbackController = {
     } else if (status === STATUS_WRONG_AMOUNT) {
         transaction.status = 'success';
         transaction.description = `Thẻ đúng nhưng sai mệnh giá. Thực nhận ${realAmount.toLocaleString('vi-VN')}đ.`;
-        // Vẫn cộng tiền cho người dùng theo mệnh giá THỰC của thẻ
         await User.findByIdAndUpdate(transaction.user, { $inc: { balance: realAmount } });
     } else {
         transaction.status = 'failed';
-        transaction.description = `Nạp thẻ thất bại: ${message || `Mã lỗi: ${status}`}`;
+        transaction.description = `Nạp thẻ thất bại: ${message || `Mã lỗi hệ thống: ${status}`}`;
         transaction.failureReason = status.toString();
     }
     
-    // Lưu lại thay đổi vào transaction
     await transaction.save();
 
-    // STEP 5: PHẢN HỒI CHO DOITHE1S.VN
-    // Sau khi xử lý xong, trả về tín hiệu 'OK' để server họ không gửi lại callback
     console.log(`[CALLBACK-SUCCESS] Processed request_id: ${request_id}, New Status: ${transaction.status}`);
     res.status(200).send('OK');
   }),
@@ -1625,46 +1609,37 @@ app.get('/api/v1/health', (req, res) => {
 });
 
 // --- PUBLIC ROUTES ---
-// Auth routes
 app.post('/api/v1/users/signup', authController.signup);
 app.post('/api/v1/users/login', authController.login);
 app.get('/api/v1/users/logout', authController.logout);
 app.post('/api/v1/users/forgotPassword', authController.forgotPassword);
 app.patch('/api/v1/users/resetPassword/:token', authController.resetPassword);
 
-// Payment callback route (MUST be public, no auth middleware)
-// Dùng app.all để chấp nhận cả GET và POST từ Doithe1s
 app.all('/api/v1/payment/callback/doithe1s', paymentCallbackController.handleDoithe1sCallback);
 
-// Public product routes
 app.get('/api/v1/products', productController.getAllProducts);
 app.get('/api/v1/products/stats', productController.getProductStats);
 app.get('/api/v1/products/:id', productController.getProduct);
 
-// Public review routes
 app.get('/api/v1/reviews', reviewController.getAllReviews);
 app.get('/api/v1/products/:productId/reviews', reviewController.getAllReviews);
 
 
-// --- PROTECTED ROUTES (USER MUST BE LOGGED IN) ---
+// --- PROTECTED ROUTES ---
 app.use(authController.protect);
 
-// User routes
 app.get('/api/v1/users/me', userController.getMe);
 app.patch('/api/v1/users/updateMe', userController.updateMe);
 app.patch('/api/v1/users/updateMyPassword', authController.updatePassword);
 app.delete('/api/v1/users/deleteMe', userController.deleteMe);
 
-// Session management routes
 app.get('/api/v1/users/sessions', userController.getSessions);
 app.delete('/api/v1/users/sessions/all-but-current', userController.logoutAllOtherSessions);
 app.delete('/api/v1/users/sessions/:sessionId', userController.logoutSession);
 
-// Transaction routes (nạp thẻ, xem lịch sử)
 app.post('/api/v1/users/deposit/card', transactionController.depositWithCard);
 app.get('/api/v1/users/transactions', transactionController.getMyTransactions);
 
-// Cart routes
 app.route('/api/v1/cart')
   .get(cartFavoriteController.getCart)
   .post(cartFavoriteController.addToCart)
@@ -1674,7 +1649,6 @@ app.route('/api/v1/cart/:productId')
   .patch(cartFavoriteController.updateCartItem)
   .delete(cartFavoriteController.removeFromCart);
 
-// Favorite routes
 app.route('/api/v1/favorites')
   .get(cartFavoriteController.getFavorites)
   .post(cartFavoriteController.addToFavorites);
@@ -1684,7 +1658,6 @@ app.route('/api/v1/favorites/:productId')
 
 app.get('/api/v1/favorites/check/:productId', cartFavoriteController.checkFavorite);
 
-// Review routes (protected)
 app.post('/api/v1/reviews', reviewController.createReview);
 app.post('/api/v1/products/:productId/reviews', reviewController.createReview);
 
@@ -1693,12 +1666,11 @@ app.route('/api/v1/reviews/:id')
   .patch(reviewController.updateReview)
   .delete(reviewController.deleteReview);
 
-// User product routes
 app.post('/api/v1/my-products', productController.createProduct);
 app.patch('/api/v1/my-products/:id', productController.updateProduct);
 app.delete('/api/v1/my-products/:id', productController.deleteProduct);
 
-// --- ADMIN ROUTES (USER MUST BE ADMIN) ---
+// --- ADMIN ROUTES ---
 app.use('/api/v1/admin', authController.restrictTo('admin'));
 
 app.route('/api/v1/admin/users')
